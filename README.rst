@@ -71,7 +71,7 @@ the scope of the full Consulate API.
                                    tags=['master'],
                                    check={'script': None,
                                           'interval': None,
-                                          'ttl': '60s')
+                                          'ttl': '60s'})
 
 
 `Fetching health information from Consul:`
