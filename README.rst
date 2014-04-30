@@ -3,7 +3,8 @@ Consulate: A Consul Client Library
 Consulate is a Python API for the Consul service discovery and configuration
 system.
 
-------------
+|Version| |Downloads| |Status| |Coverage| |License|
+
 Installation
 ------------
 Consulate is available via pypi_ and can be installed with easy_install or pip:
@@ -12,49 +13,91 @@ Consulate is available via pypi_ and can be installed with easy_install or pip:
 
     pip install consulate
 
+Documentation
 -------------
-Consulate API
--------------
-Consul is accessed via the ``consulate.Consulate`` class which exposes several
-objects for interacting with the local Consul agent.
+Documentation is available at https://consulate.readthedocs.org
 
-kv
-==
-Set key/value pairs in the Consul kv database by getting, setting and deleting
-attributes on ``Consulate.kv`` object. Additionally, there are methods for
-finding values in the database as well as returning all key/value pairs.
+Usage Examples
+--------------
+The following examples highlight the usage of Consulate and does not document
+the scope of the full Consulate API.
 
-Consulate.kv.find(``pattern``)
-''''''''''''''''''''''''''''''
-Find all keys with the specified prefix, returning a dict of key/value matches.
+Using Consulate with the Consul kv database:
 
-**Parameters**
-pattern (``str``)
-    Base string to search for
+.. code :: python
 
-**Return Values**
-``dict``
-    Key/Value pairs found
+    session = consulate.Consulate()
 
-Consulate.kv.items()
-''''''''''''''''''''
-Return all key/value pairs in the Consul kv database.
+    # Set the key named release_flag to True
+    session.kv.release_flag = True
 
-**Return Values**
-``dict``
-    Key/Value pairs found
+    # Get the value for the release_flag, if not set, raises AttributeError
+    try:
+        should_release_feature = session.kv.release_flag
+    except AttributeError:
+        should_release_feature = False
 
-agent
-=====
-Provides API methods for working with nodes, services and checks via the agent.
+    # Delete the release_flag key
+    del session.kv.release_flag
+
+    # Find all keys that start with "fl"
+    session.kv.find('fl')
+
+    # Check to see if a key called "foo" is set
+    if "foo" in session.kv:
+        print 'Already Set'
+
+    # Return all of the items in the key/value store
+    session.kv.items()
+
+Working with the Consulate.agent API:
+
+.. code :: python
+
+    session = consulate.Consulate()
+
+    # Get all of the service checks for the local agent
+    checks = session.agent.checks()
+
+    # Get all of the services registered with the local agent
+    services = session.agent.services()
+
+    # Add a service to the local agent
+    session.agent.service.register('redis',
+                                   port=6379,
+                                   tags=['master'],
+                                   check={'script': None,
+                                          'interval': None,
+                                          'ttl': '60s')
 
 
+Fetching health information from Consul:
 
+.. code :: python
 
+    session = consulate.Consulate()
 
+    # Get the health of a individual node
+    health = session.health.node('my-node')
 
+    # Get all checks that are critical
+    checks = session.heath.state('critical')
 
+For more examples, check out the Consulate documentation.
 
+.. |Version| image:: https://badge.fury.io/py/consulate.svg?
+   :target: http://badge.fury.io/py/consulate
 
+.. |Status| image:: https://travis-ci.org/gmr/consulate.svg?branch=master
+   :target: https://travis-ci.org/gmr/consulate
 
+.. |Coverage| image:: https://coveralls.io/repos/gmr/consulate/badge.png
+   :target: https://coveralls.io/r/gmr/consulate
+  
+.. |Downloads| image:: https://pypip.in/d/consulate/badge.svg?
+   :target: https://pypi.python.org/pypi/consulate
+   
+.. |License| image:: https://pypip.in/license/consulate/badge.svg?
+   :target: https://consulate.readthedocs.org
+   
 .. _pypi: https://pypi.python.org/pypi/consulate
