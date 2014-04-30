@@ -2,8 +2,8 @@
 Consulate: A Consul Client Library
 ==================================
 
-Consulate is a Python API for the Consul service discovery and configuration
-system.
+Consulate is a Python client library for the Consul service discovery and
+configuration system.
 
 |Version| |Downloads| |Status| |Coverage| |License|
 
