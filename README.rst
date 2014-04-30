@@ -1,5 +1,7 @@
+==================================
 Consulate: A Consul Client Library
 ==================================
+
 Consulate is a Python API for the Consul service discovery and configuration
 system.
 
@@ -7,6 +9,7 @@ system.
 
 Installation
 ------------
+
 Consulate is available via pypi_ and can be installed with easy_install or pip:
 
 .. code:: bash
@@ -22,7 +25,7 @@ Usage Examples
 The following examples highlight the usage of Consulate and does not document
 the scope of the full Consulate API.
 
-Using Consulate with the Consul kv database:
+`Using Consulate with the Consul kv database:`
 
 .. code :: python
 
@@ -50,7 +53,7 @@ Using Consulate with the Consul kv database:
     # Return all of the items in the key/value store
     session.kv.items()
 
-Working with the Consulate.agent API:
+`Working with the Consulate.agent API:`
 
 .. code :: python
 
@@ -71,7 +74,7 @@ Working with the Consulate.agent API:
                                           'ttl': '60s')
 
 
-Fetching health information from Consul:
+`Fetching health information from Consul:`
 
 .. code :: python
 
@@ -99,5 +102,3 @@ For more examples, check out the Consulate documentation.
    
 .. |License| image:: https://pypip.in/license/consulate/badge.svg?
    :target: https://consulate.readthedocs.org
-   
-.. _pypi: https://pypi.python.org/pypi/consulate
