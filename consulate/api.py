@@ -127,6 +127,7 @@ class KV(_Endpoint):
         :rtype: bool
 
         """
+        item = item.lstrip('/')
         response = self._adapter.get(self._build_uri([item]))
         return response.status_code == 200
 
@@ -137,6 +138,7 @@ class KV(_Endpoint):
         :raises: AttributeError
 
         """
+        item = item.lstrip('/')
         response = self._adapter.delete(self._build_uri([item]))
         if response.status_code != 200:
             raise AttributeError('Error removing "%s" (%s)' %
@@ -151,6 +153,7 @@ class KV(_Endpoint):
         :raises: KeyError
 
         """
+        item = item.lstrip('/')
         response = self._adapter.get(self._build_uri([item]))
         if response.status_code == 200:
             try:
@@ -173,6 +176,7 @@ class KV(_Endpoint):
         :raises: KeyError
 
         """
+        item = item.lstrip('/')
         response = self._adapter.get(self._build_uri([item]))
         index = 0
         if response.status_code == 200:
@@ -220,7 +224,7 @@ class KV(_Endpoint):
         :rtype: dict
 
         """
-        response = self._adapter.get(self._build_uri([prefix],
+        response = self._adapter.get(self._build_uri([prefix.lstrip('/')],
                                                      {'recurse': None}))
         if response.status_code == 200:
             return dict([(r['Key'], r.get('Value', r)) for r in response.body])
