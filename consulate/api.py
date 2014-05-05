@@ -130,21 +130,39 @@ class KV(_Endpoint):
         response = self._adapter.get(self._build_uri([item]))
         return response.status_code == 200
 
-    def __delattr__(self, item):
+    def __delitem__(self, item):
         """Delete an item from the Consul Key/Value store.
 
         :param str item: The key name
         :raises: AttributeError
 
         """
-        if item in ['_adapter', '_base_uri', '_dc']:
-            return super(KV, self).__delattr__(item)
         response = self._adapter.delete(self._build_uri([item]))
         if response.status_code != 200:
             raise AttributeError('Error removing "%s" (%s)' %
                                  (item, response.status_code))
 
-    def __setattr__(self, item, value):
+    def __getitem__(self, item):
+        """Get a value from the Consul Key/Value store, returning it fully
+        demarshaled if possible.
+
+        :param str item: The item name
+        :rtype: mixed
+        :raises: KeyError
+
+        """
+        response = self._adapter.get(self._build_uri([item]))
+        if response.status_code == 200:
+            try:
+                return response.body.get('Value', response.body)
+            except AttributeError:
+                return response.body
+        elif response.status_code == 404:
+            raise KeyError('Key not found (%s)' % item)
+        else:
+            raise KeyError('Unknown response (%s)' % response.status_code)
+
+    def __setitem__(self, item, value):
         """Set a value in the Consul Key/Value store, using the CAS mechanism
         to ensure that the set is atomic. If the value passed in is not a
         string, an attempt will be made to JSON encode the value prior to
@@ -152,11 +170,9 @@ class KV(_Endpoint):
 
         :param str item: The key to set
         :param mixed value: The value to set
-        :raises: AttributeError
+        :raises: KeyError
 
         """
-        if item in ['_adapter', '_base_uri', '_dc']:
-            return super(KV, self).__setattr__(item, value)
         response = self._adapter.get(self._build_uri([item]))
         index = 0
         if response.status_code == 200:
@@ -169,28 +185,32 @@ class KV(_Endpoint):
             raise AttributeError('Error setting "%s" (%s)' %
                                  (item, response.status_code))
 
-    def __getattr__(self, item):
+    def get(self, item, default=None):
         """Get a value from the Consul Key/Value store, returning it fully
         demarshaled if possible.
 
         :param str item: The item name
         :rtype: mixed
-        :raises: AttributeError
+        :raises: KeyError
 
         """
-        if item in ['_adapter', '_base_uri', '_dc']:
-            return super(KV, self).__getattr__(item)
-        response = self._adapter.get(self._build_uri([item]))
-        if response.status_code == 200:
-            try:
-                return response.body.get('Value', response.body)
-            except AttributeError:
-                return response.body
-        elif response.status_code == 404:
-            raise AttributeError('Key not found (%s)' % item)
-        else:
-            raise AttributeError('Unknown response (%s)' %
-                                 response.status_code)
+        try:
+            return self.__getitem__(item)
+        except KeyError:
+            return default
+
+    def set(self, item, value):
+        """Set a value in the Consul Key/Value store, using the CAS mechanism
+        to ensure that the set is atomic. If the value passed in is not a
+        string, an attempt will be made to JSON encode the value prior to
+        setting it.
+
+        :param str item: The key to set
+        :param mixed value: The value to set
+        :raises: KeyError
+
+        """
+        return self.__setitem__(item, value)
 
     def find(self, prefix):
         """Find all keys with the specified prefix, returning a dict of
@@ -633,7 +653,7 @@ class Catalog(_Endpoint):
         :rtype: list
 
         """
-        return self._get(['service', service_id])
+        return self._get_list(['service', service_id])
 
     def services(self):
         """Return a list of all of the services for the current datacenter.
