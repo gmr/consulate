@@ -1,3 +1,4 @@
+import os
 from setuptools import setup
 
 install_requires = ['requests']
@@ -17,6 +18,7 @@ setup(name='consulate',
       license=open('LICENSE').read(),
       package_data={'': ['LICENSE', 'README.md']},
       packages=['consulate'],
+      entry_points=dict(console_scripts=['passport=consulate.passport:main']),
       classifiers=['Development Status :: 3 - Alpha',
                    'Intended Audience :: Developers',
                    'License :: OSI Approved :: BSD License',
