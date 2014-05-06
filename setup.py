@@ -7,6 +7,7 @@ install_requires = ['requests']
 if os.environ.get('READTHEDOCS', None) == 'True':
     install_requires.append('tornado')
 
+
 setup(name='consulate',
       version='0.1.0',
       description="A Client library for the Consul",
@@ -18,7 +19,8 @@ setup(name='consulate',
       license=open('LICENSE').read(),
       package_data={'': ['LICENSE', 'README.md']},
       packages=['consulate'],
-      entry_points=dict(console_scripts=['passport=consulate.passport:main']),
+      entry_points=dict(console_scripts=['consulate=consulate.cli:main',
+                                         'passport=consulate.passport:main']),
       classifiers=['Development Status :: 3 - Alpha',
                    'Intended Audience :: Developers',
                    'License :: OSI Approved :: BSD License',

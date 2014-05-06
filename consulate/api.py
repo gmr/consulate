@@ -216,28 +216,55 @@ class KV(_Endpoint):
         """
         return self.__setitem__(item, value)
 
+    def set_record(self, item, flags=0, value=None):
+        """Set a full record, including the item flag
+
+        """
+        item = item.lstrip('/')
+        response = self._adapter.get(self._build_uri([item]))
+        index = 0
+        if response.status_code == 200:
+            index = response.body.get('ModifyIndex')
+            if response.body.get('Value') == value:
+                return True
+        response = self._adapter.put(self._build_uri([item],
+                                                     {'index': index,
+                                                      'flags': flags}), value)
+        if not response.status_code == 200 or not response.body:
+            raise AttributeError('Error setting "%s" (%s)' %
+                                 (item, response.status_code))
+
     def find(self, prefix):
         """Find all keys with the specified prefix, returning a dict of
-        key/value matches.
+        matches.
 
         :param str prefix: The prefix to search with
         :rtype: dict
 
         """
-        response = self._adapter.get(self._build_uri([prefix.lstrip('/')],
-                                                     {'recurse': None}))
-        if response.status_code == 200:
-            return dict([(r['Key'], r.get('Value', r)) for r in response.body])
-        return dict()
+        response = self._get_list([prefix.lstrip('/')], {'recurse': None})
+        results = {}
+        for r in response:
+            results[r['Key']] = r['Value']
+        return results
 
     def items(self):
         """Return a dict of all of the key/value pairs in the Consul kv
         service.
 
-        :rtype: dict
+       :rtype: dict
 
         """
         return self.find('')
+
+    def records(self):
+        """Return a list of tuples for all of the records in the kv database
+
+        :rtype: list of (Key, Flags, Value)
+
+        """
+        response = self._get_list([''], {'recurse': None})
+        return [(r['Key'], r['Flags'], r['Value']) for r in response]
 
 
 class Agent(_Endpoint):
@@ -381,14 +408,16 @@ class Agent(_Endpoint):
         CHECK_EXCEPTION = 'check must be a tuple of script, interval, and ttl'
 
         def register(self, name, service_id=None, port=None,
-                     tags=None, check=None):
+                     tags=None, check=None, interval=None, ttl=None):
             """Add a new service to the local agent.
 
             :param str name: The name of the service
             :param str service_id: The id for the service (optional)
             :param int port: The service port
             :param list tags: A list of tags for the service
-            :param tuple check: A tuple of script, interval, or ttl
+            :param str check: The path to the check to run
+            :param str interval: The script execution interval
+            :param str ttl: The TTL for external script check pings
             :rtype: bool
             :raises: ValueError
 
@@ -398,25 +427,18 @@ class Agent(_Endpoint):
                 raise ValueError('port must be an integer')
             elif tags and not isinstance(tags, list):
                 raise ValueError('tags must be a list of strings')
-            elif check:
-                if not isinstance(check, tuple):
-                    raise ValueError(self.CHECK_EXCEPTION)
-                elif not len(check) == 3:
-                    raise ValueError(self.CHECK_EXCEPTION)
-                elif check[0] is None and check[2] is None:
-                    raise ValueError('Check must provide either ttl or script')
-                elif check[0] and not check[1]:
-                    raise ValueError('Check must have an interval with script')
-                elif check[2] and check[1]:
-                    raise ValueError('Can not specify interval when using ttl')
-                else:
-                    check = {'script': check[0],
-                             'interval': check[1],
-                             'ttl': check[2]}
+            elif check and ttl:
+                raise ValueError('Can not specify both a check and ttl')
 
             # Build the payload to send to consul
-            payload = {'id': service_id, 'name': name, 'port': port,
-                       'tags': tags, 'check': check}
+            payload = {'id': service_id,
+                       'name': name,
+                       'port': port,
+                       'tags': tags,
+                       'check': {'script': check,
+                                 'interval': interval,
+                                 'ttl': ttl}}
+
             for key in list(payload.keys()):
                 if payload[key] is None:
                     del payload[key]
