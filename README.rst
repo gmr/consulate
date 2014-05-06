@@ -107,7 +107,7 @@ files based upon information available in the consul cluster.
                             The path to write the rendered template to
 
 As an example, the following template is stored in the KV database as
-``templates/memcached/memcached.conf``::
+``templates/memcached/memcached.conf``
 
 .. code :: python
 
