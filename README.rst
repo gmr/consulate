@@ -130,6 +130,8 @@ And the output would look something like:
 [memcached]
     servers = 172.17.0.7:11211,172.17.0.8:11211
 
+Template rendering is done via the `Tornado Template <https://tornado.readthedocs.org/en/latest/template.html>`_ engine.
+
 Usage Examples
 --------------
 The following examples highlight the usage of Consulate and does not document
