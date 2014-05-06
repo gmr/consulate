@@ -77,12 +77,11 @@ def main():
         check = args.path if args.ctype == 'check' else None
         interval = '%ss' % args.interval if args.ctype == 'check' else None
         ttl = '%ss' % args.duration if args.ctype == 'ttl' else None
-
+        tags = args.tags.split(',') if args.tags else None
         session.agent.service.register(args.name,
                                        args.service_id,
                                        args.port,
-                                       args.tags.split(','),
-                                       check, interval, ttl)
+                                       tags, check, interval, ttl)
 
     elif args.command == 'kv':
 

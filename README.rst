@@ -1,4 +1,3 @@
-==================================
 Consulate: A Consul Client Library
 ==================================
 
@@ -33,7 +32,7 @@ The consulate application provides a CLI interface for registering a service,
 backing up and restoring the contents of the KV database, and actions for getting,
 setting, and deleting keys from the KV database.
 
-.. code :: bash
+.. code:: bash
 
     usage: consulate [-h] [--api-host API_HOST] [--api-port API_PORT]
                      [--datacenter DATACENTER]
@@ -53,7 +52,7 @@ setting, and deleting keys from the KV database.
 
 Service Registration Help:
 
-.. code :: bash
+.. code:: bash
 
     usage: consulate register [-h] [-s SERVICE_ID] [-t TAGS]
                               {check,no-check,ttl} ... name port
@@ -76,7 +75,7 @@ Service Registration Help:
 
 KV Database Utilities Help:
 
-.. code :: bash
+.. code:: bash
 
     usage: consulate kv [-h] {backup,restore,get,set,del} ...
 
@@ -96,7 +95,7 @@ passport
 Passport provides a template rendering engine that writes out configuration
 files based upon information available in the consul cluster.
 
-.. code :: bash
+.. code:: bash
 
     usage: passport [-h] [-t TEMPLATE] [-d DESTINATION]
 
@@ -112,7 +111,7 @@ files based upon information available in the consul cluster.
 As an example, the following template is stored in the KV database as
 ``templates/memcached/memcached.conf``
 
-.. code :: python
+.. code:: python
 
     {% set nodes = ['%s:%s' % (r['Address'], r['ServicePort']) for r in consul.catalog.service('memcached')] %}
 
@@ -122,13 +121,13 @@ As an example, the following template is stored in the KV database as
 Invoking passport will render the file with a list of all memcached nodes to
 ``/etc/memcached.conf``.
 
-.. code :: bash
+.. code:: bash
 
     passport templates/memcached/memcached.conf /etc/memcached.conf
 
 And the output would look something like:
 
-.. code :: ini
+.. code:: ini
 
 [memcached]
     servers = 172.17.0.7:11211,172.17.0.8:11211
@@ -142,7 +141,7 @@ the scope of the full Consulate API.
 
 `Using Consulate with the Consul kv database:`
 
-.. code :: python
+.. code:: python
 
     session = consulate.Consulate()
 
@@ -170,7 +169,7 @@ the scope of the full Consulate API.
 
 `Working with the Consulate.agent API:`
 
-.. code :: python
+.. code:: python
 
     session = consulate.Consulate()
 
@@ -191,7 +190,7 @@ the scope of the full Consulate API.
 
 `Fetching health information from Consul:`
 
-.. code :: python
+.. code:: python
 
     session = consulate.Consulate()
 
