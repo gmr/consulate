@@ -3,14 +3,14 @@ from setuptools import setup
 install_requires = ['requests', 'tornado']
 
 setup(name='consulate',
-      version='0.1.0',
+      version='0.1.1',
       description="A Client library for the Consul",
       maintainer="Gavin M. Roy",
       maintainer_email="gavinr@aweber.com",
       url="https://consulate.readthedocs.org",
       install_requires=install_requires,
       license=open('LICENSE').read(),
-      package_data={'': ['LICENSE', 'README.md']},
+      package_data={'': ['LICENSE', 'README.rst']},
       packages=['consulate'],
       entry_points=dict(console_scripts=['consulate=consulate.cli:main',
                                          'passport=consulate.passport:main']),
