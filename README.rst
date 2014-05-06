@@ -2,8 +2,8 @@
 Consulate: A Consul Client Library
 ==================================
 
-Consulate is a Python client library for the Consul service discovery and
-configuration system.
+Consulate is a Python client library and set of application for the Consul
+service discovery and configuration system.
 
 |Version| |Downloads| |Status| |Coverage| |License|
 
@@ -22,7 +22,10 @@ Documentation is available at https://consulate.readthedocs.org
 
 Command Line Utilities
 ----------------------
-There are two command line scripts that are installed:
+Consulate comes with two command line utilities that make working with Consul
+easier from a management perspective. The ``consulate`` application provides
+a cli wrapper for common tasks performed and the ``passport`` application
+implements configuration file templating.
 
 consulate
 ^^^^^^^^^
