@@ -1,12 +1,6 @@
-import os
 from setuptools import setup
 
-install_requires = ['requests']
-
-# Install tornado if generating docs on readthedocs
-if os.environ.get('READTHEDOCS', None) == 'True':
-    install_requires.append('tornado')
-
+install_requires = ['requests', 'tornado']
 
 setup(name='consulate',
       version='0.1.0',
@@ -15,7 +9,6 @@ setup(name='consulate',
       maintainer_email="gavinr@aweber.com",
       url="https://consulate.readthedocs.org",
       install_requires=install_requires,
-      extras_require={'tornado': 'tornado'},
       license=open('LICENSE').read(),
       package_data={'': ['LICENSE', 'README.md']},
       packages=['consulate'],
