@@ -3,7 +3,7 @@ from setuptools import setup
 install_requires = ['requests', 'tornado']
 
 setup(name='consulate',
-      version='0.1.1',
+      version='0.1.2',
       description="A Client library for the Consul",
       maintainer="Gavin M. Roy",
       maintainer_email="gavinr@aweber.com",

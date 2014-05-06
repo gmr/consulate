@@ -139,23 +139,23 @@ API Usage Examples
 The following examples highlight the usage of Consulate and does not document
 the scope of the full Consulate API.
 
-`Using Consulate with the Consul kv database:`
+*Using Consulate with the Consul kv database:*
 
 .. code:: python
 
     session = consulate.Consulate()
 
     # Set the key named release_flag to True
-    session.kv.release_flag = True
+    session.kv['release_flag'] = True
 
     # Get the value for the release_flag, if not set, raises AttributeError
     try:
-        should_release_feature = session.kv.release_flag
+        should_release_feature = session.kv['release_flag']
     except AttributeError:
         should_release_feature = False
 
     # Delete the release_flag key
-    del session.kv.release_flag
+    del session.kv['release_flag']
 
     # Find all keys that start with "fl"
     session.kv.find('fl')
@@ -167,7 +167,7 @@ the scope of the full Consulate API.
     # Return all of the items in the key/value store
     session.kv.items()
 
-`Working with the Consulate.agent API:`
+*Working with the Consulate.agent API:*
 
 .. code:: python
 
@@ -183,12 +183,10 @@ the scope of the full Consulate API.
     session.agent.service.register('redis',
                                    port=6379,
                                    tags=['master'],
-                                   check={'script': None,
-                                          'interval': None,
-                                          'ttl': '60s'})
+                                   ttl='10s')
 
 
-`Fetching health information from Consul:`
+*Fetching health information from Consul:*
 
 .. code:: python
 
