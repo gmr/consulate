@@ -20,6 +20,116 @@ Documentation
 -------------
 Documentation is available at https://consulate.readthedocs.org
 
+Command Line Utilities
+----------------------
+There are two command line scripts that are installed:
+
+consulate
+^^^^^^^^^
+The consulate application provides a CLI interface for registering a service,
+backing up and restoring the contents of the KV database, and actions for getting,
+setting, and deleting keys from the KV database.
+
+.. code :: bash
+
+    usage: consulate [-h] [--api-host API_HOST] [--api-port API_PORT]
+                     [--datacenter DATACENTER]
+                     {register,kv} ...
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      --api-host API_HOST   The consul host to connect on
+      --api-port API_PORT   The consul API port to connect to
+      --datacenter DATACENTER
+                            The datacenter to specify for the connection
+
+    Commands:
+      {register,kv}
+        register            Register a service for this node
+        kv                  Key/Value Database Utilities
+
+Service Registration Help:
+
+.. code :: bash
+
+    usage: consulate register [-h] [-s SERVICE_ID] [-t TAGS]
+                              {check,no-check,ttl} ... name port
+
+    positional arguments:
+      name                  The service name
+      port                  The port the service runs on
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -s SERVICE_ID, --service-id SERVICE_ID
+                            Specify a service ID
+      -t TAGS, --tags TAGS  Specify a comma delimited list of tags
+
+    Service Check Options:
+      {check,no-check,ttl}
+        check               Define an external script-based check
+        no-check            Do not enable service monitoring
+        ttl                 Define a duration based TTL check
+
+KV Database Utilities Help:
+
+.. code :: bash
+
+    usage: consulate kv [-h] {backup,restore,get,set,del} ...
+
+    optional arguments:
+      -h, --help            show this help message and exit
+
+    Key/Value Database Utilities:
+      {backup,restore,get,set,del}
+        backup              Backup to a JSON file
+        restore             Restore from a JSON file
+        get                 Get a key from the database
+        set                 Set a key in the database
+        del                 Delete a key from the database
+
+passport
+^^^^^^^^
+Passport provides a template rendering engine that writes out configuration
+files based upon information available in the consul cluster.
+
+.. code :: bash
+
+    usage: passport [-h] [-t TEMPLATE] [-d DESTINATION]
+
+    Render templates from Consul
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -t TEMPLATE, --template TEMPLATE
+                            The path to the template
+      -d DESTINATION, --destination DESTINATION
+                            The path to write the rendered template to
+
+As an example, the following template is stored in the KV database as
+``templates/memcached/memcached.conf``::
+
+.. code :: python
+
+    {% set nodes = ['%s:%s' % (r['Address'], r['ServicePort']) for r in consul.catalog.service('memcached')] %}
+
+    [memcached]
+        servers = {{ ','.join(nodes) }}
+
+Invoking passport will render the file with a list of all memcached nodes to
+``/etc/memcached.conf``.
+
+.. code :: bash
+
+    passport templates/memcached/memcached.conf /etc/memcached.conf
+
+And the output would look something like:
+
+.. code :: ini
+
+[memcached]
+    servers = 172.17.0.7:11211,172.17.0.8:11211
+
 Usage Examples
 --------------
 The following examples highlight the usage of Consulate and does not document
