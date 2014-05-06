@@ -132,8 +132,8 @@ And the output would look something like:
 
 Template rendering is done via the `Tornado Template <https://tornado.readthedocs.org/en/latest/template.html>`_ engine.
 
-Usage Examples
---------------
+API Usage Examples
+------------------
 The following examples highlight the usage of Consulate and does not document
 the scope of the full Consulate API.
 
