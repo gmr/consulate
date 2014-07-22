@@ -1,19 +1,19 @@
 from setuptools import setup
 
-install_requires = ['requests', 'tornado']
+install_requires = ['requests']
 
 setup(name='consulate',
-      version='0.1.2',
+      version='0.2.0',
       description="A Client library for the Consul",
       maintainer="Gavin M. Roy",
       maintainer_email="gavinr@aweber.com",
       url="https://consulate.readthedocs.org",
       install_requires=install_requires,
       license=open('LICENSE').read(),
+      extras_require={'tornado': 'tornado'},
       package_data={'': ['LICENSE', 'README.rst']},
       packages=['consulate'],
-      entry_points=dict(console_scripts=['consulate=consulate.cli:main',
-                                         'passport=consulate.passport:main']),
+      entry_points=dict(console_scripts=['consulate=consulate.cli:main']),
       classifiers=['Development Status :: 3 - Alpha',
                    'Intended Audience :: Developers',
                    'License :: OSI Approved :: BSD License',

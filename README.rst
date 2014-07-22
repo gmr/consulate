@@ -4,7 +4,7 @@ Consulate: A Consul Client Library
 Consulate is a Python client library and set of application for the Consul
 service discovery and configuration system.
 
-|Version| |Downloads| |Status| |Coverage| |License|
+|Version| |Downloads| |License|
 
 Installation
 ------------
@@ -15,16 +15,14 @@ Consulate is available via pypi_ and can be installed with easy_install or pip:
 
     pip install consulate
 
-Documentation
--------------
-Documentation is available at https://consulate.readthedocs.org
-
 Command Line Utilities
 ----------------------
 Consulate comes with two command line utilities that make working with Consul
 easier from a management perspective. The ``consulate`` application provides
-a cli wrapper for common tasks performed and the ``passport`` application
-implements configuration file templating.
+a cli wrapper for common tasks performed.
+
+The ``passport`` application has been moved to a stand-alone application and
+is available at https://github.com/gmr/passport.
 
 consulate
 ^^^^^^^^^
@@ -89,50 +87,6 @@ KV Database Utilities Help:
         get                 Get a key from the database
         set                 Set a key in the database
         del                 Delete a key from the database
-
-passport
-^^^^^^^^
-Passport provides a template rendering engine that writes out configuration
-files based upon information available in the consul cluster.
-
-.. code:: bash
-
-    usage: passport [-h] [-t TEMPLATE] [-d DESTINATION]
-
-    Render templates from Consul
-
-    optional arguments:
-      -h, --help            show this help message and exit
-      -t TEMPLATE, --template TEMPLATE
-                            The path to the template
-      -d DESTINATION, --destination DESTINATION
-                            The path to write the rendered template to
-
-As an example, the following template is stored in the KV database as
-``templates/memcached/memcached.conf``
-
-.. code:: python
-
-    {% set nodes = ['%s:%s' % (r['Address'], r['ServicePort']) for r in consul.catalog.service('memcached')] %}
-
-    [memcached]
-        servers = {{ ','.join(nodes) }}
-
-Invoking passport will render the file with a list of all memcached nodes to
-``/etc/memcached.conf``.
-
-.. code:: bash
-
-    passport templates/memcached/memcached.conf /etc/memcached.conf
-
-And the output would look something like:
-
-.. code:: ini
-
-[memcached]
-    servers = 172.17.0.7:11211,172.17.0.8:11211
-
-Template rendering is done via the `Tornado Template <https://tornado.readthedocs.org/en/latest/template.html>`_ engine.
 
 API Usage Examples
 ------------------
@@ -202,12 +156,6 @@ For more examples, check out the Consulate documentation.
 
 .. |Version| image:: https://badge.fury.io/py/consulate.svg?
    :target: http://badge.fury.io/py/consulate
-
-.. |Status| image:: https://travis-ci.org/gmr/consulate.svg?branch=master
-   :target: https://travis-ci.org/gmr/consulate
-
-.. |Coverage| image:: https://coveralls.io/repos/gmr/consulate/badge.png
-   :target: https://coveralls.io/r/gmr/consulate
   
 .. |Downloads| image:: https://pypip.in/d/consulate/badge.svg?
    :target: https://pypi.python.org/pypi/consulate
