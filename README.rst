@@ -9,7 +9,8 @@ service discovery and configuration system.
 Installation
 ------------
 
-Consulate is available via pypi_ and can be installed with easy_install or pip:
+Consulate is available via Passport is available via `pypi <https://pypi.python.org/pypi/consulate>`_ 
+and can be installed with easy_install or pip:
 
 .. code:: bash
 
