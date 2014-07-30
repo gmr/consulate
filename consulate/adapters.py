@@ -10,8 +10,12 @@ try:
     from tornado import gen
     from tornado import httpclient
 except ImportError:
-    gen, httpclient = None, None
+    httpclient = None
 
+    class Gen:
+        def coroutine(self, func):
+            pass
+    gen = Gen()
 
 LOGGER = logging.getLogger(__name__)
 
