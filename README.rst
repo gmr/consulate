@@ -9,7 +9,7 @@ service discovery and configuration system.
 Installation
 ------------
 
-Consulate is available via Passport is available via `pypi <https://pypi.python.org/pypi/consulate>`_ 
+Consulate is available via via `pypi <https://pypi.python.org/pypi/consulate>`_
 and can be installed with easy_install or pip:
 
 .. code:: bash
@@ -157,9 +157,9 @@ For more examples, check out the Consulate documentation.
 
 .. |Version| image:: https://badge.fury.io/py/consulate.svg?
    :target: http://badge.fury.io/py/consulate
-  
+
 .. |Downloads| image:: https://pypip.in/d/consulate/badge.svg?
    :target: https://pypi.python.org/pypi/consulate
-   
+
 .. |License| image:: https://pypip.in/license/consulate/badge.svg?
    :target: https://consulate.readthedocs.org
