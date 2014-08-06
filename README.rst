@@ -115,6 +115,9 @@ the scope of the full Consulate API.
     # Find all keys that start with "fl"
     session.kv.find('fl')
 
+    # Find all keys that start with "feature_flag" terminated by "/" separator
+    session.kv.find('feature_flag', separator='/')
+
     # Check to see if a key called "foo" is set
     if "foo" in session.kv:
         print 'Already Set'
