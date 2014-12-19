@@ -98,7 +98,7 @@ the scope of the full Consulate API.
 
 .. code:: python
 
-    session = consulate.Consulate()
+    session = consulate.Session()
 
     # Set the key named release_flag to True
     session.kv['release_flag'] = True
@@ -129,7 +129,7 @@ the scope of the full Consulate API.
 
 .. code:: python
 
-    session = consulate.Consulate()
+    session = consulate.Session()
 
     # Get all of the service checks for the local agent
     checks = session.agent.checks()
@@ -148,7 +148,7 @@ the scope of the full Consulate API.
 
 .. code:: python
 
-    session = consulate.Consulate()
+    session = consulate.Session()
 
     # Get the health of a individual node
     health = session.health.node('my-node')
