@@ -25,7 +25,7 @@ def prepare_data(fun):
         if kwargs.get('data') and not isinstance(kwargs.get('data'), str):
             kwargs['data'] = json.dumps(kwargs['data'])
         elif len(args) == 3 and not isinstance(args[2], str):
-            args = args[0], args[1], json.dumps(args[2])
+            args = args[0], args[1], args[2]
         return fun(*args, **kwargs)
     return inner
 
@@ -122,10 +122,6 @@ class Response(object):
                         try:
                             row['Value'] = base64.b64decode(row['Value'])
                         except TypeError:
-                            pass
-                        try:
-                            row['Value'] = json.loads(row['Value'])
-                        except (TypeError, ValueError):
                             pass
             if isinstance(value, list) and len(value) == 1:
                 return value[0]
