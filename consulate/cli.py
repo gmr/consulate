@@ -72,7 +72,8 @@ def parse_cli_args():
 
 def main():
     args = parse_cli_args()
-    session = api.Consulate(args.api_host, args.api_port, args.datacenter, args.token)
+    session = api.Consulate(args.api_host, args.api_port, args.datacenter,
+                            args.token)
 
     if args.command == 'register':
 
