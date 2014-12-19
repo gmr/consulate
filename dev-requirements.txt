@@ -3,4 +3,5 @@ httmock
 mock
 nose
 requests
+simplejson
 tornado
