@@ -234,18 +234,25 @@ class KV(_Endpoint):
             raise AttributeError('Error setting "%s" (%s)' %
                                  (item, response.status_code))
 
-    def find(self, prefix):
+    def find(self, prefix, separator=None):
         """Find all keys with the specified prefix, returning a dict of
         matches.
 
         :param str prefix: The prefix to search with
-        :rtype: dict
+        :rtype: mixed
 
         """
-        response = self._get_list([prefix.lstrip('/')], {'recurse': None})
-        results = {}
-        for r in response:
-            results[r['Key']] = r['Value']
+        query_params = {'recurse': None}
+        if separator:
+            query_params['keys'] = prefix
+            query_params['separator'] = separator
+        response = self._get_list([prefix.lstrip('/')], query_params)
+        if separator:
+            results = response
+        else:
+            results = {}
+            for r in response:
+                results[r['Key']] = r['Value']
         return results
 
     def items(self):
