@@ -1,4 +1,6 @@
 coverage
+httmock
+mock
 nose
 requests
 tornado

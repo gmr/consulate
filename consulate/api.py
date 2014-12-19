@@ -1,11 +1,31 @@
 """
-consulate
+consulate.api
+=============
+The :py:mod:`consulate.api` module exposes the main classes in consulate for
+end-user use.
 
-A python client library for Consul
+Primary use is focused on the :py:class:`Session <consulate.api.Session>` or the
+:py:class:`TornadoSession <consulate.api.TornadoSession>` classes which then
+wrap access to consul's HTTP API via the :py:class:`ACL <consulate.api.ACL>`,
+:py:class:`Agent <consulate.api.Agent>`,
+:py:class:`Catalog <consulate.api.Catalog>`,
+:py:class:`Events <consulate.api.Events>`,
+:py:class:`Health <consulate.api.Health>`, :py:class:`KV <consulate.api.KV>`,
+and :py:class:`Status <consulate.api.Status>` classes.
+
+Example use:
+
+.. code:: python
+
+    session = consulate.Session('127.0.0.1', 8500, 'dc1', 'acl-token-value)
+    session.agent.checks()
 
 """
 import logging
-import urllib
+try:
+    from urllib.parse import urlencode  # Python 3
+except ImportError:  # pragma: no cover
+    from urllib import urlencode        # Python 2
 
 from consulate import adapters
 
@@ -15,41 +35,42 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8500
 
 
-class Consulate(object):
+class Session(object):
     """Access the Consul HTTP API via Python
 
-    .. code:: python
-
-        consul = consulate.Consulate()
-        consul.agent.checks()
-
-
+    :param str host: The host name to connect to (Default: localhost)
+    :param int port: The port to connect on (Default: 8500)
+    :param str dc: Specify a specific data center
+    :param str token: Specify a ACL token to use
 
     """
     SCHEME = 'http'
     VERSION = 'v1'
 
-    def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT, dc=None, token=None):
-        self._dc = dc
-        self._host = host
-        self._port = port
-        self._token = token
-        self._adapter = adapters.Request()
-        self.kv = KV(self._base_uri, self._adapter, self._dc, self._token)
-        self.agent = Agent(self._base_uri, self._adapter, self._dc, self._token)
-        self.catalog = Catalog(self._base_uri, self._adapter, self._dc, self._token)
-        self.health = Health(self._base_uri, self._adapter, self._dc, self._token)
-        self.status = Status(self._base_uri, self._adapter, self._dc, self._token)
+    def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT, dc=None,
+                 token=None):
+        base_uri = self._base_uri(host, port)
+        self.adapter = adapters.Request()
+        self.acl = None
+        self.agent = Agent(base_uri, self.adapter, dc, token)
+        self.catalog = Catalog(base_uri, self.adapter, dc, token)
+        self.events = None
+        self.health = Health(base_uri, self.adapter, dc, token)
+        self.kv = KV(base_uri, self.adapter, dc, token)
+        self.status = Status(base_uri, self.adapter, dc, token)
 
-    @property
-    def _base_uri(self):
-        return '%s://%s:%s/%s' % (self.SCHEME,
-                                  self._host,
-                                  self._port,
-                                  self.VERSION)
+    def _base_uri(self, host, port):
+        """Return the base URI to use for API requests
+
+        :param str host: The host name to connect to (Default: localhost)
+        :param int port: The port to connect on (Default: 8500)
+        :rtype: str
+
+        """
+        return '{0}://{1}:{2}/{3}'.format(self.SCHEME, host, port, self.VERSION)
 
 
-class TornadoConsulate(Consulate):
+class TornadoSession(Session):
     pass
 
 
@@ -60,22 +81,22 @@ class _Endpoint(object):
 
     def __init__(self, uri, adapter, dc=None, token=None):
         self._adapter = adapter
-        self._base_uri = '%s/%s' % (uri, self.__class__.__name__.lower())
+        self._base_uri = '{0}/{1}'.format(uri, self.__class__.__name__.lower())
         self._dc = dc
         self._token = token
 
     def _build_uri(self, params, query_params=None):
-        if self._dc or self._token:
-            if not query_params:
-                query_params = dict()
+        if not query_params:
+            query_params = dict()
         if self._dc:
             query_params['dc'] = self._dc
         if self._token:
             query_params['token'] = self._token
+        path = '/'.join(params)
         if query_params:
-            return '%s/%s?%s' % (self._base_uri, '/'.join(params),
-                                 urllib.urlencode(query_params))
-        return '%s/%s' % (self._base_uri, '/'.join(params))
+            return '{0}/{1}?{2}'.format(self._base_uri, path,
+                                        urlencode(query_params))
+        return '{0}/{1}'.format(self._base_uri, path)
 
     def _get(self, params, query_params=None):
         response = self._adapter.get(self._build_uri(params, query_params))
@@ -146,8 +167,8 @@ class KV(_Endpoint):
         item = item.lstrip('/')
         response = self._adapter.delete(self._build_uri([item]))
         if response.status_code != 200:
-            raise KeyError('Error removing "%s" (%s)' %
-                           (item, response.status_code))
+            raise KeyError(
+                'Error removing "{0}" ({1})'.format(item, response.status_code))
 
     def __getitem__(self, item):
         """Get a value from the Consul Key/Value store, returning it fully
@@ -166,9 +187,27 @@ class KV(_Endpoint):
             except AttributeError:
                 return response.body
         elif response.status_code == 404:
-            raise KeyError('Key not found (%s)' % item)
+            raise KeyError('Key not found ({0})'.format(item))
         else:
-            raise KeyError('Unknown response (%s)' % response.status_code)
+            raise KeyError(
+                'Unknown response ({0})'.format(response.status_code))
+
+    def __iter__(self):
+        """Iterate over all the keys in the KV store
+
+        :rtype: iterator
+
+        """
+        for key in self.keys():
+            yield key
+
+    def __len__(self):
+        """Return the number if items in the KV service.
+
+        :return: int
+
+        """
+        return len(self._get_all_items())
 
     def __setitem__(self, item, value):
         """Set a value in the Consul Key/Value store, using the CAS mechanism
@@ -181,18 +220,16 @@ class KV(_Endpoint):
         :raises: KeyError
 
         """
-        item = item.lstrip('/')
-        response = self._adapter.get(self._build_uri([item]))
-        index = 0
-        if response.status_code == 200:
-            index = response.body.get('ModifyIndex')
-            if response.body.get('Value') == value:
-                return True
-        response = self._adapter.put(self._build_uri([item],
-                                                     {'index': index}), value)
-        if not response.status_code == 200 or not response.body:
-            raise AttributeError('Error setting "%s" (%s)' %
-                                 (item, response.status_code))
+        self._set_item(item, value)
+
+    def delete(self, item):
+        """Delete an item from the Consul Key/Value store.
+
+        :param str item: The item key
+        :raises: KeyError
+
+        """
+        return self.__delitem__(item)
 
     def get(self, item, default=None):
         """Get a value from the Consul Key/Value store, returning it fully
@@ -208,14 +245,102 @@ class KV(_Endpoint):
         except KeyError:
             return default
 
-    def remove(self, item):
-        """Remove a value from the Consul Key/Value store.
+    def find(self, prefix, separator=None):
+        """Find all keys with the specified prefix, returning a dict of
+        matches.
 
-        :param str item: The item key
-        :raises: KeyError
+        Example:
+
+        .. code:: python
+            >>> session.kv.find('b')
+            {u'baz': 'qux', u'bar': 'baz'
+
+        :param str prefix: The prefix to search with
+        :rtype: dict
 
         """
-        return self.__delitem__(item)
+        query_params = {'recurse': None}
+        if separator:
+            query_params['keys'] = prefix
+            query_params['separator'] = separator
+        response = self._get_list([prefix.lstrip('/')], query_params)
+        if separator:
+            results = response
+        else:
+            results = {}
+            for row in response:
+                results[row['Key']] = row['Value']
+        return results
+
+    def items(self):
+        """Return a dict of all of the key/value pairs in the Consul KV
+        service.
+
+        Example:
+
+        .. code:: python
+
+            >>> session.kv.items()
+            {u'foo': 'bar', u'bar': 'baz', u'quz': True, u'corgie': 'dog'}
+
+       :rtype: dict
+
+        """
+        return self.find('')
+
+    def iteritems(self):
+        """Iterate over the dict of key/value pairs in the Consul KV service.
+
+        Example:
+
+        .. code:: python
+
+            >>> for key, value in session.kv.iteritems():
+            ...     print(key, value)
+            ...
+            (u'bar', 'baz')
+            (u'foo', 'bar')
+            (u'quz', True)
+
+       :rtype: iterator
+
+        """
+        for item in self._get_all_items():
+            yield item['Key'], item['Value']
+
+    def keys(self):
+        """Return a list of all of the keys in the Consul KV service.
+
+        Example:
+
+        .. code:: python
+
+            >>> session.kv.keys()
+            [u'bar', u'foo', u'quz']
+
+        :rtype: list
+
+        """
+        return sorted([row['Key'] for row in self._get_all_items()])
+
+    def records(self):
+        """Return a list of tuples for all of the records in the KV database
+
+        Example:
+
+        ..code :: python
+
+            >>> session.kv.records()
+            [(u'bar', 0, 'baz'),
+             (u'corgie', 128, 'dog'),
+             (u'foo', 0, 'bar'),
+             (u'quz', 0, True)]
+
+        :rtype: list of (Key, Flags, Value)
+
+        """
+        return [(item['Key'], item['Flags'], item['Value'])
+                for item in self._get_all_items()]
 
     def set(self, item, value):
         """Set a value in the Consul Key/Value store, using the CAS mechanism
@@ -233,6 +358,44 @@ class KV(_Endpoint):
     def set_record(self, item, flags=0, value=None):
         """Set a full record, including the item flag
 
+        :param str item: The key to set
+        :param mixed value: The value to set
+
+        """
+        self._set_item(item, value, flags)
+
+    def values(self):
+        """Return a list of all of the values in the Consul KV service.
+
+        Example:
+
+        .. code:: python
+
+            >>> session.kv.values()
+            [True, 'bar', 'baz']
+
+        :rtype: list
+
+        """
+        return [row['Value'] for row in self._get_all_items()]
+
+    def _get_all_items(self):
+        """Return a list of all item sin the Consul KV index.
+
+        :rtype: list
+
+        """
+        return self._get_list([''], {'recurse': None})
+
+    def _set_item(self, item, value, flags=None):
+        """Internal method for setting a key/value pair with flags in the
+        Consul KV service.
+
+        :param str item: The key to set
+        :param mixed value: The value to set
+        :param int flags: User defined flags to set
+        :raises: KeyError
+
         """
         item = item.lstrip('/')
         response = self._adapter.get(self._build_uri([item]))
@@ -241,51 +404,14 @@ class KV(_Endpoint):
             index = response.body.get('ModifyIndex')
             if response.body.get('Value') == value:
                 return True
-        response = self._adapter.put(self._build_uri([item],
-                                                     {'index': index,
-                                                      'flags': flags}), value)
+        query_params = {'index': index}
+        if flags is not None:
+            query_params['flags'] = flags
+        response = self._adapter.put(self._build_uri([item], query_params),
+                                     value)
         if not response.status_code == 200 or not response.body:
-            raise AttributeError('Error setting "%s" (%s)' %
-                                 (item, response.status_code))
-
-    def find(self, prefix, separator=None):
-        """Find all keys with the specified prefix, returning a dict of
-        matches.
-
-        :param str prefix: The prefix to search with
-        :rtype: mixed
-
-        """
-        query_params = {'recurse': None}
-        if separator:
-            query_params['keys'] = prefix
-            query_params['separator'] = separator
-        response = self._get_list([prefix.lstrip('/')], query_params)
-        if separator:
-            results = response
-        else:
-            results = {}
-            for r in response:
-                results[r['Key']] = r['Value']
-        return results
-
-    def items(self):
-        """Return a dict of all of the key/value pairs in the Consul kv
-        service.
-
-       :rtype: dict
-
-        """
-        return self.find('')
-
-    def records(self):
-        """Return a list of tuples for all of the records in the kv database
-
-        :rtype: list of (Key, Flags, Value)
-
-        """
-        response = self._get_list([''], {'recurse': None})
-        return [(r['Key'], r['Flags'], r['Value']) for r in response]
+            raise KeyError(
+                'Error setting "{0}" ({1})'.format(item, response.status_code))
 
 
 class Agent(_Endpoint):
