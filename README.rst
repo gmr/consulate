@@ -4,7 +4,7 @@ Consulate: A Consul Client Library
 Consulate is a Python client library and set of application for the Consul
 service discovery and configuration system.
 
-|Version| |Downloads| |License| |Build Status|
+|Version| |Downloads| |License| |Build Status| |Coverage|
 
 Installation
 ------------
@@ -169,3 +169,6 @@ For more examples, check out the Consulate documentation.
 
 .. |Build Status| image:: https://travis-ci.org/gmr/consulate.svg?branch=master
     :target: https://travis-ci.org/gmr/consulate
+
+.. |Coverage| image:: https://codecov.io/github/gmr/consulate/coverage.svg?branch=master
+    :target: https://codecov.io/github/gmr/consulate?branch=master
