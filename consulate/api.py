@@ -29,16 +29,17 @@ class Consulate(object):
     SCHEME = 'http'
     VERSION = 'v1'
 
-    def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT, dc=None):
+    def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT, dc=None, token=None):
         self._dc = dc
         self._host = host
         self._port = port
+        self._token = token
         self._adapter = adapters.Request()
-        self.kv = KV(self._base_uri, self._adapter, self._dc)
-        self.agent = Agent(self._base_uri, self._adapter, self._dc)
-        self.catalog = Catalog(self._base_uri, self._adapter, self._dc)
-        self.health = Health(self._base_uri, self._adapter, self._dc)
-        self.status = Status(self._base_uri, self._adapter, self._dc)
+        self.kv = KV(self._base_uri, self._adapter, self._dc, self._token)
+        self.agent = Agent(self._base_uri, self._adapter, self._dc, self._token)
+        self.catalog = Catalog(self._base_uri, self._adapter, self._dc, self._token)
+        self.health = Health(self._base_uri, self._adapter, self._dc, self._token)
+        self.status = Status(self._base_uri, self._adapter, self._dc, self._token)
 
     @property
     def _base_uri(self):
@@ -57,16 +58,20 @@ class _Endpoint(object):
 
     KEYWORD = ''
 
-    def __init__(self, uri, adapter, dc=None):
+    def __init__(self, uri, adapter, dc=None, token=None):
         self._adapter = adapter
         self._base_uri = '%s/%s' % (uri, self.__class__.__name__.lower())
         self._dc = dc
+        self._token = token
 
     def _build_uri(self, params, query_params=None):
-        if self._dc:
+        if self._dc or self._token:
             if not query_params:
                 query_params = dict()
+        if self._dc:
             query_params['dc'] = self._dc
+        if self._token:
+            query_params['token'] = self._token
         if query_params:
             return '%s/%s?%s' % (self._base_uri, '/'.join(params),
                                  urllib.urlencode(query_params))
@@ -281,10 +286,10 @@ class Agent(_Endpoint):
     Consul cluster.
 
     """
-    def __init__(self, uri, adapter, dc=None):
-        super(Agent, self).__init__(uri, adapter, dc)
-        self.check = Agent.Check(self._base_uri, adapter, dc)
-        self.service = Agent.Service(self._base_uri, adapter, dc)
+    def __init__(self, uri, adapter, dc=None, token=None):
+        super(Agent, self).__init__(uri, adapter, dc, token)
+        self.check = Agent.Check(self._base_uri, adapter, dc, token)
+        self.service = Agent.Service(self._base_uri, adapter, dc, token)
 
     class Check(_Endpoint):
         """One of the primary roles of the agent is the management of system
@@ -542,8 +547,8 @@ class Catalog(_Endpoint):
     Consul cluster.
 
     """
-    def __init__(self, uri, adapter, dc=None):
-        super(Catalog, self).__init__(uri, adapter, dc)
+    def __init__(self, uri, adapter, dc=None, token=None):
+        super(Catalog, self).__init__(uri, adapter, dc, token)
 
     def register(self,  node, address, datacenter=None,
                  service=None, check=None):

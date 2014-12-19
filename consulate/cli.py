@@ -15,6 +15,8 @@ def parse_cli_args():
                         help='The consul API port to connect to')
     parser.add_argument('--datacenter', default=None,
                         help='The datacenter to specify for the connection')
+    parser.add_argument('--token', default=None,
+                        help='ACL token')
 
     sparsers = parser.add_subparsers(title='Commands', dest='command')
 
@@ -70,7 +72,7 @@ def parse_cli_args():
 
 def main():
     args = parse_cli_args()
-    session = api.Consulate(args.api_host, args.api_port, args.datacenter)
+    session = api.Consulate(args.api_host, args.api_port, args.datacenter, args.token)
 
     if args.command == 'register':
 
