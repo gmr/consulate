@@ -28,7 +28,13 @@ API Documentation
    :maxdepth: 2
 
    session
+   acl
+   agent
+   catalog
+   events
+   health
    kv
+   status
 
 
 Version History
