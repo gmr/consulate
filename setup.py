@@ -1,9 +1,13 @@
 from setuptools import setup
+import sys
 
 install_requires = ['requests']
 
+if sys.version_info < (2, 7, 0):
+    install_requires.append('argparse')
+
 setup(name='consulate',
-      version='0.2.0',
+      version='0.3.0',
       description="A Client library for the Consul",
       maintainer="Gavin M. Roy",
       maintainer_email="gavinr@aweber.com",
