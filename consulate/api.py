@@ -50,14 +50,84 @@ class Session(object):
     def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT, dc=None,
                  token=None):
         base_uri = self._base_uri(host, port)
-        self.adapter = adapters.Request()
-        self.acl = None
-        self.agent = Agent(base_uri, self.adapter, dc, token)
-        self.catalog = Catalog(base_uri, self.adapter, dc, token)
-        self.events = None
-        self.health = Health(base_uri, self.adapter, dc, token)
-        self.kv = KV(base_uri, self.adapter, dc, token)
-        self.status = Status(base_uri, self.adapter, dc, token)
+        self._adapter = adapters.Request()
+        self._acl = None
+        self._agent = Agent(base_uri, self._adapter, dc, token)
+        self._catalog = Catalog(base_uri, self._adapter, dc, token)
+        self._events = None
+        self._health = Health(base_uri, self._adapter, dc, token)
+        self._kv = KV(base_uri, self._adapter, dc, token)
+        self._status = Status(base_uri, self._adapter, dc, token)
+
+    @property
+    def acl(self):
+        """Access the Consul
+        `ACL <https://www.consul.io/docs/agent/http.html#acl>`_ API
+
+        :rtype: :py:class:`consulate.api.ACL`
+
+        """
+        return self._acl
+
+    @property
+    def agent(self):
+        """Access the Consul
+        `Agent <https://www.consul.io/docs/agent/http.html#agent>`_ API
+
+        :rtype: :py:class:`consulate.api.Agent`
+
+        """
+        return self._agent
+
+    @property
+    def catalog(self):
+        """Access the Consul
+        `Catalog <https://www.consul.io/docs/agent/http.html#catalog>`_ API
+
+        :rtype: :py:class:`consulate.api.Catalog`
+
+        """
+        return self._catalog
+
+    @property
+    def events(self):
+        """Access the Consul
+        `Events <https://www.consul.io/docs/agent/http.html#events>`_ API
+
+        :rtype: :py:class:`consulate.api.Events`
+
+        """
+        return self._events
+
+    @property
+    def health(self):
+        """Access the Consul
+        `Health <https://www.consul.io/docs/agent/http.html#health>`_ API
+
+        :rtype: :py:class:`consulate.api.Health`
+
+        """
+        return self._health
+
+    @property
+    def kv(self):
+        """Access the Consul
+        `KV <https://www.consul.io/docs/agent/http.html#kv>`_ API
+
+        :rtype: :py:class:`consulate.api.KV`
+
+        """
+        return self._kv
+
+    @property
+    def status(self):
+        """Access the Consul
+        `Status <https://www.consul.io/docs/agent/http.html#status>`_ API
+
+        :rtype: :py:class:`consulate.api.Status`
+
+        """
+        return self._status
 
     def _base_uri(self, host, port):
         """Return the base URI to use for API requests
@@ -112,30 +182,63 @@ class _Endpoint(object):
 
 
 class KV(_Endpoint):
-    """The Key/Value class implements an attribute based interface for working
-    with the Consul key/value store. Simply use attributes on the ``Consul.kv``
-    object to get/set/delete values in the key/value store.
+    """The Key/Value class implements a :py:class:`dict` like interface for
+    working with the Key/Value service. Simply use items on the
+    :py:class:`consulate.Session` like you would with a :py:class:`dict` to
+    :py:meth:`get <consulate.api.KV.get>`,
+    :py:meth:`set <consulate.api.KV.set>`, or
+    :py:meth:`delete <consulate.api.KV.delete>` values in the key/value store.
 
-    Examples:
+    Additionally, :py:class:`KV <consulate.api.KV>` acts as an
+    :py:meth:`iterator <consulate.api.KV.__iter__>`, providing methods to
+    iterate over :py:meth:`keys <consulate.api.KV.keys>`,
+    :py:meth:`values <consulate.api.KV.values>`,
+    :py:meth:`keys and values <consulate.api.KV.iteritems>`, etc.
+
+    Should you need access to get or set the flag value, the
+    :py:meth:`get_record <consulate.api.KV.get_record>`,
+    :py:meth:`set_record <consulate.api.KV.set_record>`,
+    and :py:meth:`records <consulate.api.KV.records>` provide a way to access
+    the additional fields exposed by the KV service.
+
+    *Examples of use:*
 
     .. code:: python
 
-        session = consulate.Consulate()
+        import consulate
+
+        session = consulate.Session()
 
         # Set the key named release_flag to True
-        session.kv.release_flag = True
+        session.kv['release_flag'] = True
 
         # Get the value for the release_flag, if not set, raises AttributeError
         try:
-            should_release_feature = session.kv.release_flag
+            should_release_feature = session.kv['release_flag']
         except AttributeError:
             should_release_feature = False
 
         # Delete the release_flag key
-        del session.kv.release_flag
+        del session.kv['release_flag']
+
+        # Fetch how many rows are set in the KV store
+        print(len(self.session.kv))
+
+        # Iterate over all keys in the kv store
+        for key in session.kv:
+            print('Key "{0}" set'.format(key))
+
+        # Iterate over all key/value pairs in the kv store
+        for key, value in session.kv.iteritems():
+            print('{0}: {1}'.format(key, value))
+
+        # Iterate over all keys in the kv store
+        for value in session.kv.values:
+            print(value)
 
         # Find all keys that start with "fl"
-        session.kv.find('fl')
+        for key in session.kv.find('fl'):
+            print('Key "{0}" found'.format(key))
 
         # Check to see if a key called "foo" is set
         if "foo" in session.kv:
@@ -146,7 +249,7 @@ class KV(_Endpoint):
 
     """
     def __contains__(self, item):
-        """Return True if there is a value set in the Consul kv service for the
+        """Return True if there is a value set in the Key/Value service for the
         given key.
 
         :param str item: The key to check for
@@ -158,7 +261,7 @@ class KV(_Endpoint):
         return response.status_code == 200
 
     def __delitem__(self, item):
-        """Delete an item from the Consul Key/Value store.
+        """Delete an item from the Key/Value service
 
         :param str item: The key name
         :raises: KeyError
@@ -171,7 +274,7 @@ class KV(_Endpoint):
                 'Error removing "{0}" ({1})'.format(item, response.status_code))
 
     def __getitem__(self, item):
-        """Get a value from the Consul Key/Value store, returning it fully
+        """Get a value from the Key/Value service, returning it fully
         demarshaled if possible.
 
         :param str item: The item name
@@ -179,21 +282,14 @@ class KV(_Endpoint):
         :raises: KeyError
 
         """
-        item = item.lstrip('/')
-        response = self._adapter.get(self._build_uri([item]))
-        if response.status_code == 200:
-            try:
-                return response.body.get('Value', response.body)
-            except AttributeError:
-                return response.body
-        elif response.status_code == 404:
-            raise KeyError('Key not found ({0})'.format(item))
-        else:
-            raise KeyError(
-                'Unknown response ({0})'.format(response.status_code))
+        value = self._get_item(item)
+        try:
+            return value.get('Value', value)
+        except AttributeError:
+            return value
 
     def __iter__(self):
-        """Iterate over all the keys in the KV store
+        """Iterate over all the keys in the Key/Value service
 
         :rtype: iterator
 
@@ -202,7 +298,7 @@ class KV(_Endpoint):
             yield key
 
     def __len__(self):
-        """Return the number if items in the KV service.
+        """Return the number if items in the Key/Value service
 
         :return: int
 
@@ -210,7 +306,7 @@ class KV(_Endpoint):
         return len(self._get_all_items())
 
     def __setitem__(self, item, value):
-        """Set a value in the Consul Key/Value store, using the CAS mechanism
+        """Set a value in the Key/Value service, using the CAS mechanism
         to ensure that the set is atomic. If the value passed in is not a
         string, an attempt will be made to JSON encode the value prior to
         setting it.
@@ -223,7 +319,7 @@ class KV(_Endpoint):
         self._set_item(item, value)
 
     def delete(self, item):
-        """Delete an item from the Consul Key/Value store.
+        """Delete an item from the Key/Value service
 
         :param str item: The item key
         :raises: KeyError
@@ -232,7 +328,7 @@ class KV(_Endpoint):
         return self.__delitem__(item)
 
     def get(self, item, default=None):
-        """Get a value from the Consul Key/Value store, returning it fully
+        """Get a value from the Key/Value service, returning it fully
         demarshaled if possible.
 
         :param str item: The item key
@@ -245,15 +341,30 @@ class KV(_Endpoint):
         except KeyError:
             return default
 
+    def get_record(self, item, default=None):
+        """Get the full record from the Key/Value service, returning
+        all fields including the flag.
+
+        :param str item: The item key
+        :rtype: dict
+        :raises: KeyError
+
+        """
+        try:
+            return self._get_item(item)
+        except KeyError:
+            return default
+
     def find(self, prefix, separator=None):
         """Find all keys with the specified prefix, returning a dict of
         matches.
 
-        Example:
+        *Example:*
 
         .. code:: python
+
             >>> session.kv.find('b')
-            {u'baz': 'qux', u'bar': 'baz'
+            {'baz': 'qux', 'bar': 'baz'}
 
         :param str prefix: The prefix to search with
         :rtype: dict
@@ -273,25 +384,24 @@ class KV(_Endpoint):
         return results
 
     def items(self):
-        """Return a dict of all of the key/value pairs in the Consul KV
-        service.
+        """Return a dict of all of the key/value pairs in the Key/Value service
 
-        Example:
+        *Example:*
 
         .. code:: python
 
             >>> session.kv.items()
-            {u'foo': 'bar', u'bar': 'baz', u'quz': True, u'corgie': 'dog'}
+            {'foo': 'bar', 'bar': 'baz', 'quz': True, 'corgie': 'dog'}
 
        :rtype: dict
 
         """
-        return self.find('')
+        return [{item['Key']: item['Value']} for item in self._get_all_items()]
 
     def iteritems(self):
-        """Iterate over the dict of key/value pairs in the Consul KV service.
+        """Iterate over the dict of key/value pairs in the Key/Value service
 
-        Example:
+        *Example:*
 
         .. code:: python
 
@@ -309,9 +419,9 @@ class KV(_Endpoint):
             yield item['Key'], item['Value']
 
     def keys(self):
-        """Return a list of all of the keys in the Consul KV service.
+        """Return a list of all of the keys in the Key/Value service
 
-        Example:
+        *Example:*
 
         .. code:: python
 
@@ -324,11 +434,12 @@ class KV(_Endpoint):
         return sorted([row['Key'] for row in self._get_all_items()])
 
     def records(self):
-        """Return a list of tuples for all of the records in the KV database
+        """Return a list of tuples for all of the records in the Key/Value
+        service
 
-        Example:
+        *Example:*
 
-        ..code :: python
+        .. code:: python
 
             >>> session.kv.records()
             [(u'bar', 0, 'baz'),
@@ -343,7 +454,7 @@ class KV(_Endpoint):
                 for item in self._get_all_items()]
 
     def set(self, item, value):
-        """Set a value in the Consul Key/Value store, using the CAS mechanism
+        """Set a value in the Key/Value service, using the CAS mechanism
         to ensure that the set is atomic. If the value passed in is not a
         string, an attempt will be made to JSON encode the value prior to
         setting it.
@@ -365,9 +476,9 @@ class KV(_Endpoint):
         self._set_item(item, value, flags)
 
     def values(self):
-        """Return a list of all of the values in the Consul KV service.
+        """Return a list of all of the values in the Key/Value service
 
-        Example:
+        *Example:*
 
         .. code:: python
 
@@ -380,16 +491,36 @@ class KV(_Endpoint):
         return [row['Value'] for row in self._get_all_items()]
 
     def _get_all_items(self):
-        """Return a list of all item sin the Consul KV index.
+        """Internal method to return a list of all items in the Key/Value
+        service
 
         :rtype: list
 
         """
         return self._get_list([''], {'recurse': None})
 
+    def _get_item(self, item):
+        """Internal method to get the full item record from the Key/Value
+        service
+
+        :param str item: The item to get
+        :rtype: dict
+        :raises: KeyError
+
+        """
+        item = item.lstrip('/')
+        response = self._adapter.get(self._build_uri([item]))
+        if response.status_code == 200:
+            return response.body
+        elif response.status_code == 404:
+            raise KeyError('Key not found ({0})'.format(item))
+        else:
+            raise KeyError(
+                'Unknown response ({0})'.format(response.status_code))
+
     def _set_item(self, item, value, flags=None):
         """Internal method for setting a key/value pair with flags in the
-        Consul KV service.
+        Key/Value service
 
         :param str item: The key to set
         :param mixed value: The value to set
