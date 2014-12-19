@@ -77,6 +77,27 @@ class SessionTests(unittest.TestCase):
                                                      self.adapter, self.dc,
                                                      self.token))
 
+    def test_acl_property(self):
+        self.assertEqual(self.session.acl, self.session._acl)
+
+    def test_agent_property(self):
+        self.assertEqual(self.session.agent, self.session._agent)
+
+    def test_catalog_property(self):
+        self.assertEqual(self.session.catalog, self.session._catalog)
+
+    def test_events_property(self):
+        self.assertEqual(self.session.events, self.session._events)
+
+    def test_health_property(self):
+        self.assertEqual(self.session.health, self.session._health)
+
+    def test_kv_property(self):
+        self.assertEqual(self.session.kv, self.session._kv)
+
+    def test_status_property(self):
+        self.assertEqual(self.session.status, self.session._status)
+
 
 class EndpointBuildURITests(unittest.TestCase):
 
