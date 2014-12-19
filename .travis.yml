@@ -6,7 +6,25 @@ python:
     - 3.2
     - 3.3
     - 3.4
+before_install:
+    - sudo apt-get install -y -q curl unzip screen
+    - curl -L -o /tmp/0.4.1_linux_amd64.zip https://dl.bintray.com/mitchellh/consul/0.4.1_linux_amd64.zip
+    - unzip /tmp/0.4.1_linux_amd64.zip
+    - screen -dmS consul consul agent -data-dir=/tmp/consul -server -bootstrap
+    - pip install codecov
 install:
-    - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install --use-mirrors unittest2; fi
-    - "pip install -r requirements.txt --use-mirrors"
-script: nosetests
+    - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install --use-mirrors argparse unittest2; fi
+    - pip install -r dev-requirements.txt
+script: nosetests --with-coverage --cover-package=consulate
+after_success:
+  - codecov
+deploy:
+  distributions: sdist bdist_wheel
+  provider: pypi
+  user: crad
+  on:
+    python: 2.7
+    tags: true
+    all_branches: true
+  password:
+    secure: "W3mHi2tzX34KcN82tdVPZwS0RHBGkI2Cy/df18ehsVKoOzWzQvaQKh2Jh1LIBOvdZCyih+KltmMNT8ounqUd+ql6kBFd0kotQk3C3x5R5KlpbhQ4BNKp++grs+iycPwK6qnJISypt2d3ykJNgqUgfBI0p+7XVpMkBY0GIXGNcvk="

@@ -140,14 +140,14 @@ class KV(_Endpoint):
         """Delete an item from the Consul Key/Value store.
 
         :param str item: The key name
-        :raises: AttributeError
+        :raises: KeyError
 
         """
         item = item.lstrip('/')
         response = self._adapter.delete(self._build_uri([item]))
         if response.status_code != 200:
-            raise AttributeError('Error removing "%s" (%s)' %
-                                 (item, response.status_code))
+            raise KeyError('Error removing "%s" (%s)' %
+                           (item, response.status_code))
 
     def __getitem__(self, item):
         """Get a value from the Consul Key/Value store, returning it fully
@@ -198,7 +198,7 @@ class KV(_Endpoint):
         """Get a value from the Consul Key/Value store, returning it fully
         demarshaled if possible.
 
-        :param str item: The item name
+        :param str item: The item key
         :rtype: mixed
         :raises: KeyError
 
@@ -207,6 +207,15 @@ class KV(_Endpoint):
             return self.__getitem__(item)
         except KeyError:
             return default
+
+    def remove(self, item):
+        """Remove a value from the Consul Key/Value store.
+
+        :param str item: The item key
+        :raises: KeyError
+
+        """
+        return self.__delitem__(item)
 
     def set(self, item, value):
         """Set a value in the Consul Key/Value store, using the CAS mechanism
