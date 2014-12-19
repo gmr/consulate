@@ -30,7 +30,7 @@ class BaseTestCase(unittest.TestCase):
     def tearDown(self):
         for key in self.used_keys:
             try:
-                self.session.kv.remove(key)
+                self.session.kv.delete(key)
             except KeyError:
                 pass
 
@@ -60,8 +60,8 @@ class TestKVSet(BaseTestCase):
 
     @generate_key
     def test_set_item_get_item_str_value(self, key):
-        self.session.kv[key] = self.__class__.__name__
-        self.assertEqual(self.session.kv[key], self.__class__.__name__)
+        self.session.kv[key] = b'foo'
+        self.assertEqual(self.session.kv[key], 'foo')
 
     @generate_key
     def test_set_get_bool_value(self, key):
@@ -75,6 +75,6 @@ class TestKVSet(BaseTestCase):
 
     @generate_key
     def test_set_item_get_item_str_value(self, key):
-        self.session.kv.set(key, self.__class__.__name__)
-        self.assertEqual(self.session.kv.get(key), self.__class__.__name__)
+        self.session.kv.set(key, b'foo')
+        self.assertEqual(self.session.kv.get(key), 'foo')
 
