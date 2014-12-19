@@ -182,8 +182,8 @@ class _Endpoint(object):
 
 
 class KV(_Endpoint):
-    """The Key/Value class implements a :py:class:`dict` like interface for
-    working with the Key/Value service. Simply use items on the
+    """The :py:class:`consul.api.KV` class implements a :py:class:`dict` like
+    interface for working with the Key/Value service. Simply use items on the
     :py:class:`consulate.Session` like you would with a :py:class:`dict` to
     :py:meth:`get <consulate.api.KV.get>`,
     :py:meth:`set <consulate.api.KV.set>`, or
@@ -200,52 +200,6 @@ class KV(_Endpoint):
     :py:meth:`set_record <consulate.api.KV.set_record>`,
     and :py:meth:`records <consulate.api.KV.records>` provide a way to access
     the additional fields exposed by the KV service.
-
-    *Examples of use:*
-
-    .. code:: python
-
-        import consulate
-
-        session = consulate.Session()
-
-        # Set the key named release_flag to True
-        session.kv['release_flag'] = True
-
-        # Get the value for the release_flag, if not set, raises AttributeError
-        try:
-            should_release_feature = session.kv['release_flag']
-        except AttributeError:
-            should_release_feature = False
-
-        # Delete the release_flag key
-        del session.kv['release_flag']
-
-        # Fetch how many rows are set in the KV store
-        print(len(self.session.kv))
-
-        # Iterate over all keys in the kv store
-        for key in session.kv:
-            print('Key "{0}" set'.format(key))
-
-        # Iterate over all key/value pairs in the kv store
-        for key, value in session.kv.iteritems():
-            print('{0}: {1}'.format(key, value))
-
-        # Iterate over all keys in the kv store
-        for value in session.kv.values:
-            print(value)
-
-        # Find all keys that start with "fl"
-        for key in session.kv.find('fl'):
-            print('Key "{0}" found'.format(key))
-
-        # Check to see if a key called "foo" is set
-        if "foo" in session.kv:
-            print 'Already Set'
-
-        # Return all of the items in the key/value store
-        session.kv.items()
 
     """
     def __contains__(self, item):
