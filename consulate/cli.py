@@ -98,7 +98,7 @@ def main():
             with open(args.restore_file, 'rb') as handle:
                 data = json.load(handle)
                 for row in data:
-                    session.kv.set_record(row[0], row[1], row[2].encode('utf-8'))
+                    session.kv.set_record(row[0], row[1], row[2])
 
         elif args.action == 'del':
             del session.kv[args.key]

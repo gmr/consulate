@@ -485,15 +485,17 @@ class KV(_Endpoint):
         item = item.lstrip('/')
         response = self._adapter.get(self._build_uri([item]))
         index = 0
+        if isinstance(value, (str, unicode)):
+            value = value.encode('utf-8')
         if response.status_code == 200:
             index = response.body.get('ModifyIndex')
-            if response.body.get('Value') == value.encode('utf-8'):
+            if response.body.get('Value') == value:
                 return True
         query_params = {'index': index}
         if flags is not None:
             query_params['flags'] = flags
         response = self._adapter.put(self._build_uri([item], query_params),
-                                     value.encode('utf-8'))
+                                     value)
         if not response.status_code == 200 or not response.body:
             raise KeyError(
                 'Error setting "{0}" ({1})'.format(item, response.status_code))
