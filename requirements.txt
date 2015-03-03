@@ -1,2 +1,3 @@
-requests
-simplejson
+requests==2.5.3
+simplejson==3.6.5
+tornado==4.1
