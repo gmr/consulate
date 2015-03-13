@@ -87,3 +87,10 @@ class TestKVSet(BaseTestCase):
         self.session.kv.set(key, u'✈')
         print(self.session.kv.get(key))
         self.assertEqual(self.session.kv.get(key), u'✈')
+
+    @unittest.skipIf(not PYTHON3, 'No native unicode strings in Python2')
+    @generate_key
+    def test_set_item_get_item_unicode_value(self, key):
+        self.session.kv.set(key, '✈')
+        print(self.session.kv.get(key))
+        self.assertEqual(self.session.kv.get(key), '✈')
