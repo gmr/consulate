@@ -12,7 +12,7 @@ import uuid
 
 import consulate
 
-from consulate.adapters import PYTHON3
+from consulate.utils import PYTHON3
 
 
 def generate_key(func):
@@ -84,5 +84,6 @@ class TestKVSet(BaseTestCase):
     @unittest.skipIf(PYTHON3, 'No unicode strings in Python3')
     @generate_key
     def test_set_item_get_item_unicode_value(self, key):
-        self.session.kv.set(key, u'\u2708')
-        self.assertEqual(self.session.kv.get(key), u'\u2708')
+        self.session.kv.set(key, u'✈')
+        print(self.session.kv.get(key))
+        self.assertEqual(self.session.kv.get(key), u'✈')
