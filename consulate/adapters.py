@@ -66,8 +66,9 @@ class Request(object):
             headers = {'Content-Type': CONTENT_FORM}
         else:
             headers = {'Content-Type': CONTENT_JSON}
-        response = self.session.put(uri, data=data.encode('utf-8'),
-                                    headers=headers)
+        if not utils.PYTHON3:
+            data = data.encode('utf-8')
+        response = self.session.put(uri, data=data, headers=headers)
         return Response(response.status_code,
                         response.content,
                         response.headers)
