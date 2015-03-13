@@ -1,0 +1,8 @@
+{
+  "acl_datacenter": "test",
+  "acl_master_token": "9ae5fe1a-6b38-47e5-a0e7-f06b8b2fa645",
+  "bootstrap": true,
+  "data_dir": "/tmp/consul",
+  "datacenter": "test",
+  "server": true
+}

@@ -1,3 +1,4 @@
+import json
 import httmock
 import mock
 try:
@@ -13,6 +14,8 @@ import uuid
 from consulate import api
 from consulate import adapters
 
+CONSUL_CONFIG = json.load(open('consul-test.json', 'r'))
+
 
 class SessionTests(unittest.TestCase):
 
@@ -21,14 +24,15 @@ class SessionTests(unittest.TestCase):
     @mock.patch('consulate.api.Catalog')
     @mock.patch('consulate.api.KV')
     @mock.patch('consulate.api.Health')
+    @mock.patch('consulate.api.ACL')
     @mock.patch('consulate.api.Status')
-    def setUp(self, status, health, kv, catalog, agent, adapter):
+    def setUp(self, status, acl, health, kv, catalog, agent, adapter):
         self.host = '127.0.0.1'
         self.port = 8500
-        self.dc = str(uuid.uuid4())
-        self.token = str(uuid.uuid4())
+        self.dc = CONSUL_CONFIG['datacenter']
+        self.token = CONSUL_CONFIG['acl_master_token']
 
-        self.acl = None
+        self.acl = acl
         self.adapter = adapter
         self.agent = agent
         self.catalog = catalog
@@ -46,7 +50,9 @@ class SessionTests(unittest.TestCase):
                           self.base_uri)
 
     def test_acl_initialization(self):
-        self.assertIsNone(self.session.acl)
+        self.assertTrue(self.acl.called_once_with(self.base_uri,
+                                                  self.adapter, self.dc,
+                                                  self.token))
 
     def test_adapter_initialization(self):
         self.assertTrue(self.adapter.called_once_with())

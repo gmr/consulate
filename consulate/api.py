@@ -52,7 +52,7 @@ class Session(object):
                  token=None):
         base_uri = self._base_uri(host, port)
         self._adapter = adapters.Request()
-        self._acl = None
+        self._acl = ACL(base_uri, self._adapter, dc, token)
         self._agent = Agent(base_uri, self._adapter, dc, token)
         self._catalog = Catalog(base_uri, self._adapter, dc, token)
         self._events = None
@@ -976,6 +976,56 @@ class Health(_Endpoint):
 
         """
         return self._get_list(['state', state])
+
+
+class ACL(_Endpoint):
+    """The ACL endpoints are used to create, update, destroy, and query ACL
+    tokens.
+
+    """
+    def create(self, name, acl_type='client', rules=None):
+        """The create endpoint is used to make a new token. A token has a name,
+        a type, and a set of ACL rules.
+
+        The ``name`` property is opaque to Consul. To aid human operators, it
+        should be a meaningful indicator of the ACL's purpose.
+
+        ``acl_type`` is either client or management. A management token is
+        comparable to a root user and has the ability to perform any action
+        including creating, modifying, and deleting ACLs.
+
+        By contrast, a client token can only perform actions as permitted by
+        the rules associated. Client tokens can never manage ACLs. Given this
+        limitation, only a management token can be used to make requests to
+        the create endpoint.
+
+        ``rules`` is a HCL string defining the rule policy. See
+        `https://consul.io/docs/internals/acl.html`_ for more information on
+        defining rules.
+
+        The call to create will return the ID of the new ACL.
+
+        :param str name: The name of the ACL to create
+        :param str acl_type: One of "client" or "management"
+        :param str rules: The rules HCL string
+        :rtype: str
+
+        """
+        payload = {'name': name, 'type': acl_type}
+        if rules:
+            payload['rules'] = rules
+        response = self._adapter.put(self._build_uri(['create']), payload)
+        print(response.status_code)
+        return response.status_code == 200
+
+    def list(self):
+        """
+        Return a list of all ACLs
+
+        :rtype: list
+
+        """
+        self._get(['list'])
 
 
 class Status(_Endpoint):

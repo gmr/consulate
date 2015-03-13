@@ -7,9 +7,9 @@ python:
     - 3.3
     - 3.4
 before_install:
-    - curl -L -o /tmp/0.4.1_linux_amd64.zip https://dl.bintray.com/mitchellh/consul/0.4.1_linux_amd64.zip
-    - unzip /tmp/0.4.1_linux_amd64.zip
-    - ./consul agent -data-dir=/tmp/consul -server -bootstrap > /tmp/consul.log &
+    - curl -L -o /tmp/0.5.0_linux_amd64.zip https://dl.bintray.com/mitchellh/consul/0.5.0_linux_amd64.zip
+    - unzip /tmp/0.5.0_linux_amd64.zip
+    - ./consul agent -config-file consul-test.json > /tmp/consul.log &
     - pip install codecov
 install:
     - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install --use-mirrors argparse unittest2; fi

@@ -4,6 +4,7 @@ These tests require that consul is running on localhost
 
 """
 import functools
+import json
 try:
     import unittest2 as unittest
 except ImportError:
@@ -13,6 +14,9 @@ import uuid
 import consulate
 
 from consulate.utils import PYTHON3
+
+consul_config = json.load(open('consul-test.json', 'r'))
+ACCESS_TOKEN = consul_config['acl_master_token']
 
 
 def generate_key(func):
@@ -27,7 +31,7 @@ def generate_key(func):
 class BaseTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.session = consulate.Consulate()
+        self.session = consulate.Consulate(token=ACCESS_TOKEN)
         self.used_keys = list()
 
     def tearDown(self):
