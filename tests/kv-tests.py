@@ -23,20 +23,20 @@ ALL_DATA = ('[{"CreateIndex":643,"ModifyIndex":643,"LockIndex":0,"Key":"bar",'
             'ZQ=="}]')
 
 ALL_ITEMS = [{'CreateIndex': 643, 'Flags': 0,
-               'Key': 'bar', 'LockIndex': 0,
-               'ModifyIndex': 643, 'Value': b'baz'},
-              {'CreateIndex': 669, 'Flags': 0,
-               'Key': 'baz', 'LockIndex': 0,
-               'ModifyIndex': 669, 'Value': b'qux'},
-              {'CreateIndex': 666, 'Flags': 128,
-               'Key': 'corgie', 'LockIndex': 0,
-               'ModifyIndex': 666, 'Value': b'dog'},
-              {'CreateIndex': 642, 'Flags': 0,
-               'Key': 'foo', 'LockIndex': 0,
-               'ModifyIndex': 642, 'Value': b'bar'},
-              {'CreateIndex': 644, 'Flags': 0,
-               'Key': 'quz', 'LockIndex': 0,
-               'ModifyIndex': 644, 'Value': True}]
+              'Key': 'bar', 'LockIndex': 0,
+              'ModifyIndex': 643, 'Value': 'baz'},
+             {'CreateIndex': 669, 'Flags': 0,
+              'Key': 'baz', 'LockIndex': 0,
+              'ModifyIndex': 669, 'Value': 'qux'},
+             {'CreateIndex': 666, 'Flags': 128,
+              'Key': 'corgie', 'LockIndex': 0,
+              'ModifyIndex': 666, 'Value': 'dog'},
+             {'CreateIndex': 642, 'Flags': 0,
+              'Key': 'foo', 'LockIndex': 0,
+              'ModifyIndex': 642, 'Value': 'bar'},
+             {'CreateIndex': 644, 'Flags': 0,
+              'Key': 'quz', 'LockIndex': 0,
+              'ModifyIndex': 644, 'Value': True}]
 
 
 @httmock.all_requests
