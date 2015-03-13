@@ -74,12 +74,18 @@ def parse_cli_args():
                          help='JSON file to read instead of stdin',
                          nargs="?", type=open)
 
+    kvls = kvsparsers.add_parser('ls', help='List all of the keys')
+    kvls.add_argument('-l', '--long', help='Long format', action='store_true')
+
     kvget = kvsparsers.add_parser('get', help='Get a key from the database')
     kvget.add_argument('key', help='The key to get')
     kvset = kvsparsers.add_parser('set', help='Set a key in the database')
     kvset.add_argument('key', help='The key to set')
     kvset.add_argument('value', help='The value of the key')
-    kvdel = kvsparsers.add_parser('del', help='Delete a key from the database')
+    kvrm = kvsparsers.add_parser('rm', help='Remove a key from the database')
+    kvrm.add_argument('key', help='The key to delete')
+    kvdel = kvsparsers.add_parser('del',
+                                  help='Deprecated method to remove a key')
     kvdel.add_argument('key', help='The key to delete')
 
     return parser.parse_args()
@@ -123,6 +129,16 @@ def main():
                     session.kv.set_record(row[0], row[1], row[2])
                 except exceptions.ConnectionError:
                     connection_error()
+
+        elif args.action == 'ls':
+            try:
+                for key in session.kv.keys():
+                    if args.long:
+                        print('{0:>14} {1}'.format(len(session.kv[key]), key))
+                    else:
+                        print(key)
+            except exceptions.ConnectionError:
+                connection_error()
 
         elif args.action in ['rm', 'del']:
             try:
