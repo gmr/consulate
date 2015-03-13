@@ -145,10 +145,7 @@ class Response(object):
                     if 'Value' in row:
                         try:
                             row['Value'] = base64.b64decode(row['Value'])
-                            if PYTHON3:
-                                row['Value'] = bytes(row['Value'], 'utf-8')
-                            else:
-                                row['Value'] = row['Value'].decode('utf-8')
+                            row['Value'] = row['Value'].decode('utf-8')
                         except TypeError:
                             pass
                         try:

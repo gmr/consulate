@@ -483,12 +483,10 @@ class KV(_Endpoint):
         :raises: KeyError
 
         """
-        try:
-            value.decode('ascii')
-        except UnicodeDecodeError:
-            if PYTHON3:
-                value = bytes(value, 'utf-8')
-            else:
+        if not PYTHON3:
+            try:
+                value.decode('ascii')
+            except UnicodeDecodeError:
                 value = value.decode('utf-8')
 
         item = item.lstrip('/')
