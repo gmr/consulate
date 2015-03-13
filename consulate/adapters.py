@@ -4,7 +4,6 @@ HTTP Client Library Adapters
 """
 import base64
 import logging
-import sys
 import requests
 
 try:
@@ -23,25 +22,19 @@ except ImportError:
             pass
     gen = Gen()
 
+from consulate import utils
+
 LOGGER = logging.getLogger(__name__)
 
 CONTENT_FORM = 'application/x-www-form-urlencoded; charset=UTF-8'
 CONTENT_JSON = 'application/json; charset=UTF-8'
-PYTHON3 = True if sys.version_info > (3, 0, 0) else False
-
-
-def is_string(value):
-    checks = [isinstance(value, bytes), isinstance(value, str)]
-    if not PYTHON3:
-        checks.append(isinstance(value, unicode))
-    return any(checks)
 
 
 def prepare_data(fun):
     def inner(*args, **kwargs):
-        if kwargs.get('data') and not is_string(kwargs.get('data')):
+        if kwargs.get('data') and not utils.is_string(kwargs.get('data')):
             kwargs['data'] = json.dumps(kwargs['data'])
-        elif len(args) == 3 and not is_string(args[2]):
+        elif len(args) == 3 and not utils.is_string(args[2]):
             args = args[0], args[1], json.dumps(args[2])
         return fun(*args, **kwargs)
     return inner
@@ -69,7 +62,7 @@ class Request(object):
     @prepare_data
     def put(self, uri, data=None):
         LOGGER.debug("PUT %s with %r", uri, data)
-        if is_string(data):
+        if utils.is_string(data):
             headers = {'Content-Type': CONTENT_FORM}
         else:
             headers = {'Content-Type': CONTENT_JSON}
@@ -103,7 +96,7 @@ class TornadoRequest(Request):
 
     @gen.coroutine
     def put(self, uri, headers=None, data=None):
-        if is_string(data):
+        if utils.is_string(data):
             headers = {'Content-Type': CONTENT_FORM}
         else:
             headers = {'Content-Type': CONTENT_JSON}
