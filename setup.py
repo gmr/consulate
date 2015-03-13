@@ -1,7 +1,7 @@
 from setuptools import setup
 import sys
 
-install_requires = ['requests', 'tornado']
+install_requires = ['requests>=2.0.0,<3.0.0']
 
 if sys.version_info < (2, 7, 0):
     install_requires.append('argparse')
@@ -13,7 +13,7 @@ setup(name='consulate',
       maintainer_email="gavinr@aweber.com",
       url="https://consulate.readthedocs.org",
       install_requires=install_requires,
-      license=open('LICENSE').read(),
+      license='BSD',
       package_data={'': ['LICENSE', 'README.rst']},
       packages=['consulate'],
       entry_points=dict(console_scripts=['consulate=consulate.cli:main']),
