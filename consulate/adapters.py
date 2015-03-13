@@ -5,7 +5,10 @@ HTTP Client Library Adapters
 import base64
 import logging
 import requests
-import simplejson as json
+try:
+    import simplejson as json
+except ImportError:
+    import json
 try:
     from tornado import gen
     from tornado import httpclient
