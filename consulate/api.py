@@ -496,7 +496,7 @@ class KV(_Endpoint):
             index = response.body.get('ModifyIndex')
             if response.body.get('Value') == value:
                 return True
-        query_params = {'index': index}
+        query_params = {'cas': index}
         if flags is not None:
             query_params['flags'] = flags
         response = self._adapter.put(self._build_uri([item], query_params),
