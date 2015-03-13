@@ -77,6 +77,10 @@ def parse_cli_args():
     kvls = kvsparsers.add_parser('ls', help='List all of the keys')
     kvls.add_argument('-l', '--long', help='Long format', action='store_true')
 
+    kvmkdir = kvsparsers.add_parser('mkdir',
+                                    help='Create a folder')
+    kvmkdir.add_argument('path', help='The path to create')
+
     kvget = kvsparsers.add_parser('get', help='Get a key from the database')
     kvget.add_argument('key', help='The key to get')
     kvset = kvsparsers.add_parser('set', help='Set a key in the database')
@@ -158,6 +162,13 @@ def main():
             except exceptions.ConnectionError:
                 connection_error()
 
+        elif args.action == 'mkdir':
+            if not args.path[:-1] == '/':
+                args.path += '/'
+            try:
+                session.kv.set(args.path, None)
+            except exceptions.ConnectionError:
+                connection_error()
 
 if __name__ == '__main__':
     main()
