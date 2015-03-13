@@ -24,22 +24,30 @@ except ImportError:
     gen = Gen()
 
 LOGGER = logging.getLogger(__name__)
+
+CONTENT_FORM = 'application/x-www-form-urlencoded; charset=UTF-8'
+CONTENT_JSON = 'application/json; charset=UTF-8'
 PYTHON3 = True if sys.version_info > (3, 0, 0) else False
+
+
+def is_string(value):
+    checks = [isinstance(value, bytes), isinstance(value, str)]
+    if not PYTHON3:
+        checks.append(isinstance(value, unicode))
+    return any(checks)
 
 
 def prepare_data(fun):
     def inner(*args, **kwargs):
-        if kwargs.get('data') and not isinstance(kwargs.get('data'), str):
+        if kwargs.get('data') and not is_string(kwargs.get('data')):
             kwargs['data'] = json.dumps(kwargs['data'])
-        elif len(args) == 3 and not isinstance(args[2], str):
+        elif len(args) == 3 and not is_string(args[2]):
             args = args[0], args[1], json.dumps(args[2])
         return fun(*args, **kwargs)
     return inner
 
 
 class Request(object):
-
-    HEADERS = {'Content-Type': 'application/json'}
 
     def __init__(self):
         self.session = requests.Session()
@@ -61,7 +69,12 @@ class Request(object):
     @prepare_data
     def put(self, uri, data=None):
         LOGGER.debug("PUT %s with %r", uri, data)
-        response = self.session.put(uri, headers=self.HEADERS, data=data)
+        if is_string(data):
+            headers = {'Content-Type': CONTENT_FORM}
+        else:
+            headers = {'Content-Type': CONTENT_JSON}
+        response = self.session.put(uri, data=data.encode('utf-8'),
+                                    headers=headers)
         return Response(response.status_code,
                         response.content,
                         response.headers)
@@ -90,8 +103,12 @@ class TornadoRequest(Request):
 
     @gen.coroutine
     def put(self, uri, headers=None, data=None):
+        if is_string(data):
+            headers = {'Content-Type': CONTENT_FORM}
+        else:
+            headers = {'Content-Type': CONTENT_JSON}
         response = yield self.session.fetch(uri,
-                                            headers=self.HEADERS,
+                                            headers=headers,
                                             body=json.dumps(data))
         raise gen.Return(Response(response.code,
                                   response.body,

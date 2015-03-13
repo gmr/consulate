@@ -28,6 +28,7 @@ except ImportError:  # pragma: no cover
     from urllib import urlencode        # Python 2
 
 from consulate import adapters
+from consulate.adapters import PYTHON3
 
 LOGGER = logging.getLogger(__name__)
 
@@ -482,17 +483,17 @@ class KV(_Endpoint):
         :raises: KeyError
 
         """
+        try:
+            value.decode('ascii')
+        except UnicodeDecodeError:
+            if PYTHON3:
+                value = bytes(value, 'utf-8')
+            else:
+                value = value.decode('utf-8')
+
         item = item.lstrip('/')
         response = self._adapter.get(self._build_uri([item]))
         index = 0
-
-        try:
-            if isinstance(value, (str, unicode)):
-                value = value.encode('utf-8')
-        except NameError:  #in Python3 str is unicode by default
-            if isinstance(value, str):
-                value = value.encode('utf-8')
-
         if response.status_code == 200:
             index = response.body.get('ModifyIndex')
             if response.body.get('Value') == value:
