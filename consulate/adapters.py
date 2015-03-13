@@ -4,11 +4,14 @@ HTTP Client Library Adapters
 """
 import base64
 import logging
+import sys
 import requests
+
 try:
     import simplejson as json
 except ImportError:
     import json
+
 try:
     from tornado import gen
     from tornado import httpclient
@@ -21,6 +24,7 @@ except ImportError:
     gen = Gen()
 
 LOGGER = logging.getLogger(__name__)
+PYTHON3 = True if sys.version_info > (3, 0, 0) else False
 
 
 def prepare_data(fun):
@@ -119,11 +123,15 @@ class Response(object):
                 return body
             if isinstance(value, bool):
                 return value
-            if not 'error' in value:
+            if 'error' not in value:
                 for row in value:
                     if 'Value' in row:
                         try:
                             row['Value'] = base64.b64decode(row['Value'])
+                            if PYTHON3:
+                                row['Value'] = bytes(row['Value'], 'utf-8')
+                            else:
+                                row['Value'] = row['Value'].decode('utf-8')
                         except TypeError:
                             pass
                         try:
