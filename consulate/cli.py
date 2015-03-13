@@ -3,7 +3,14 @@ import argparse
 import json
 import sys
 
+from requests import exceptions
+
 from consulate import api
+
+
+def connection_error():
+    sys.stderr.write('ERROR: Could not connect to consul\n')
+    sys.exit(1)
 
 
 def parse_cli_args():
@@ -73,41 +80,58 @@ def parse_cli_args():
 def main():
     args = parse_cli_args()
     session = api.Session(args.api_host, args.api_port, args.datacenter,
-                            args.token)
+                          args.token)
 
     if args.command == 'register':
-
         check = args.path if args.ctype == 'check' else None
         interval = '%ss' % args.interval if args.ctype == 'check' else None
         ttl = '%ss' % args.duration if args.ctype == 'ttl' else None
         tags = args.tags.split(',') if args.tags else None
-        session.agent.service.register(args.name,
-                                       args.service_id,
-                                       args.port,
-                                       tags, check, interval, ttl)
+        try:
+            session.agent.service.register(args.name,
+                                           args.service_id,
+                                           args.port,
+                                           tags, check, interval, ttl)
+        except exceptions.ConnectionError:
+                    connection_error()
 
     elif args.command == 'kv':
 
         if args.action == 'backup':
             with open(args.backup_file, 'wb') as handle:
-                handle.write(json.dumps(session.kv.records(),
-                                        ensure_ascii=False,
-                                        indent=2))
+                try:
+                    handle.write(json.dumps(session.kv.records(),
+                                            ensure_ascii=False,
+                                            indent=2))
+                except exceptions.ConnectionError:
+                            connection_error()
 
         elif args.action == 'restore':
             with open(args.restore_file, 'rb') as handle:
                 data = json.load(handle)
                 for row in data:
-                    session.kv.set_record(row[0], row[1], row[2])
+                    try:
+                        session.kv.set_record(row[0], row[1], row[2])
+                    except exceptions.ConnectionError:
+                        connection_error()
 
         elif args.action == 'del':
-            del session.kv[args.key]
+            try:
+                del session.kv[args.key]
+            except exceptions.ConnectionError:
+                connection_error()
 
         elif args.action == 'get':
-            sys.stdout.write("%s\n" % session.kv.get(args.key))
+            try:
+                sys.stdout.write("%s\n" % session.kv.get(args.key))
+            except exceptions.ConnectionError:
+                connection_error()
 
         elif args.action == 'set':
-            session.kv[args.key] = args.value
+            try:
+                session.kv[args.key] = args.value
+            except exceptions.ConnectionError:
+                connection_error()
 
 
 if __name__ == '__main__':
