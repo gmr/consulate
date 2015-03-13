@@ -6,6 +6,7 @@ import sys
 from requests import exceptions
 
 from consulate import api
+from consulate import adapters
 
 
 def connection_error():
@@ -62,10 +63,17 @@ def parse_cli_args():
                                    title='Key/Value Database Utilities')
 
     backup = kvsparsers.add_parser('backup',
-                                   help='Backup to a JSON file')
-    backup.add_argument('backup_file', help='Path to backup the content to')
-    restore = kvsparsers.add_parser('restore', help='Restore from a JSON file')
-    restore.add_argument('restore_file', help='Path to backup the content to')
+                                   help='Backup to stdout or a JSON file')
+    backup.add_argument('-f', '--file',
+                        help='JSON file to read instead of stdin',
+                        nargs="?")
+
+    restore = kvsparsers.add_parser('restore',
+                                    help='Restore from stdin or a JSON file')
+    restore.add_argument('-f', '--file',
+                         help='JSON file to read instead of stdin',
+                         nargs="?", type=open)
+
     kvget = kvsparsers.add_parser('get', help='Get a key from the database')
     kvget.add_argument('key', help='The key to get')
     kvset = kvsparsers.add_parser('set', help='Set a key in the database')
@@ -98,23 +106,25 @@ def main():
     elif args.command == 'kv':
 
         if args.action == 'backup':
-            with open(args.backup_file, 'wb') as handle:
-                try:
-                    handle.write(json.dumps(session.kv.records(),
-                                            sort_keys=True))
-                except exceptions.ConnectionError:
-                            connection_error()
+            handle = open(args.file, 'w') if args.file else sys.stdout
+            try:
+                handle.write(json.dumps(session.kv.records()) + '\n')
+            except exceptions.ConnectionError:
+                connection_error()
 
         elif args.action == 'restore':
-            with open(args.restore_file, 'rb') as handle:
-                data = json.load(handle)
-                for row in data:
-                    try:
-                        session.kv.set_record(row[0], row[1], row[2])
-                    except exceptions.ConnectionError:
-                        connection_error()
+            handle = open(args.file, 'r') if args.file else sys.stdin
+            data = json.load(handle)
+            for row in data:
+                # Here's an awesome thing to make things work
+                if not adapters.PYTHON3 and isinstance(row[2], unicode):
+                    row[2] = row[2].encode('utf-8')
+                try:
+                    session.kv.set_record(row[0], row[1], row[2])
+                except exceptions.ConnectionError:
+                    connection_error()
 
-        elif args.action == 'del':
+        elif args.action in ['rm', 'del']:
             try:
                 del session.kv[args.key]
             except exceptions.ConnectionError:
