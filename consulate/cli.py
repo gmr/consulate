@@ -101,8 +101,7 @@ def main():
             with open(args.backup_file, 'wb') as handle:
                 try:
                     handle.write(json.dumps(session.kv.records(),
-                                            ensure_ascii=False,
-                                            indent=2))
+                                            sort_keys=True))
                 except exceptions.ConnectionError:
                             connection_error()
 
