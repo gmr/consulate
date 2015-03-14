@@ -1,5 +1,5 @@
-consulate.Consul
-=================
+Consul
+======
 The :py:class:`consulate.Consul` class is core interface for interacting with
 all parts of the `Consul <http://consul.io>`_ API.
 
