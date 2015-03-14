@@ -56,7 +56,7 @@ class Consul(object):
         """Access the Consul
         `ACL <https://www.consul.io/docs/agent/http.html#acl>`_ API
 
-        :rtype: :py:class:`consulate.api_old.ACL`
+        :rtype: :py:class:`consulate.api.acl.ACL`
 
         """
         return self._acl
@@ -66,7 +66,7 @@ class Consul(object):
         """Access the Consul
         `Agent <https://www.consul.io/docs/agent/http.html#agent>`_ API
 
-        :rtype: :py:class:`consulate.api.Agent`
+        :rtype: :py:class:`consulate.api.agent.Agent`
 
         """
         return self._agent
@@ -76,7 +76,7 @@ class Consul(object):
         """Access the Consul
         `Catalog <https://www.consul.io/docs/agent/http.html#catalog>`_ API
 
-        :rtype: :py:class:`consulate.api.Catalog`
+        :rtype: :py:class:`consulate.api.catalog.Catalog`
 
         """
         return self._catalog
@@ -86,7 +86,7 @@ class Consul(object):
         """Access the Consul
         `Events <https://www.consul.io/docs/agent/http.html#events>`_ API
 
-        :rtype: :py:class:`consulate.api_old.Event`
+        :rtype: :py:class:`consulate.api.event.Event`
 
         """
         return self._event
@@ -96,7 +96,7 @@ class Consul(object):
         """Access the Consul
         `Health <https://www.consul.io/docs/agent/http.html#health>`_ API
 
-        :rtype: :py:class:`consulate.api.Health`
+        :rtype: :py:class:`consulate.api.health.Health`
 
         """
         return self._health
@@ -106,7 +106,7 @@ class Consul(object):
         """Access the Consul
         `KV <https://www.consul.io/docs/agent/http.html#kv>`_ API
 
-        :rtype: :py:class:`consulate.api.KV`
+        :rtype: :py:class:`consulate.api.kv.KV`
 
         """
         return self._kv
@@ -116,7 +116,7 @@ class Consul(object):
         """Access the Consul
         `Session <https://www.consul.io/docs/agent/http.html#session>`_ API
 
-        :rtype: :py:class:`consulate.api_old.Session`
+        :rtype: :py:class:`consulate.api.session.Session`
 
         """
         return self._session
@@ -126,7 +126,7 @@ class Consul(object):
         """Access the Consul
         `Status <https://www.consul.io/docs/agent/http.html#status>`_ API
 
-        :rtype: :py:class:`consulate.api_old.Status`
+        :rtype: :py:class:`consulate.api.status.Status`
 
         """
         return self._status
