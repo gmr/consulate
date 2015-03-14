@@ -17,7 +17,7 @@ from consulate import adapters
 CONSUL_CONFIG = json.load(open('consul-test.json', 'r'))
 
 
-class SessionTests(unittest.TestCase):
+class ConsulTests(unittest.TestCase):
 
     @mock.patch('consulate.adapters.Request')
     @mock.patch('consulate.api.Agent')
@@ -26,8 +26,10 @@ class SessionTests(unittest.TestCase):
     @mock.patch('consulate.api.Health')
     @mock.patch('consulate.api.ACL')
     @mock.patch('consulate.api.Event')
+    @mock.patch('consulate.api.Session')
     @mock.patch('consulate.api.Status')
-    def setUp(self, status, event, acl, health, kv, catalog, agent, adapter):
+    def setUp(self, status, session, event, acl, health, kv, catalog,
+              agent, adapter):
         self.host = '127.0.0.1'
         self.port = 8500
         self.dc = CONSUL_CONFIG['datacenter']
@@ -40,14 +42,15 @@ class SessionTests(unittest.TestCase):
         self.event = event
         self.kv = kv
         self.health = health
+        self.session = session
         self.status = status
 
-        self.base_uri = '{0}://{1}:{2}/v1'.format(api.Session.SCHEME,
+        self.base_uri = '{0}://{1}:{2}/v1'.format(api.Consul.SCHEME,
                                                   self.host, self.port)
-        self.session = api.Session(self.host, self.port, self.dc, self.token)
+        self.consul = api.Consul(self.host, self.port, self.dc, self.token)
 
     def test_base_uri(self):
-        self.assertEquals(self.session._base_uri(self.host, self.port),
+        self.assertEquals(self.consul._base_uri(self.host, self.port),
                           self.base_uri)
 
     def test_acl_initialization(self):
@@ -81,39 +84,44 @@ class SessionTests(unittest.TestCase):
                                                      self.adapter, self.dc,
                                                      self.token))
 
+    def test_session_initialization(self):
+        self.assertTrue(self.session.called_once_with(self.base_uri,
+                                                      self.adapter, self.dc,
+                                                      self.token))
+
     def test_status_initialization(self):
         self.assertTrue(self.status.called_once_with(self.base_uri,
                                                      self.adapter, self.dc,
                                                      self.token))
 
     def test_acl_property(self):
-        self.assertEqual(self.session.acl, self.session._acl)
+        self.assertEqual(self.consul.acl, self.consul._acl)
 
     def test_agent_property(self):
-        self.assertEqual(self.session.agent, self.session._agent)
+        self.assertEqual(self.consul.agent, self.consul._agent)
 
     def test_catalog_property(self):
-        self.assertEqual(self.session.catalog, self.session._catalog)
+        self.assertEqual(self.consul.catalog, self.consul._catalog)
 
     def test_event_property(self):
-        self.assertEqual(self.session.event, self.session._event)
+        self.assertEqual(self.consul.event, self.consul._event)
 
     def test_health_property(self):
-        self.assertEqual(self.session.health, self.session._health)
+        self.assertEqual(self.consul.health, self.consul._health)
 
     def test_kv_property(self):
-        self.assertEqual(self.session.kv, self.session._kv)
+        self.assertEqual(self.consul.kv, self.consul._kv)
 
     def test_status_property(self):
-        self.assertEqual(self.session.status, self.session._status)
+        self.assertEqual(self.consul.status, self.consul._status)
 
 
 class EndpointBuildURITests(unittest.TestCase):
 
     def setUp(self):
         self.adapter = adapters.Request()
-        self.base_uri = '{0}://localhost:8500/{1}'.format(api.Session.SCHEME,
-                                                          api.Session.VERSION)
+        self.base_uri = '{0}://localhost:8500/{1}'.format(api.Consul.SCHEME,
+                                                          api.Consul.VERSION)
         self.endpoint = api._Endpoint(self.base_uri, self.adapter)
 
     def test_adapter_assignment(self):
@@ -133,20 +141,20 @@ class EndpointBuildURITests(unittest.TestCase):
         result = self.endpoint._build_uri(['foo', 'bar'])
         parsed = parse.urlparse(result)
         query_params = parse.parse_qs(parsed.query)
-        self.assertEqual(parsed.scheme, api.Session.SCHEME)
+        self.assertEqual(parsed.scheme, api.Consul.SCHEME)
         self.assertEqual(parsed.netloc, 'localhost:8500')
         self.assertEqual(parsed.path,
-                         '/{0}/_endpoint/foo/bar'.format(api.Session.VERSION))
+                         '/{0}/_endpoint/foo/bar'.format(api.Consul.VERSION))
         self.assertDictEqual(query_params, {})
 
     def test_build_uri_with_params(self):
         result = self.endpoint._build_uri(['foo', 'bar'], {'baz': 'qux'})
         parsed = parse.urlparse(result)
         query_params = parse.parse_qs(parsed.query)
-        self.assertEqual(parsed.scheme, api.Session.SCHEME)
+        self.assertEqual(parsed.scheme, api.Consul.SCHEME)
         self.assertEqual(parsed.netloc, 'localhost:8500')
         self.assertEqual(parsed.path,
-                         '/{0}/_endpoint/foo/bar'.format(api.Session.VERSION))
+                         '/{0}/_endpoint/foo/bar'.format(api.Consul.VERSION))
         self.assertDictEqual(query_params, {'baz': ['qux']})
 
 
@@ -154,8 +162,8 @@ class EndpointBuildURIWithDCTests(unittest.TestCase):
 
     def setUp(self):
         self.adapter = adapters.Request()
-        self.base_uri = '{0}://localhost:8500/{1}'.format(api.Session.SCHEME,
-                                                          api.Session.VERSION)
+        self.base_uri = '{0}://localhost:8500/{1}'.format(api.Consul.SCHEME,
+                                                          api.Consul.VERSION)
         self.dc = str(uuid.uuid4())
         self.endpoint = api._Endpoint(self.base_uri, self.adapter, self.dc)
 
@@ -169,20 +177,20 @@ class EndpointBuildURIWithDCTests(unittest.TestCase):
         result = self.endpoint._build_uri(['foo', 'bar'])
         parsed = parse.urlparse(result)
         query_params = parse.parse_qs(parsed.query)
-        self.assertEqual(parsed.scheme, api.Session.SCHEME)
+        self.assertEqual(parsed.scheme, api.Consul.SCHEME)
         self.assertEqual(parsed.netloc, 'localhost:8500')
         self.assertEqual(parsed.path,
-                         '/{0}/_endpoint/foo/bar'.format(api.Session.VERSION))
+                         '/{0}/_endpoint/foo/bar'.format(api.Consul.VERSION))
         self.assertDictEqual(query_params, {'dc': [self.dc]})
 
     def test_build_uri_with_params(self):
         result = self.endpoint._build_uri(['foo', 'bar'], {'baz': 'qux'})
         parsed = parse.urlparse(result)
         query_params = parse.parse_qs(parsed.query)
-        self.assertEqual(parsed.scheme, api.Session.SCHEME)
+        self.assertEqual(parsed.scheme, api.Consul.SCHEME)
         self.assertEqual(parsed.netloc, 'localhost:8500')
         self.assertEqual(parsed.path,
-                         '/{0}/_endpoint/foo/bar'.format(api.Session.VERSION))
+                         '/{0}/_endpoint/foo/bar'.format(api.Consul.VERSION))
         self.assertDictEqual(query_params, {'dc': [self.dc],
                                             'baz': ['qux']})
 
@@ -191,8 +199,8 @@ class EndpointBuildURIWithTokenTests(unittest.TestCase):
 
     def setUp(self):
         self.adapter = adapters.Request()
-        self.base_uri = '{0}://localhost:8500/{1}'.format(api.Session.SCHEME,
-                                                          api.Session.VERSION)
+        self.base_uri = '{0}://localhost:8500/{1}'.format(api.Consul.SCHEME,
+                                                          api.Consul.VERSION)
         self.token = str(uuid.uuid4())
         self.endpoint = api._Endpoint(self.base_uri, self.adapter,
                                       token=self.token)
@@ -207,20 +215,20 @@ class EndpointBuildURIWithTokenTests(unittest.TestCase):
         result = self.endpoint._build_uri(['foo', 'bar'])
         parsed = parse.urlparse(result)
         query_params = parse.parse_qs(parsed.query)
-        self.assertEqual(parsed.scheme, api.Session.SCHEME)
+        self.assertEqual(parsed.scheme, api.Consul.SCHEME)
         self.assertEqual(parsed.netloc, 'localhost:8500')
         self.assertEqual(parsed.path,
-                         '/{0}/_endpoint/foo/bar'.format(api.Session.VERSION))
+                         '/{0}/_endpoint/foo/bar'.format(api.Consul.VERSION))
         self.assertDictEqual(query_params, {'token': [self.token]})
 
     def test_build_uri_with_params(self):
         result = self.endpoint._build_uri(['foo', 'bar'], {'baz': 'qux'})
         parsed = parse.urlparse(result)
         query_params = parse.parse_qs(parsed.query)
-        self.assertEqual(parsed.scheme, api.Session.SCHEME)
+        self.assertEqual(parsed.scheme, api.Consul.SCHEME)
         self.assertEqual(parsed.netloc, 'localhost:8500')
         self.assertEqual(parsed.path,
-                         '/{0}/_endpoint/foo/bar'.format(api.Session.VERSION))
+                         '/{0}/_endpoint/foo/bar'.format(api.Consul.VERSION))
         self.assertDictEqual(query_params, {'token': [self.token],
                                             'baz': ['qux']})
 
@@ -229,8 +237,8 @@ class EndpointBuildURIWithDCAndTokenTests(unittest.TestCase):
 
     def setUp(self):
         self.adapter = adapters.Request()
-        self.base_uri = '{0}://localhost:8500/{1}'.format(api.Session.SCHEME,
-                                                          api.Session.VERSION)
+        self.base_uri = '{0}://localhost:8500/{1}'.format(api.Consul.SCHEME,
+                                                          api.Consul.VERSION)
         self.dc = str(uuid.uuid4())
         self.token = str(uuid.uuid4())
         self.endpoint = api._Endpoint(self.base_uri, self.adapter, self.dc,
@@ -246,10 +254,10 @@ class EndpointBuildURIWithDCAndTokenTests(unittest.TestCase):
         result = self.endpoint._build_uri(['foo', 'bar'])
         parsed = parse.urlparse(result)
         query_params = parse.parse_qs(parsed.query)
-        self.assertEqual(parsed.scheme, api.Session.SCHEME)
+        self.assertEqual(parsed.scheme, api.Consul.SCHEME)
         self.assertEqual(parsed.netloc, 'localhost:8500')
         self.assertEqual(parsed.path,
-                         '/{0}/_endpoint/foo/bar'.format(api.Session.VERSION))
+                         '/{0}/_endpoint/foo/bar'.format(api.Consul.VERSION))
         self.assertDictEqual(query_params, {'dc': [self.dc],
                                             'token': [self.token]})
 
@@ -257,10 +265,10 @@ class EndpointBuildURIWithDCAndTokenTests(unittest.TestCase):
         result = self.endpoint._build_uri(['foo', 'bar'], {'baz': 'qux'})
         parsed = parse.urlparse(result)
         query_params = parse.parse_qs(parsed.query)
-        self.assertEqual(parsed.scheme, api.Session.SCHEME)
+        self.assertEqual(parsed.scheme, api.Consul.SCHEME)
         self.assertEqual(parsed.netloc, 'localhost:8500')
         self.assertEqual(parsed.path,
-                         '/{0}/_endpoint/foo/bar'.format(api.Session.VERSION))
+                         '/{0}/_endpoint/foo/bar'.format(api.Consul.VERSION))
         self.assertDictEqual(query_params, {'dc': [self.dc],
                                             'token': [self.token],
                                             'baz': ['qux']})
@@ -270,8 +278,8 @@ class EndpointGetTests(unittest.TestCase):
 
     def setUp(self):
         self.adapter = adapters.Request()
-        self.base_uri = '{0}://localhost:8500/{1}'.format(api.Session.SCHEME,
-                                                          api.Session.VERSION)
+        self.base_uri = '{0}://localhost:8500/{1}'.format(api.Consul.SCHEME,
+                                                          api.Consul.VERSION)
         self.dc = str(uuid.uuid4())
         self.token = str(uuid.uuid4())
         self.endpoint = api._Endpoint(self.base_uri, self.adapter, self.dc,
@@ -305,13 +313,12 @@ class EndpointGetTests(unittest.TestCase):
             self.assertEqual(values, [])
 
 
-
 class EndpointGetListTests(unittest.TestCase):
 
     def setUp(self):
         self.adapter = adapters.Request()
-        self.base_uri = '{0}://localhost:8500/{1}'.format(api.Session.SCHEME,
-                                                          api.Session.VERSION)
+        self.base_uri = '{0}://localhost:8500/{1}'.format(api.Consul.SCHEME,
+                                                          api.Consul.VERSION)
         self.dc = str(uuid.uuid4())
         self.token = str(uuid.uuid4())
         self.endpoint = api._Endpoint(self.base_uri, self.adapter, self.dc,

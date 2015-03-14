@@ -98,47 +98,47 @@ the scope of the full Consulate API.
 
 .. code:: python
 
-    session = consulate.Session()
+    consul = consulate.Consul()
 
     # Set the key named release_flag to True
-    session.kv['release_flag'] = True
+    consul.kv['release_flag'] = True
 
     # Get the value for the release_flag, if not set, raises AttributeError
     try:
-        should_release_feature = session.kv['release_flag']
+        should_release_feature = consul.kv['release_flag']
     except AttributeError:
         should_release_feature = False
 
     # Delete the release_flag key
-    del session.kv['release_flag']
+    del consul.kv['release_flag']
 
     # Find all keys that start with "fl"
-    session.kv.find('fl')
+    consul.kv.find('fl')
 
     # Find all keys that start with "feature_flag" terminated by "/" separator
-    session.kv.find('feature_flag', separator='/')
+    consul.kv.find('feature_flag', separator='/')
 
     # Check to see if a key called "foo" is set
-    if "foo" in session.kv:
+    if "foo" in consul.kv:
         print 'Already Set'
 
     # Return all of the items in the key/value store
-    session.kv.items()
+    consul.kv.items()
 
 *Working with the Consulate.agent API:*
 
 .. code:: python
 
-    session = consulate.Session()
+    consul = consulate.Consul()
 
     # Get all of the service checks for the local agent
-    checks = session.agent.checks()
+    checks = consul.agent.checks()
 
     # Get all of the services registered with the local agent
-    services = session.agent.services()
+    services = consul.agent.services()
 
     # Add a service to the local agent
-    session.agent.service.register('redis',
+    consul.agent.service.register('redis',
                                    port=6379,
                                    tags=['master'],
                                    ttl='10s')
@@ -148,13 +148,13 @@ the scope of the full Consulate API.
 
 .. code:: python
 
-    session = consulate.Session()
+    consul = consulate.Session()
 
     # Get the health of a individual node
-    health = session.health.node('my-node')
+    health = consul.health.node('my-node')
 
     # Get all checks that are critical
-    checks = session.heath.state('critical')
+    checks = consul.heath.state('critical')
 
 For more examples, check out the Consulate documentation.
 

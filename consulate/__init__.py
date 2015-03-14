@@ -4,12 +4,10 @@ Consulate: A client library for Consul
 """
 __version__ = '0.4.0'
 
-from consulate.api import Session
-from consulate.api import TornadoSession
+from consulate.api import Consul
 
-# Backwards compatibility with 0.2.0
-Consulate = Session
-TornadoConsulate = TornadoSession
+# Backwards compatibility with 0.3.0
+Session = Consul
 
 import logging
 try:

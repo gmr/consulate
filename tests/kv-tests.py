@@ -55,8 +55,8 @@ class KVTests(unittest.TestCase):
 
     def setUp(self):
         self.adapter = adapters.Request()
-        self.base_uri = '{0}://localhost:8500/{1}'.format(api.Session.SCHEME,
-                                                          api.Session.VERSION)
+        self.base_uri = '{0}://localhost:8500/{1}'.format(api.Consul.SCHEME,
+                                                          api.Consul.VERSION)
         self.dc = str(uuid.uuid4())
         self.token = str(uuid.uuid4())
         self.kv = api.KV(self.base_uri, self.adapter, self.dc, self.token)

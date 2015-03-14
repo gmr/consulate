@@ -27,13 +27,14 @@ API Documentation
    :glob:
    :maxdepth: 2
 
-   session
+   consul
    acl
    agent
    catalog
    events
    health
    kv
+   session
    status
 
 

@@ -132,6 +132,8 @@ class Response(object):
                 value = json.loads(body)
             except (TypeError, ValueError):
                 return body
+            if value is None:
+                return None
             if isinstance(value, bool):
                 return value
             if 'error' not in value:

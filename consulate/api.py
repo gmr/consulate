@@ -4,21 +4,23 @@ consulate.api
 The :py:mod:`consulate.api` module exposes the main classes in consulate for
 end-user use.
 
-Primary use is focused on the :py:class:`Session <consulate.api.Session>` or the
-:py:class:`TornadoSession <consulate.api.TornadoSession>` classes which then
-wrap access to consul's HTTP API via the :py:class:`ACL <consulate.api.ACL>`,
+Primary use is focused on the :py:class:`Consul <consulate.api.Consulate>`
+class which wraps access to consul's HTTP API via the
+:py:class:`ACL <consulate.api.ACL>`,
 :py:class:`Agent <consulate.api.Agent>`,
 :py:class:`Catalog <consulate.api.Catalog>`,
 :py:class:`Events <consulate.api.Events>`,
-:py:class:`Health <consulate.api.Health>`, :py:class:`KV <consulate.api.KV>`,
+:py:class:`Health <consulate.api.Health>`,
+:py:class:`KV <consulate.api.KV>`,
+:py:class:`Session <consulate.api.Session>`,
 and :py:class:`Status <consulate.api.Status>` classes.
 
 Example use:
 
 .. code:: python
 
-    session = consulate.Session('127.0.0.1', 8500, 'dc1', 'acl-token-value)
-    session.agent.checks()
+    consul = consulate.Consul('127.0.0.1', 8500, 'dc1', 'acl-token-value)
+    consul.agent.checks()
 
 """
 import logging
@@ -48,7 +50,7 @@ class ACLForbidden(ConsulateException):
     pass
 
 
-class Session(object):
+class Consul(object):
     """Access the Consul HTTP API via Python
 
     :param str host: The host name to connect to (Default: localhost)
@@ -70,6 +72,7 @@ class Session(object):
         self._event = Event(base_uri, self._adapter, dc, token)
         self._health = Health(base_uri, self._adapter, dc, token)
         self._kv = KV(base_uri, self._adapter, dc, token)
+        self._session = Session(base_uri, self._adapter, dc, token)
         self._status = Status(base_uri, self._adapter, dc, token)
 
     @property
@@ -133,6 +136,16 @@ class Session(object):
         return self._kv
 
     @property
+    def session(self):
+        """Access the Consul
+        `Session <https://www.consul.io/docs/agent/http.html#session>`_ API
+
+        :rtype: :py:class:`consulate.api.Session`
+
+        """
+        return self._session
+
+    @property
     def status(self):
         """Access the Consul
         `Status <https://www.consul.io/docs/agent/http.html#status>`_ API
@@ -151,10 +164,6 @@ class Session(object):
 
         """
         return '{0}://{1}:{2}/{3}'.format(self.SCHEME, host, port, self.VERSION)
-
-
-class TornadoSession(Session):
-    pass
 
 
 class _Endpoint(object):
@@ -289,6 +298,19 @@ class KV(_Endpoint):
         """
         self._set_item(item, value)
 
+    def acquire_lock(self, item, session):
+        """Use Consul for locking by specifying the item/key to lock with
+        and a session value for removing the lock.
+
+        :param str item: The item in the Consul KV database
+        :param str session: The session value for the lock
+        :return: bool
+
+        """
+        query_params = {'acquire': session}
+        response = self._adapter.put(self._build_uri([item], query_params))
+        return response.body
+
     def delete(self, item):
         """Delete an item from the Key/Value service
 
@@ -300,7 +322,7 @@ class KV(_Endpoint):
 
     def get(self, item, default=None):
         """Get a value from the Key/Value service, returning it fully
-        demarshaled if possible.
+        decoded if possible.
 
         :param str item: The item key
         :rtype: mixed
@@ -423,6 +445,18 @@ class KV(_Endpoint):
         """
         return [(item['Key'], item['Flags'], item['Value'])
                 for item in self._get_all_items()]
+
+    def release_lock(self, item, session):
+        """Release an existing lock from the Consul KV database.
+
+        :param str item: The item in the Consul KV database
+        :param str session: The session value for the lock
+        :return: bool
+
+        """
+        query_params = {'release': session}
+        response = self._adapter.put(self._build_uri([item], query_params))
+        return response.body
 
     def set(self, item, value):
         """Set a value in the Key/Value service, using the CAS mechanism
@@ -1127,6 +1161,133 @@ class Event(_Endpoint):
         if name:
             query_args['name'] = name
         return self._get(['list'], query_args)
+
+
+class Session(_Endpoint):
+    """Create, destroy, and query Consul sessions."""
+
+    def create(self, name=None, behavior='release', node=None, delay=None,
+               ttl=None, checks=None, dc=None):
+        """Initialize a new session.
+
+        None of the fields are mandatory, and in fact no body needs to be PUT
+        if the defaults are to be used.
+
+        Name can be used to provide a human-readable name for the Session.
+
+        Behavior can be set to either ``release`` or ``delete``. This controls
+        the behavior when a session is invalidated. By default, this is
+        release, causing any locks that are held to be released. Changing this
+        to delete causes any locks that are held to be deleted. delete is
+        useful for creating ephemeral key/value entries.
+
+        Node must refer to a node that is already registered, if specified.
+        By default, the agent's own node name is used.
+
+        LockDelay (``delay``) can be specified as a duration string using a
+        "s" suffix for seconds. The default is 15s.
+
+        The TTL field is a duration string, and like LockDelay it can use "s"
+        as a suffix for seconds. If specified, it must be between 10s and
+        3600s currently. When provided, the session is invalidated if it is
+        not renewed before the TTL expires. See the session internals page
+        for more documentation of this feature.
+
+        Checks is used to provide a list of associated health checks. It is
+        highly recommended that, if you override this list, you include the
+        default "serfHealth".
+
+        By default, the agent's local datacenter is used and you can specify
+        another datacenter, However, it is not recommended to use
+        cross-datacenter sessions.
+
+        :param str name: A human readable session name
+        :param str behavior: One of ``release`` or ``delete``
+        :param str node: A node to create the session on
+        :param str delay: A lock delay for the session
+        :param str ttl: The time to live for the session
+        :param lists checks: A list of associated health checks
+        :param str dc: The datacenter to create the session on
+        :return str: session ID
+
+        """
+        payload = {'name': name} if name else {}
+        query_param = {'dc': dc} if dc else {}
+        if node:
+            payload['Node'] = node
+        if behavior:
+            payload['Behavior'] = behavior
+        if delay:
+            payload['LockDelay'] = delay
+        if ttl:
+            payload['TTL'] = ttl
+        if checks:
+            payload['Checks'] = checks
+        response = self._adapter.put(self._build_uri(['create'], query_param),
+                                     payload)
+        return response.body.get('ID')
+
+    def destroy(self, session_id, dc=None):
+        """Destroy an existing session
+
+        :param str session_id: The session to destroy
+        :return: bool
+
+        """
+        query_param = {'dc': dc} if dc else {}
+        response = self._adapter.put(self._build_uri(['destroy', session_id],
+                                                     query_param))
+        return response.status_code == 200
+
+    def info(self, session_id, dc=None):
+        """Returns the requested session information within a given datacenter.
+        By default, the datacenter of the agent is queried.
+
+        :param str session_id: The session to get info about
+        :return: dict
+
+        """
+        query_param = {'dc': dc} if dc else {}
+        response = self._adapter.get(self._build_uri(['info', session_id],
+                                                     query_param))
+        return response.body
+
+    def list(self, dc=None):
+        """Returns the active sessions for a given datacenter.
+
+        :return: list
+
+        """
+        query_param = {'dc': dc} if dc else {}
+        response = self._adapter.get(self._build_uri(['list'], query_param))
+        return response.body
+
+    def node(self, node, dc=None):
+        """Returns the active sessions for a given node and datacenter.
+        By default, the datacenter of the agent is queried.
+
+        :param str node: The node to get active sessions for
+        :return: list
+
+        """
+        query_param = {'dc': dc} if dc else {}
+        response = self._adapter.get(self._build_uri(['node', node],
+                                                     query_param))
+        return response.body
+
+    def renew(self, session_id, dc=None):
+        """Renew the given session. This is used with sessions that have a TTL,
+        and it extends the expiration by the TTL. By default, the datacenter
+        of the agent is queried.
+
+        :param str session_id: The session to renew
+        :return: dict
+
+        """
+        query_param = {'dc': dc} if dc else {}
+        response = self._adapter.put(self._build_uri(['renew', session_id],
+                                                     query_param))
+        return response.body
 
 
 class Status(_Endpoint):
