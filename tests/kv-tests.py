@@ -10,8 +10,12 @@ except ImportError:  # pragma: no cover
     import urlparse as parse      # Python 2
 import uuid
 
-from consulate import api
+import consulate
 from consulate import adapters
+from consulate import api
+
+SCHEME = consulate.SCHEME
+VERSION = consulate.VERSION
 
 ALL_DATA = ('[{"CreateIndex":643,"ModifyIndex":643,"LockIndex":0,"Key":"bar",'
             '"Flags":0,"Value":"YmF6"},{"CreateIndex":669,"ModifyIndex":669,"'
@@ -55,8 +59,7 @@ class KVTests(unittest.TestCase):
 
     def setUp(self):
         self.adapter = adapters.Request()
-        self.base_uri = '{0}://localhost:8500/{1}'.format(api.Consul.SCHEME,
-                                                          api.Consul.VERSION)
+        self.base_uri = '{0}://localhost:8500/{1}'.format(SCHEME, VERSION)
         self.dc = str(uuid.uuid4())
         self.token = str(uuid.uuid4())
         self.kv = api.KV(self.base_uri, self.adapter, self.dc, self.token)
