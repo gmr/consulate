@@ -17,8 +17,6 @@ your choice. I prefer pip:
 Requirements
 ------------
 - requests
-- simplejson
-- tornado (optional)
 
 API Documentation
 -----------------
