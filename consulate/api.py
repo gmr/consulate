@@ -251,11 +251,12 @@ class KV(_Endpoint):
         response = self._adapter.delete(self._build_uri([item]))
         if response.status_code != 200:
             raise KeyError(
-                'Error removing "{0}" ({1})'.format(item, response.status_code))
+                'Error removing "{0}" ({1})'.format(item,
+                                                    response.status_code))
 
     def __getitem__(self, item):
         """Get a value from the Key/Value service, returning it fully
-        demarshaled if possible.
+        decoded if possible.
 
         :param str item: The item name
         :rtype: mixed
@@ -263,10 +264,9 @@ class KV(_Endpoint):
 
         """
         value = self._get_item(item)
-        try:
-            return value.get('Value', value)
-        except AttributeError:
-            return value
+        if not value:
+            raise KeyError('Key not found ({0})'.format(item))
+        return value.get('Value')
 
     def __iter__(self):
         """Iterate over all the keys in the Key/Value service
@@ -320,7 +320,7 @@ class KV(_Endpoint):
         """
         return self.__delitem__(item)
 
-    def get(self, item, default=None):
+    def get(self, item, default=None, raw=False):
         """Get a value from the Key/Value service, returning it fully
         decoded if possible.
 
@@ -329,10 +329,10 @@ class KV(_Endpoint):
         :raises: KeyError
 
         """
-        try:
-            return self.__getitem__(item)
-        except KeyError:
-            return default
+        response = self._get_item(item, raw)
+        if isinstance(response, dict):
+            return response.get('Value', default)
+        return response or default
 
     def get_record(self, item, default=None):
         """Get the full record from the Key/Value service, returning
@@ -356,7 +356,7 @@ class KV(_Endpoint):
 
         .. code:: python
 
-            >>> session.kv.find('b')
+            >>> consul.kv.find('b')
             {'baz': 'qux', 'bar': 'baz'}
 
         :param str prefix: The prefix to search with
@@ -383,7 +383,7 @@ class KV(_Endpoint):
 
         .. code:: python
 
-            >>> session.kv.items()
+            >>> consul.kv.items()
             {'foo': 'bar', 'bar': 'baz', 'quz': True, 'corgie': 'dog'}
 
        :rtype: dict
@@ -398,7 +398,7 @@ class KV(_Endpoint):
 
         .. code:: python
 
-            >>> for key, value in session.kv.iteritems():
+            >>> for key, value in consul.kv.iteritems():
             ...     print(key, value)
             ...
             (u'bar', 'baz')
@@ -418,7 +418,7 @@ class KV(_Endpoint):
 
         .. code:: python
 
-            >>> session.kv.keys()
+            >>> consul.kv.keys()
             [u'bar', u'foo', u'quz']
 
         :rtype: list
@@ -434,7 +434,7 @@ class KV(_Endpoint):
 
         .. code:: python
 
-            >>> session.kv.records()
+            >>> consul.kv.records()
             [(u'bar', 0, 'baz'),
              (u'corgie', 128, 'dog'),
              (u'foo', 0, 'bar'),
@@ -487,7 +487,7 @@ class KV(_Endpoint):
 
         .. code:: python
 
-            >>> session.kv.values()
+            >>> consul.kv.values()
             [True, 'bar', 'baz']
 
         :rtype: list
@@ -504,24 +504,21 @@ class KV(_Endpoint):
         """
         return self._get_list([''], {'recurse': None})
 
-    def _get_item(self, item):
+    def _get_item(self, item, raw=False):
         """Internal method to get the full item record from the Key/Value
         service
 
         :param str item: The item to get
-        :rtype: dict
-        :raises: KeyError
+        :param bool raw: Return only the raw body
+        :rtype: mixed
 
         """
         item = item.lstrip('/')
-        response = self._adapter.get(self._build_uri([item]))
+        query_params = {'raw': True} if raw else {}
+        response = self._adapter.get(self._build_uri([item], query_params))
         if response.status_code == 200:
             return response.body
-        elif response.status_code == 404:
-            raise KeyError('Key not found ({0})'.format(item))
-        else:
-            raise KeyError(
-                'Unknown response ({0})'.format(response.status_code))
+        return None
 
     def _set_item(self, item, value, flags=None):
         """Internal method for setting a key/value pair with flags in the

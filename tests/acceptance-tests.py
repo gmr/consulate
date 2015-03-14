@@ -131,6 +131,11 @@ class TestKVSet(BaseTestCase):
         self.assertEqual(self.consul.kv[key], 'foo')
 
     @generate_key
+    def test_set_item_get_item_str_value_raw(self, key):
+        self.consul.kv[key] = 'foo'
+        self.assertEqual(self.consul.kv.get(key, raw=True), 'foo')
+
+    @generate_key
     def test_set_get_bool_value(self, key):
         self.consul.kv.set(key, True)
         self.assertTrue(self.consul.kv.get(key))
