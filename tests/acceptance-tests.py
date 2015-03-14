@@ -226,3 +226,15 @@ class TestKVLocking(BaseTestCase):
         self.assertTrue(self.consul.kv.release_lock(lock_key, sid))
         self.consul.session.destroy(sid)
         self.consul.session.destroy(sid2)
+
+
+class TestAgent(unittest.TestCase):
+
+    def setUp(self):
+        self.consul = consulate.Consul(token=CONSUL_CONFIG['acl_master_token'])
+
+    def test_service_registration(self):
+        self.consul.agent.service.register('test-service', address='10.0.0.1',
+                                           port=5672, tags=['foo', 'bar'])
+        self.assertIn('test-service', self.consul.agent.services()[0].keys())
+        self.consul.agent.service.deregister('test-service')

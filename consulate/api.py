@@ -596,7 +596,7 @@ class Agent(_Endpoint):
                    dead man's switch.
 
         """
-        def register(self, name, script, check_id=None, interval=None,
+        def register(self, name, script=None, check_id=None, interval=None,
                      ttl=None, notes=None):
             """Add a new check to the local agent. Checks are either a script
             or TTL type. The agent is responsible for managing the status of
@@ -696,12 +696,13 @@ class Agent(_Endpoint):
         """
         CHECK_EXCEPTION = 'check must be a tuple of script, interval, and ttl'
 
-        def register(self, name, service_id=None, port=None,
+        def register(self, name, service_id=None, address=None, port=None,
                      tags=None, check=None, interval=None, ttl=None):
             """Add a new service to the local agent.
 
             :param str name: The name of the service
             :param str service_id: The id for the service (optional)
+            :param str address: The service IP address
             :param int port: The service port
             :param list tags: A list of tags for the service
             :param str check: The path to the check to run
@@ -723,6 +724,7 @@ class Agent(_Endpoint):
             payload = {'id': service_id,
                        'name': name,
                        'port': port,
+                       'address': address,
                        'tags': tags,
                        'check': {'script': check,
                                  'interval': interval,
