@@ -76,18 +76,21 @@ KV Database Utilities Help:
 
 .. code:: bash
 
-    usage: consulate kv [-h] {backup,restore,get,set,del} ...
+    usage: consulate kv [-h] {backup,restore,ls,mkdir,get,set,rm,del} ...
 
     optional arguments:
       -h, --help            show this help message and exit
 
     Key/Value Database Utilities:
-      {backup,restore,get,set,del}
-        backup              Backup to a JSON file
-        restore             Restore from a JSON file
+      {backup,restore,ls,mkdir,get,set,rm,del}
+        backup              Backup to stdout or a JSON file
+        restore             Restore from stdin or a JSON file
+        ls                  List all of the keys
+        mkdir               Create a folder
         get                 Get a key from the database
         set                 Set a key in the database
-        del                 Delete a key from the database
+        rm                  Remove a key from the database
+        del                 Deprecated method to remove a key
 
 API Usage Examples
 ------------------

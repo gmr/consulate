@@ -6,18 +6,20 @@ import sys
 from requests import exceptions
 
 from consulate import api
-from consulate import adapters
+from consulate import utils
 
 
 def connection_error():
+    """Common exit routine when consulate can't connect to Consul"""
     sys.stderr.write('ERROR: Could not connect to consul\n')
     sys.exit(1)
 
 
 def parse_cli_args():
+    """Create the argument parser and add the arguments"""
     parser = argparse.ArgumentParser(description='CLI utilities for Consul')
 
-    parser.add_argument('--api-host',  default='localhost',
+    parser.add_argument('--api-host', default='localhost',
                         help='The consul host to connect on')
     parser.add_argument('--api-port', default=8500,
                         help='The consul API port to connect to')
@@ -29,16 +31,20 @@ def parse_cli_args():
     sparsers = parser.add_subparsers(title='Commands', dest='command')
 
     # Service registration
-    register = sparsers.add_parser('register',
-                                   help='Register a service for this node')
+    registerp = sparsers.add_parser('register',
+                                    help='Register a service for this node')
+    registerp.add_argument('name', help='The service name')
+    registerp.add_argument('-a', '--address', default=None,
+                           help='Specify an address')
+    registerp.add_argument('-p', '--port', default=None,
+                           help='Specify a port')
+    registerp.add_argument('-s', '--service-id', default=None,
+                           help='Specify a service ID')
+    registerp.add_argument('-t', '--tags', default=[],
+                           help='Specify a comma delimited list of tags')
 
-    register.add_argument('-s', '--service-id', default=None,
-                          help='Specify a service ID')
-    register.add_argument('-t', '--tags', default=[],
-                          help='Specify a comma delimited list of tags')
-
-    rsparsers = register.add_subparsers(dest='ctype',
-                                        title='Service Check Options')
+    rsparsers = registerp.add_subparsers(dest='ctype',
+                                         title='Service Check Options')
     check = rsparsers.add_parser('check',
                                  help='Define an external script-based check')
 
@@ -52,15 +58,11 @@ def parse_cli_args():
     ttl.add_argument('duration', type=int, default=10,
                      help='TTL duration for a service with missing check data')
 
-    register.add_argument('name', help='The service name')
-    register.add_argument('port', type=int,
-                          help='The port the service runs on')
-
     # K/V database info
-    kv = sparsers.add_parser('kv', help='Key/Value Database Utilities')
+    kvp = sparsers.add_parser('kv', help='Key/Value Database Utilities')
 
-    kvsparsers = kv.add_subparsers(dest='action',
-                                   title='Key/Value Database Utilities')
+    kvsparsers = kvp.add_subparsers(dest='action',
+                                    title='Key/Value Database Utilities')
 
     backup = kvsparsers.add_parser('backup',
                                    help='Backup to stdout or a JSON file')
@@ -88,6 +90,9 @@ def parse_cli_args():
     kvset.add_argument('value', help='The value of the key')
     kvrm = kvsparsers.add_parser('rm', help='Remove a key from the database')
     kvrm.add_argument('key', help='The key to delete')
+    kvrm.add_argument('-r', '--recurse', action='store_true',
+                      help='Delete all keys prefixed with the specified key')
+
     kvdel = kvsparsers.add_parser('del',
                                   help='Deprecated method to remove a key')
     kvdel.add_argument('key', help='The key to delete')
@@ -95,80 +100,169 @@ def parse_cli_args():
     return parser.parse_args()
 
 
-def main():
-    args = parse_cli_args()
-    session = api.Session(args.api_host, args.api_port, args.datacenter,
-                          args.token)
+def kv_backup(consul, args):
+    """Backup the Consul KV database
 
-    if args.command == 'register':
-        check = args.path if args.ctype == 'check' else None
-        interval = '%ss' % args.interval if args.ctype == 'check' else None
-        ttl = '%ss' % args.duration if args.ctype == 'ttl' else None
-        tags = args.tags.split(',') if args.tags else None
+    :param consulate.api.Consul consul: The Consul instance
+    :param argparser.namespace args: The cli args
+
+    """
+    handle = open(args.file, 'w') if args.file else sys.stdout
+    try:
+        handle.write(json.dumps(consul.kv.records()) + '\n')
+    except exceptions.ConnectionError:
+        connection_error()
+
+
+def kv_delete(consul, args):
+    """Remove a key from the Consulate database
+
+    :param consulate.api.Consul consul: The Consul instance
+    :param argparser.namespace args: The cli args
+
+    """
+    try:
+        del consul.kv[args.key]
+    except exceptions.ConnectionError:
+        connection_error()
+
+
+def kv_get(consul, args):
+    """Get the value of a key from the Consul database
+
+    :param consulate.api.Consul consul: The Consul instance
+    :param argparser.namespace args: The cli args
+
+    """
+    try:
+        sys.stdout.write("%s\n" % consul.kv.get(args.key))
+    except exceptions.ConnectionError:
+        connection_error()
+
+
+def kv_ls(consul, args):
+    """List out the keys from the Consul KV database
+
+    :param consulate.api.Consul consul: The Consul instance
+    :param argparser.namespace args: The cli args
+
+    """
+    try:
+        for key in consul.kv.keys():
+            if args.long:
+                print('{0:>14} {1}'.format(len(consul.kv[key]), key))
+            else:
+                print(key)
+    except exceptions.ConnectionError:
+        connection_error()
+
+
+def kv_mkdir(consul, args):
+    """Make a key based path/directory in the KV database
+
+    :param consulate.api.Consul consul: The Consul instance
+    :param argparser.namespace args: The cli args
+
+    """
+    if not args.path[:-1] == '/':
+        args.path += '/'
+    try:
+        consul.kv.set(args.path, None)
+    except exceptions.ConnectionError:
+        connection_error()
+
+
+def kv_restore(consul, args):
+    """Restore the Consul KV store
+
+    :param consulate.api.Consul consul: The Consul instance
+    :param argparser.namespace args: The cli args
+
+    """
+    handle = open(args.file, 'r') if args.file else sys.stdin
+    data = json.load(handle)
+    for row in data:
+        # Here's an awesome thing to make things work
+        if not utils.PYTHON3 and isinstance(row[2], unicode):
+            row[2] = row[2].encode('utf-8')
         try:
-            session.agent.service.register(args.name,
-                                           args.service_id,
-                                           args.port,
-                                           tags, check, interval, ttl)
+            consul.kv.set_record(row[0], row[1], row[2])
         except exceptions.ConnectionError:
-                    connection_error()
+            connection_error()
 
+
+def kv_rm(consul, args):
+    """Remove a key from the Consulate database
+
+    :param consulate.api.Consul consul: The Consul instance
+    :param argparser.namespace args: The cli args
+
+    """
+    try:
+        consul.kv.delete(args.key, args.recurse)
+    except exceptions.ConnectionError:
+        connection_error()
+
+
+def kv_set(consul, args):
+    """Set a value of a key int the Consul database
+
+    :param consulate.api.Consul consul: The Consul instance
+    :param argparser.namespace args: The cli args
+
+    """
+    try:
+        consul.kv[args.key] = args.value
+    except exceptions.ConnectionError:
+        connection_error()
+
+
+def register(consul, args):
+    """Handle service registration.
+
+    :param consulate.api.Consul consul: The Consul instance
+    :param argparser.namespace args: The cli args
+
+    """
+    check = args.path if args.ctype == 'check' else None
+    interval = '%ss' % args.interval if args.ctype == 'check' else None
+    ttl = '%ss' % args.duration if args.ctype == 'ttl' else None
+    tags = args.tags.split(',') if args.tags else None
+    try:
+        consul.agent.service.register(args.name,
+                                      args.service_id,
+                                      args.address,
+                                      args.port,
+                                      tags, check, interval, ttl)
+    except exceptions.ConnectionError:
+        connection_error()
+
+
+def main():
+    """Entrypoint for the consulate cli application"""
+    args = parse_cli_args()
+    consul = api.Consul(args.api_host, args.api_port,
+                        args.datacenter, args.token)
+    if args.command == 'register':
+        register(consul, args)
     elif args.command == 'kv':
-
         if args.action == 'backup':
-            handle = open(args.file, 'w') if args.file else sys.stdout
-            try:
-                handle.write(json.dumps(session.kv.records()) + '\n')
-            except exceptions.ConnectionError:
-                connection_error()
-
-        elif args.action == 'restore':
-            handle = open(args.file, 'r') if args.file else sys.stdin
-            data = json.load(handle)
-            for row in data:
-                # Here's an awesome thing to make things work
-                if not adapters.PYTHON3 and isinstance(row[2], unicode):
-                    row[2] = row[2].encode('utf-8')
-                try:
-                    session.kv.set_record(row[0], row[1], row[2])
-                except exceptions.ConnectionError:
-                    connection_error()
-
-        elif args.action == 'ls':
-            try:
-                for key in session.kv.keys():
-                    if args.long:
-                        print('{0:>14} {1}'.format(len(session.kv[key]), key))
-                    else:
-                        print(key)
-            except exceptions.ConnectionError:
-                connection_error()
-
-        elif args.action in ['rm', 'del']:
-            try:
-                del session.kv[args.key]
-            except exceptions.ConnectionError:
-                connection_error()
-
+            kv_backup(consul, args)
+        elif args.action == 'del':
+            kv_delete(consul, args)
         elif args.action == 'get':
-            try:
-                sys.stdout.write("%s\n" % session.kv.get(args.key))
-            except exceptions.ConnectionError:
-                connection_error()
-
-        elif args.action == 'set':
-            try:
-                session.kv[args.key] = args.value
-            except exceptions.ConnectionError:
-                connection_error()
-
+            kv_get(consul, args)
+        elif args.action == 'ls':
+            kv_ls(consul, args)
         elif args.action == 'mkdir':
-            if not args.path[:-1] == '/':
-                args.path += '/'
-            try:
-                session.kv.set(args.path, None)
-            except exceptions.ConnectionError:
-                connection_error()
+            kv_mkdir(consul, args)
+        elif args.action == 'restore':
+            kv_restore(consul, args)
+        elif args.action == 'rm':
+            kv_rm(consul, args)
+        elif args.action == 'set':
+            kv_set(consul, args)
+
 
 if __name__ == '__main__':
     main()

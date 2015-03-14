@@ -163,7 +163,8 @@ class Consul(object):
         :rtype: str
 
         """
-        return '{0}://{1}:{2}/{3}'.format(self.SCHEME, host, port, self.VERSION)
+        return '{0}://{1}:{2}/{3}'.format(self.SCHEME, host, port,
+                                          self.VERSION)
 
 
 class _Endpoint(object):
@@ -244,15 +245,9 @@ class KV(_Endpoint):
         """Delete an item from the Key/Value service
 
         :param str item: The key name
-        :raises: KeyError
 
         """
-        item = item.lstrip('/')
-        response = self._adapter.delete(self._build_uri([item]))
-        if response.status_code != 200:
-            raise KeyError(
-                'Error removing "{0}" ({1})'.format(item,
-                                                    response.status_code))
+        self._delete_item(item)
 
     def __getitem__(self, item):
         """Get a value from the Key/Value service, returning it fully
@@ -311,14 +306,15 @@ class KV(_Endpoint):
         response = self._adapter.put(self._build_uri([item], query_params))
         return response.body
 
-    def delete(self, item):
+    def delete(self, item, recurse=False):
         """Delete an item from the Key/Value service
 
         :param str item: The item key
+        :param bool recurse: Remove keys prefixed with the item pattern
         :raises: KeyError
 
         """
-        return self.__delitem__(item)
+        return self._delete_item(item, recurse)
 
     def get(self, item, default=None, raw=False):
         """Get a value from the Key/Value service, returning it fully
@@ -494,6 +490,16 @@ class KV(_Endpoint):
 
         """
         return [row['Value'] for row in self._get_all_items()]
+
+    def _delete_item(self, item, recurse=False):
+        """Remove an item from the Consul database
+
+        :param str item:
+        :param recurse:
+        :return:
+        """
+        query_params = {'recurse': True} if recurse else {}
+        return self._adapter.delete(self._build_uri([item], query_params))
 
     def _get_all_items(self):
         """Internal method to return a list of all items in the Key/Value
@@ -829,7 +835,7 @@ class Catalog(_Endpoint):
     def __init__(self, uri, adapter, dc=None, token=None):
         super(Catalog, self).__init__(uri, adapter, dc, token)
 
-    def register(self,  node, address, datacenter=None,
+    def register(self, node, address, datacenter=None,
                  service=None, check=None):
         """A a low level mechanism for directly registering or updating
         entries in the catalog. It is usually recommended to use the agent
@@ -862,9 +868,9 @@ class Catalog(_Endpoint):
 
         It is important to note that Check does not have to be provided
         with Service and visa-versa. They can be provided or omitted at will.
-        
+
         Example service dict:
-        
+
         .. code:: python
 
             'Service': {
@@ -873,9 +879,9 @@ class Catalog(_Endpoint):
                 'Tags': ['master', 'v1'],
                 'Port': 8000,
             }
-            
+
         Example check dict:
-            
+
         .. code:: python
 
             'Check': {
@@ -887,15 +893,13 @@ class Catalog(_Endpoint):
                 'ServiceID': 'redis1'
             }
 
-
         :param str node: The node name
         :param str address: The node address
         :param str datacenter: The optional node datacenter
         :param dict service: An optional node service
         :param dict check: An optional node check
-
         :rtype: bool
-        
+
         """
         payload = {'Node': node, 'Address': address}
         if datacenter:
@@ -926,7 +930,7 @@ class Catalog(_Endpoint):
         :param str check_id: The optional check_id to remove
         :param str service_id: The optional service_id to remove
         :rtype: bool
-        
+
         """
         payload = {'Node': node}
         if datacenter:
