@@ -1,0 +1,24 @@
+Version History
+===============
+ - 0.4.0 - released *2015-03-14*
+  - Major internal restructure and code cleanup
+  - consulate.Session renamed to consulate.Consul
+  - Fix issues regarding UTF-8 values
+  - Fix usage of CAS for KV.set (#15)
+  - Added new ``consulate`` kv options: ls, mkdir, rm (#16)
+  - Add support for KV.get raw
+  - Add ACL endpoint support
+  - Add Session endpoint support
+  - Add Event endpoint support
+  - Added KV lock support (acquire, release)
+  - Remove all remaining fragments of Tornado support
+- 0.3.0 - released *2015-03-03*
+  - Fix issues with quoting and UTF-8 in ``consulate kv backup/restore`` (#6, #8,
+  - Fix installation issues related to missing tornado dependency (#10,
+  - Make simplejson requirement optional
+- 0.2.0 - released *2014-07-22*
+  - Extract the ``passport`` app to a standalone library
+- 0.1.2 - released *2014-05-06*
+  - consulate cli app bugfixes
+- 0.1.0 - released *2014-05-06*
+  - Initial release
