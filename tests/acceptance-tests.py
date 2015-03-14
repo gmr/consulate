@@ -15,14 +15,13 @@ import consulate
 
 from consulate.utils import PYTHON3
 
-consul_config = json.load(open('consul-test.json', 'r'))
-ACCESS_TOKEN = consul_config['acl_master_token']
+CONSUL_CONFIG = json.load(open('consul-test.json', 'r'))
 
 
 def generate_key(func):
     @functools.wraps(func)
     def _decorator(self, *args, **kwargs):
-        key = str(uuid.uuid4())
+        key = str(uuid.uuid4())[0:8]
         self.used_keys.append(key)
         func(self, key)
     return _decorator
@@ -31,7 +30,8 @@ def generate_key(func):
 class BaseTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.session = consulate.Consulate(token=ACCESS_TOKEN)
+        self.session = \
+            consulate.Consulate(token=CONSUL_CONFIG['acl_master_token'])
         self.used_keys = list()
 
     def tearDown(self):
@@ -40,6 +40,48 @@ class BaseTestCase(unittest.TestCase):
                 self.session.kv.delete(key)
             except KeyError:
                 pass
+
+
+class TestACL(BaseTestCase):
+
+    def setUp(self):
+        super(TestACL, self).setUp()
+        self.acl_list = list()
+
+    def tearDown(self):
+        for acl_id in self.acl_list:
+            self.session.acl.destroy(acl_id)
+
+    @generate_key
+    def test_create_and_destroy(self, key):
+        acl_id = self.session.acl.create(key)
+        self.acl_list.append(acl_id)
+        self.assertTrue(self.session.acl.destroy(acl_id))
+
+    @generate_key
+    def test_create_and_info(self, key):
+        acl_id = self.session.acl.create(key)
+        self.acl_list.append(acl_id)
+        self.assertIsNotNone(acl_id)
+        data = self.session.acl.info(acl_id)
+        self.assertIsNotNone(data)
+        self.assertEqual(acl_id, data.get('ID'))
+
+    @generate_key
+    def test_create_and_list(self, key):
+        acl_id = self.session.acl.create(key)
+        self.acl_list.append(acl_id)
+        data = self.session.acl.list()
+        self.assertIn(acl_id, [r.get('ID') for r in data])
+
+    @generate_key
+    def test_create_and_update(self, key):
+        acl_id = self.session.acl.create(key)
+        self.acl_list.append(acl_id)
+        self.session.acl.update(acl_id, 'Foo')
+        data = self.session.acl.list()
+        self.assertIn('Foo', [r.get('Name') for r in data])
+        self.assertIn(acl_id, [r.get('ID') for r in data])
 
 
 class TestKVGetWithNoKey(BaseTestCase):
@@ -89,12 +131,10 @@ class TestKVSet(BaseTestCase):
     @generate_key
     def test_set_item_get_item_unicode_value(self, key):
         self.session.kv.set(key, u'✈')
-        print(self.session.kv.get(key))
         self.assertEqual(self.session.kv.get(key), u'✈')
 
     @unittest.skipIf(not PYTHON3, 'No native unicode strings in Python2')
     @generate_key
     def test_set_item_get_item_unicode_value(self, key):
         self.session.kv.set(key, '✈')
-        print(self.session.kv.get(key))
         self.assertEqual(self.session.kv.get(key), '✈')

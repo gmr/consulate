@@ -36,6 +36,18 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8500
 
 
+class ConsulateException(Exception):
+    pass
+
+
+class ACLDisabled(ConsulateException):
+    pass
+
+
+class ACLForbidden(ConsulateException):
+    pass
+
+
 class Session(object):
     """Access the Consul HTTP API via Python
 
@@ -173,6 +185,10 @@ class _Endpoint(object):
         response = self._adapter.get(self._build_uri(params, query_params))
         if response.status_code == 200:
             return response.body
+        elif response.status_code == 401:
+            raise ACLDisabled(response.body)
+        elif response.status_code == 403:
+            raise ACLForbidden(response.body)
         return []
 
     def _get_list(self, params, query_params=None):
@@ -1011,21 +1027,61 @@ class ACL(_Endpoint):
         :rtype: str
 
         """
-        payload = {'name': name, 'type': acl_type}
+        payload = {'Name': name, 'Type': acl_type}
         if rules:
-            payload['rules'] = rules
+            payload['Rules'] = rules
         response = self._adapter.put(self._build_uri(['create']), payload)
-        print(response.status_code)
+        return response.body.get('ID')
+
+    def clone(self, acl_id):
+        """Clone an existing ACL returning the new ACL ID
+
+        :param str acl_id: The ACL id
+        :rtype: bool
+
+        """
+        response = self._adapter.put(self._build_uri(['clone', acl_id]))
+        return response.body.get('ID')
+
+    def destroy(self, acl_id):
+        """Delete the specified ACL
+
+        :param str acl_id: The ACL id
+        :rtype: bool
+
+        """
+        response = self._adapter.put(self._build_uri(['destroy', acl_id]))
         return response.status_code == 200
 
-    def list(self):
+    def info(self, acl_id):
+        """Return a dict of information about the ACL
+
+        :param str acl_id: The ACL id
+        :rtype: dict
+
         """
-        Return a list of all ACLs
+        return self._get(['info', acl_id])
+
+    def list(self):
+        """Return a list of all ACLs
 
         :rtype: list
 
         """
-        self._get(['list'])
+        return self._get(['list'])
+
+    def update(self, acl_id, name, acl_type='client', rules=None):
+        """Update an existing ACL, updating its values
+
+        :param str acl_id: The ACL id
+        :rtype: bool
+
+        """
+        payload = {'ID': acl_id, 'Name': name, 'Type': acl_type}
+        if rules:
+            payload['Rules'] = rules
+        response = self._adapter.put(self._build_uri(['update']), payload)
+        return response.status_code == 200
 
 
 class Status(_Endpoint):
@@ -1039,7 +1095,7 @@ class Status(_Endpoint):
         :rtype: str
 
         """
-        self._get(['leader'])
+        return self._get(['leader'])
 
     def peers(self):
         """Get the Raft peers for the datacenter the agent is running in.
@@ -1047,4 +1103,4 @@ class Status(_Endpoint):
         :rtype: list
 
         """
-        self._get(['peers'])
+        return self._get(['peers'])
