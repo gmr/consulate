@@ -1,6 +1,6 @@
-consulate.api.ACL
-=================
+ACL
+===
 
-.. autoclass:: consulate.api.ACL
+.. autoclass:: consulate.api.acl.ACL
        :members:
        :special-members:

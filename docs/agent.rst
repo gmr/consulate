@@ -1,6 +1,6 @@
-consulate.api.Agent
-===================
+Agent
+=====
 
-.. autoclass:: consulate.api.Agent
+.. autoclass:: consulate.api.agent.Agent
        :members:
        :special-members:

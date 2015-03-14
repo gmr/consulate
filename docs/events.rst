@@ -1,6 +1,6 @@
-consulate.api.Events
-====================
+Event
+=====
 
-.. autoclass:: consulate.api.Events
+.. autoclass:: consulate.api.event.Event
        :members:
        :special-members:

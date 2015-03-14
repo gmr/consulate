@@ -1,6 +1,6 @@
-consulate.api.Catalog
-=====================
+Catalog
+=======
 
-.. autoclass:: consulate.api.Catalog
+.. autoclass:: consulate.api.catalog.Catalog
        :members:
        :special-members:

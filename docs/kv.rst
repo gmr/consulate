@@ -1,24 +1,24 @@
-consulate.api.KV
-================
-The :py:class:`KV <consulate.api.KV>` class provides both high and low level access
-to the Consul Key/Value service. To use the :py:class:`KV <consulate.api.KV>` class,
-access the :py:meth:`consulate.Session.kv` attribute of the
-:py:class:`Session <consulate.Session>` class.
+KV
+==
+The :py:class:`KV <consulate.api.kv.KV>` class provides both high and low level access
+to the Consul Key/Value service. To use the :py:class:`KV <consulate.api.kv.KV>` class,
+access the :py:meth:`consulate.Consul.kv` attribute of the
+:py:class:`Session <consulate.Consul>` class.
 
-For high-level operation, the :py:class:`KV <consulate.api.KV>` class behaves
+For high-level operation, the :py:class:`KV <consulate.api.kv.KV>` class behaves
 like a standard Python :py:class:`dict`. You can get, set, and delete items in
 the Key/Value service just as you would with a normal dictionary.
 
 If you need to have access to the full record associated with an item, there are
-lower level methods such as :py:meth:`KV.set_record <consulate.api.KV.set_record>`
-and :py:meth:`KV.set_record <consulate.api.KV.get_record>`. These two methods
+lower level methods such as :py:meth:`KV.set_record <consulate.api.kv.KV.set_record>`
+and :py:meth:`KV.set_record <consulate.api.kv.KV.get_record>`. These two methods
 provide access to the other fields associated with the item in Consul, including
 the ``flag`` and various index related fields.
 
 Examples of Use
 ---------------
 Here's a big blob of example code that uses most of the functionality in the
-:py:class:`KV <consul.api.KV>` class. Check the comments in the code to see what
+:py:class:`KV <consul.api.kv.KV>` class. Check the comments in the code to see what
 part of the class it is demonstrating.
 
     .. code:: python
@@ -67,6 +67,6 @@ part of the class it is demonstrating.
 
 API
 ---
-.. autoclass:: consulate.api.KV
+.. autoclass:: consulate.api.kv.KV
        :members:
        :special-members:

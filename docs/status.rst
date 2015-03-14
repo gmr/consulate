@@ -1,6 +1,6 @@
-consulate.api.Status
-====================
+Status
+======
 
-.. autoclass:: consulate.api.Status
+.. autoclass:: consulate.api.status.Status
        :members:
        :special-members:

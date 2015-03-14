@@ -1,6 +1,6 @@
-consulate.api.Health
-====================
+Health
+======
 
-.. autoclass:: consulate.api.Health
+.. autoclass:: consulate.api.health.Health
        :members:
        :special-members:
