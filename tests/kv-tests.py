@@ -83,7 +83,6 @@ class KVTests(unittest.TestCase):
     def test_items(self):
         with httmock.HTTMock(kv_all_records_content):
             for index, row in enumerate(self.kv.items()):
-                print(row)
                 value = {ALL_ITEMS[index]['Key']: ALL_ITEMS[index]['Value']}
                 self.assertDictEqual(row, value)
 
