@@ -84,6 +84,25 @@ class TestACL(BaseTestCase):
         self.assertIn(acl_id, [r.get('ID') for r in data])
 
 
+class TestEvents(BaseTestCase):
+
+    def setUp(self):
+        super(TestEvents, self).setUp()
+
+    def test_fire(self):
+        event_name = 'test-event-%s' % str(uuid.uuid4())[0:8]
+        response = self.session.event.fire(event_name)
+        events = self.session.event.list(event_name)
+        if isinstance(events, dict):
+            self.assertEqual(event_name, events.get('Name'))
+            self.assertEqual(response, events.get('ID'))
+        elif isinstance(events, dict):
+            self.assertIn(event_name, [e.get('Name') for e in events])
+            self.assertIn(response, [e.get('ID') for e in events])
+        else:
+            assert False, 'Unexpected return type'
+
+
 class TestKVGetWithNoKey(BaseTestCase):
 
     @generate_key

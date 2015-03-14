@@ -25,8 +25,9 @@ class SessionTests(unittest.TestCase):
     @mock.patch('consulate.api.KV')
     @mock.patch('consulate.api.Health')
     @mock.patch('consulate.api.ACL')
+    @mock.patch('consulate.api.Event')
     @mock.patch('consulate.api.Status')
-    def setUp(self, status, acl, health, kv, catalog, agent, adapter):
+    def setUp(self, status, event, acl, health, kv, catalog, agent, adapter):
         self.host = '127.0.0.1'
         self.port = 8500
         self.dc = CONSUL_CONFIG['datacenter']
@@ -36,7 +37,7 @@ class SessionTests(unittest.TestCase):
         self.adapter = adapter
         self.agent = agent
         self.catalog = catalog
-        self.events = None
+        self.event = event
         self.kv = kv
         self.health = health
         self.status = status
@@ -67,7 +68,9 @@ class SessionTests(unittest.TestCase):
                                                       self.token))
 
     def test_events_initialization(self):
-        self.assertIsNone(self.session.events)
+        self.assertTrue(self.event.called_once_with(self.base_uri,
+                                                    self.adapter, self.dc,
+                                                    self.token))
 
     def test_kv_initialization(self):
         self.assertTrue(self.kv.called_once_with(self.base_uri, self.adapter,
@@ -92,8 +95,8 @@ class SessionTests(unittest.TestCase):
     def test_catalog_property(self):
         self.assertEqual(self.session.catalog, self.session._catalog)
 
-    def test_events_property(self):
-        self.assertEqual(self.session.events, self.session._events)
+    def test_event_property(self):
+        self.assertEqual(self.session.event, self.session._event)
 
     def test_health_property(self):
         self.assertEqual(self.session.health, self.session._health)

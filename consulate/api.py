@@ -67,7 +67,7 @@ class Session(object):
         self._acl = ACL(base_uri, self._adapter, dc, token)
         self._agent = Agent(base_uri, self._adapter, dc, token)
         self._catalog = Catalog(base_uri, self._adapter, dc, token)
-        self._events = None
+        self._event = Event(base_uri, self._adapter, dc, token)
         self._health = Health(base_uri, self._adapter, dc, token)
         self._kv = KV(base_uri, self._adapter, dc, token)
         self._status = Status(base_uri, self._adapter, dc, token)
@@ -103,14 +103,14 @@ class Session(object):
         return self._catalog
 
     @property
-    def events(self):
+    def event(self):
         """Access the Consul
         `Events <https://www.consul.io/docs/agent/http.html#events>`_ API
 
-        :rtype: :py:class:`consulate.api.Events`
+        :rtype: :py:class:`consulate.api.Event`
 
         """
-        return self._events
+        return self._event
 
     @property
     def health(self):
@@ -1082,6 +1082,51 @@ class ACL(_Endpoint):
             payload['Rules'] = rules
         response = self._adapter.put(self._build_uri(['update']), payload)
         return response.status_code == 200
+
+
+class Event(_Endpoint):
+    """The Event endpoints are used to fire a new event and list recent events.
+
+    """
+    def fire(self, name, payload=None,
+             dc=None, node=None, service=None, tag=None):
+        """Trigger a new user Event
+
+        :param str name: The name of the event
+        :param str payload: The opaque event payload
+        :param str dc: Optional datacenter to fire the event in
+        :param str node: Optional node to fire the event for
+        :param str service: Optional service to fire the event for
+        :param str tag: Option tag to fire the event for
+        :return str: the new event ID
+
+        """
+        query_args = {}
+        if dc:
+            query_args['dc'] = dc
+        if node:
+            query_args['node'] = node
+        if service:
+            query_args['service'] = service
+        if tag:
+            query_args['tag'] = tag
+        response = self._adapter.put(self._build_uri(['fire', name],
+                                                     query_args), payload)
+        return response.body.get('ID')
+
+    def list(self, name=None):
+        """Returns the most recent events known by the agent. As a consequence
+        of how the event command works, each agent may have a different view of
+        the events. Events are broadcast using the gossip protocol, so they
+        have no global ordering nor do they make a promise of delivery.
+
+        :return: list
+
+        """
+        query_args = {}
+        if name:
+            query_args['name'] = name
+        return self._get(['list'], query_args)
 
 
 class Status(_Endpoint):
