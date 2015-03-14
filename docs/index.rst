@@ -61,11 +61,12 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-.. |Version| image:: https://badge.fury.io/py/consulate.svg?
+
+.. |Version| image:: https://img.shields.io/pypi/v/consulate.svg?
    :target: http://badge.fury.io/py/consulate
 
-.. |Downloads| image:: https://pypip.in/d/consulate/badge.svg?
+.. |Downloads| image:: https://img.shields.io/pypi/dm/consulate.svg?
    :target: https://pypi.python.org/pypi/consulate
 
-.. |License| image:: https://pypip.in/license/consulate/badge.svg?
+.. |License| image:: https://img.shields.io/pypi/l/consulate.svg?
    :target: https://consulate.readthedocs.org
