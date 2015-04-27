@@ -31,14 +31,21 @@ class Health(base.Endpoint):
         """
         return self._get_list(['node', node_id])
 
-    def service(self, service_id):
+    def service(self, service_id, tag=None, passing=None):
         """Returns the nodes and health info of a service
 
         :param str service_id: The service ID
         :rtype: list
 
         """
-        return self._get_list(['service', service_id])
+
+        query_params = {}
+        if tag:
+            query_params['tag'] = tag
+        if passing:
+            query_params['passing'] = ''
+
+        return self._get_list(['service', service_id], query_params=query_params)
 
     def state(self, state):
         """Returns the checks in a given state where state is one of
