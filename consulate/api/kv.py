@@ -265,14 +265,15 @@ class KV(base.Endpoint):
         """
         return self.__setitem__(item, value)
 
-    def set_record(self, item, flags=0, value=None):
+    def set_record(self, item, flags=0, value=None, replace=True):
         """Set a full record, including the item flag
 
         :param str item: The key to set
         :param mixed value: The value to set
+        :param replace: If True existing value will be overwritten:
 
         """
-        self._set_item(item, value, flags)
+        self._set_item(item, value, flags, replace)
 
     def values(self):
         """Return a list of all of the values in the Key/Value service
@@ -324,13 +325,14 @@ class KV(base.Endpoint):
             return response.body
         return None
 
-    def _set_item(self, item, value, flags=None):
+    def _set_item(self, item, value, flags=None, replace=True):
         """Internal method for setting a key/value pair with flags in the
         Key/Value service
 
         :param str item: The key to set
         :param mixed value: The value to set
         :param int flags: User defined flags to set
+        :param bool replace: Overwrite existing values
         :raises: KeyError
 
         """
@@ -349,6 +351,8 @@ class KV(base.Endpoint):
         if response.status_code == 200:
             index = response.body.get('ModifyIndex')
             if response.body.get('Value') == value:
+                return True
+            if not replace:
                 return True
         query_params = {'cas': index}
         if flags is not None:

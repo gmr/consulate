@@ -37,6 +37,8 @@ def add_kv_args(parser):
     restore.add_argument('-f', '--file',
                          help='JSON file to read instead of stdin',
                          nargs="?", type=open)
+    restore.add_argument('-n', '--no-replace', help='Do not replace existing entries',
+                         action='store_true')
 
     kvls = kvsparsers.add_parser('ls', help='List all of the keys')
     kvls.add_argument('-l', '--long', help='Long format', action='store_true')
@@ -200,7 +202,10 @@ def kv_restore(consul, args):
         if not utils.PYTHON3 and isinstance(row[2], unicode):
             row[2] = row[2].encode('utf-8')
         try:
-            consul.kv.set_record(row[0], row[1], row[2])
+            if args.no_replace:
+                consul.kv.set_record(row[0], row[1], row[2], False)
+            else:
+                consul.kv.set_record(row[0], row[1], row[2], True)
         except exceptions.ConnectionError:
             connection_error()
 
