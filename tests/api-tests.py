@@ -65,7 +65,6 @@ class ConsulTests(unittest.TestCase):
                                                 None),
                           expectation)
 
-
     def test_acl_initialization(self):
         self.assertTrue(self.acl.called_once_with(self.base_uri,
                                                   self.adapter, self.dc,
@@ -295,7 +294,7 @@ class EndpointGetTests(unittest.TestCase):
                        'Date': 'Fri, 19 Dec 2014 20:44:28 GMT',
                        'Content-Length': 13,
                        'Content-Type': 'application/json'}
-            content = '{"consul": []}'
+            content = b'{"consul": []}'
             return httmock.response(200, content, headers, None, 0, request)
 
         with httmock.HTTMock(response_content):
@@ -333,7 +332,7 @@ class EndpointGetListTests(unittest.TestCase):
                        'Date': 'Fri, 19 Dec 2014 20:44:28 GMT',
                        'Content-Length': 13,
                        'Content-Type': 'application/json'}
-            content = '{"consul": []}'
+            content = b'{"consul": []}'
             return httmock.response(200, content, headers, None, 0, request)
 
         with httmock.HTTMock(response_content):

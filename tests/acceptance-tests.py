@@ -123,7 +123,7 @@ class TestKVSet(BaseTestCase):
     @generate_key
     def test_set_item_get_item_int_value(self, key):
         self.consul.kv[key] = 128
-        self.assertEqual(self.consul.kv[key], 128)
+        self.assertEqual(self.consul.kv[key], '128')
 
     @generate_key
     def test_set_item_get_item_str_value(self, key):
@@ -143,11 +143,11 @@ class TestKVSet(BaseTestCase):
     @generate_key
     def test_set_get_item_value(self, key):
         self.consul.kv.set(key, 128)
-        self.assertEqual(self.consul.kv.get(key), 128)
+        self.assertEqual(self.consul.kv.get(key), '128')
 
     @generate_key
     def test_set_item_get_item_str_value(self, key):
-        self.consul.kv.set(key, b'foo')
+        self.consul.kv.set(key, 'foo')
         self.assertEqual(self.consul.kv.get(key), 'foo')
 
     @unittest.skipIf(PYTHON3, 'No unicode strings in Python3')
@@ -160,7 +160,9 @@ class TestKVSet(BaseTestCase):
     @generate_key
     def test_set_item_get_item_unicode_value(self, key):
         self.consul.kv.set(key, '✈')
-        self.assertEqual(self.consul.kv.get(key), '✈')
+        response = self.consul.kv.get(key)
+        print(repr(response))
+        self.assertEqual(response, '✈')
 
 
 class TestSession(unittest.TestCase):

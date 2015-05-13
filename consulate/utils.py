@@ -19,7 +19,7 @@ def is_string(value):
     :rtype: bool
 
     """
-    checks = [isinstance(value, str)]
+    checks = [isinstance(value, t) for t in [bytes, str]]
     if not PYTHON3:
         checks.append(isinstance(value, unicode))
     return any(checks)

@@ -3,16 +3,14 @@ Base Endpoint class used by all endpoint classes
 
 """
 import base64
-try:
-    import simplejson as json
-except ImportError:
-    import json
+import json
 try:
     from urllib.parse import urlencode  # Python 3
 except ImportError:  # pragma: no cover
     from urllib import urlencode        # Python 2
 
 from consulate import exceptions
+from consulate import utils
 
 
 class Endpoint(object):
@@ -85,7 +83,7 @@ class Endpoint(object):
         return self._adapter.get(self._build_uri(url_parts,
                                                  query)).status_code == 200
 
-    def _get_response_body(self, url_parts, query):
+    def _get_response_body(self, url_parts, query=None):
         return self._adapter.get(self._build_uri(url_parts, query)).body
 
     def _put_no_response_body(self, url_parts, query=None, payload=None):
@@ -129,12 +127,15 @@ class Response(object):
 
         """
         if self.status_code == 200:
-            try:
-                value = json.loads(body)
-            except (TypeError, ValueError):
-                return body
-            if value is None:
+            if body is None:
                 return None
+            try:
+                if utils.PYTHON3 and isinstance(body, bytes):
+                    body = body.decode('utf-8')
+                value = json.loads(body, encoding='utf-8')
+            except (TypeError, ValueError) as error:
+                print("Error:", error)
+                return body
             if isinstance(value, bool):
                 return value
             if 'error' not in value:
@@ -142,12 +143,9 @@ class Response(object):
                     if 'Value' in row:
                         try:
                             row['Value'] = base64.b64decode(row['Value'])
-                            row['Value'] = row['Value'].decode('utf-8')
+                            if isinstance(row['Value'], bytes):
+                                row['Value'] = row['Value'].decode('utf-8')
                         except TypeError:
-                            pass
-                        try:
-                            row['Value'] = json.loads(row['Value'])
-                        except (TypeError, ValueError):
                             pass
             if isinstance(value, list) and len(value) == 1:
                 return value[0]

@@ -7,7 +7,7 @@ except ImportError:
 try:
     from urllib import parse  # Python 3
 except ImportError:  # pragma: no cover
-    import urlparse as parse      # Python 2
+    import urlparse as parse  # Python 2
 import uuid
 
 import consulate
@@ -17,14 +17,14 @@ from consulate import api
 SCHEME = consulate.DEFAULT_SCHEME
 VERSION = consulate.VERSION
 
-ALL_DATA = ('[{"CreateIndex":643,"ModifyIndex":643,"LockIndex":0,"Key":"bar",'
-            '"Flags":0,"Value":"YmF6"},{"CreateIndex":669,"ModifyIndex":669,"'
-            'LockIndex":0,"Key":"baz","Flags":0,"Value":"cXV4"},{"CreateIndex'
-            '":666,"ModifyIndex":666,"LockIndex":0,"Key":"corgie","Flags":128'
-            ',"Value":"ZG9n"},{"CreateIndex":642,"ModifyIndex":642,"LockIndex'
-            '":0,"Key":"foo","Flags":0,"Value":"YmFy"},{"CreateIndex":644,"Mo'
-            'difyIndex":644,"LockIndex":0,"Key":"quz","Flags":0,"Value":"dHJ1'
-            'ZQ=="}]')
+ALL_DATA = (b'[{"CreateIndex":643,"ModifyIndex":643,"LockIndex":0,"Key":"bar",'
+            b'"Flags":0,"Value":"YmF6"},{"CreateIndex":669,"ModifyIndex":669,"'
+            b'LockIndex":0,"Key":"baz","Flags":0,"Value":"cXV4"},{"CreateIndex'
+            b'":666,"ModifyIndex":666,"LockIndex":0,"Key":"corgie","Flags":128'
+            b',"Value":"ZG9n"},{"CreateIndex":642,"ModifyIndex":642,"LockIndex'
+            b'":0,"Key":"foo","Flags":0,"Value":"YmFy"},{"CreateIndex":644,"Mo'
+            b'difyIndex":644,"LockIndex":0,"Key":"quz","Flags":0,"Value":"dHJ1'
+            b'ZQ=="}]')
 
 ALL_ITEMS = [{'CreateIndex': 643, 'Flags': 0,
               'Key': 'bar', 'LockIndex': 0,
@@ -40,7 +40,7 @@ ALL_ITEMS = [{'CreateIndex': 643, 'Flags': 0,
               'ModifyIndex': 642, 'Value': 'bar'},
              {'CreateIndex': 644, 'Flags': 0,
               'Key': 'quz', 'LockIndex': 0,
-              'ModifyIndex': 644, 'Value': True}]
+              'ModifyIndex': 644, 'Value': 'true'}]
 
 
 @httmock.all_requests
