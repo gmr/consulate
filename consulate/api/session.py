@@ -65,9 +65,8 @@ class Session(base.Endpoint):
             payload['TTL'] = ttl
         if checks:
             payload['Checks'] = checks
-        response = self._adapter.put(self._build_uri(['create'], query_param),
-                                     payload)
-        return response.body.get('ID')
+        return self._put_response_body(['create'], query_param,
+                                       payload).get('ID')
 
     def destroy(self, session_id, datacenter=None):
         """Destroy an existing session
@@ -88,9 +87,7 @@ class Session(base.Endpoint):
 
         """
         query_param = {'dc': datacenter} if datacenter else {}
-        response = self._adapter.get(self._build_uri(['info', session_id],
-                                                     query_param))
-        return response.body
+        return self._get_response_body(['info', session_id], query_param)
 
     def list(self, datacenter=None):
         """Returns the active sessions for a given datacenter.
@@ -99,8 +96,7 @@ class Session(base.Endpoint):
 
         """
         query_param = {'dc': datacenter} if datacenter else {}
-        response = self._adapter.get(self._build_uri(['list'], query_param))
-        return response.body
+        return self._get_response_body(['list'], query_param)
 
     def node(self, node, datacenter=None):
         """Returns the active sessions for a given node and datacenter.
@@ -111,9 +107,7 @@ class Session(base.Endpoint):
 
         """
         query_param = {'dc': datacenter} if datacenter else {}
-        response = self._adapter.get(self._build_uri(['node', node],
-                                                     query_param))
-        return response.body
+        return self._get_response_body(['node', node], query_param)
 
     def renew(self, session_id, datacenter=None):
         """Renew the given session. This is used with sessions that have a TTL,
@@ -125,6 +119,5 @@ class Session(base.Endpoint):
 
         """
         query_param = {'dc': datacenter} if datacenter else {}
-        response = self._adapter.put(self._build_uri(['renew', session_id],
-                                                     query_param))
-        return response.body
+        return self._put_response_body(['renew', session_id], query_param)
+

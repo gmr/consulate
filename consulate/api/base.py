@@ -82,30 +82,19 @@ class Endpoint(object):
         return result
 
     def _get_no_response_body(self, url_parts, query=None):
-        """Perform a request that only returns a ``status_code`` of ``200`` to
-        determine success.
-
-        :param function method: The method to call
-        :param str url: The URL to make the call to
-        :param dict|None payload: Optional payload for the call
-        :rtype: bool
-
-        """
         return self._adapter.get(self._build_uri(url_parts,
                                                  query)).status_code == 200
 
+    def _get_response_body(self, url_parts, query):
+        return self._adapter.get(self._build_uri(url_parts, query)).body
+
     def _put_no_response_body(self, url_parts, query=None, payload=None):
-        """Perform a request that only returns a ``status_code`` of ``200`` to
-        determine success.
-
-        :param function method: The method to call
-        :param str url: The URL to make the call to
-        :param dict|None payload: Optional payload for the call
-        :rtype: bool
-
-        """
         return self._adapter.put(self._build_uri(url_parts, query),
                                  payload).status_code == 200
+
+    def _put_response_body(self, url_parts, query=None, payload=None):
+        return self._adapter.put(self._build_uri(url_parts, query),
+                                 payload).body
 
 
 class Response(object):
