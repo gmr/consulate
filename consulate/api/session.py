@@ -77,9 +77,7 @@ class Session(base.Endpoint):
 
         """
         query_param = {'dc': datacenter} if datacenter else {}
-        response = self._adapter.put(self._build_uri(['destroy', session_id],
-                                                     query_param))
-        return response.status_code == 200
+        return self._put_no_response_body(['destroy', session_id], query_param)
 
     def info(self, session_id, datacenter=None):
         """Returns the requested session information within a given datacenter.

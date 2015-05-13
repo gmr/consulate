@@ -36,15 +36,16 @@ def add_kv_args(parser):
                                     help='Restore from stdin or a JSON file')
     restore.add_argument('-f', '--file',
                          help='JSON file to read instead of stdin',
-                         nargs="?", type=open)
-    restore.add_argument('-n', '--no-replace', help='Do not replace existing entries',
+                         nargs="?",
+                         type=open)
+    restore.add_argument('-n', '--no-replace',
+                         help='Do not replace existing entries',
                          action='store_true')
 
     kvls = kvsparsers.add_parser('ls', help='List all of the keys')
     kvls.add_argument('-l', '--long', help='Long format', action='store_true')
 
-    kvmkdir = kvsparsers.add_parser('mkdir',
-                                    help='Create a folder')
+    kvmkdir = kvsparsers.add_parser('mkdir', help='Create a folder')
     kvmkdir.add_argument('path', help='The path to create')
 
     kvget = kvsparsers.add_parser('get', help='Get a key from the database')
@@ -54,7 +55,8 @@ def add_kv_args(parser):
     kvset.add_argument('value', help='The value of the key')
     kvrm = kvsparsers.add_parser('rm', help='Remove a key from the database')
     kvrm.add_argument('key', help='The key to delete')
-    kvrm.add_argument('-r', '--recurse', action='store_true',
+    kvrm.add_argument('-r', '--recurse',
+                      action='store_true',
                       help='Delete all keys prefixed with the specified key')
 
     kvdel = kvsparsers.add_parser('del',
@@ -72,13 +74,15 @@ def add_register_args(parser):
     registerp = parser.add_parser('register',
                                   help='Register a service for this node')
     registerp.add_argument('name', help='The service name')
-    registerp.add_argument('-a', '--address', default=None,
+    registerp.add_argument('-a', '--address',
+                           default=None,
                            help='Specify an address')
-    registerp.add_argument('-p', '--port', default=None,
-                           help='Specify a port')
-    registerp.add_argument('-s', '--service-id', default=None,
+    registerp.add_argument('-p', '--port', default=None, help='Specify a port')
+    registerp.add_argument('-s', '--service-id',
+                           default=None,
                            help='Specify a service ID')
-    registerp.add_argument('-t', '--tags', default=[],
+    registerp.add_argument('-t', '--tags',
+                           default=[],
                            help='Specify a comma delimited list of tags')
 
     rsparsers = registerp.add_subparsers(dest='ctype',
@@ -86,14 +90,19 @@ def add_register_args(parser):
     check = rsparsers.add_parser('check',
                                  help='Define an external script-based check')
 
-    check.add_argument('interval', default=10, type=int,
+    check.add_argument('interval',
+                       default=10,
+                       type=int,
                        help='How often to run the check script')
-    check.add_argument('path', default=None,
+    check.add_argument('path',
+                       default=None,
                        help='Path to the script invoked by Consul')
     rsparsers.add_parser('no-check', help='Do not enable service monitoring')
 
     ttl = rsparsers.add_parser('ttl', help='Define a duration based TTL check')
-    ttl.add_argument('duration', type=int, default=10,
+    ttl.add_argument('duration',
+                     type=int,
+                     default=10,
                      help='TTL duration for a service with missing check data')
 
 
@@ -101,14 +110,16 @@ def parse_cli_args():
     """Create the argument parser and add the arguments"""
     parser = argparse.ArgumentParser(description='CLI utilities for Consul')
 
-    parser.add_argument('--api-host', default='localhost',
+    parser.add_argument('--api-host',
+                        default='localhost',
                         help='The consul host to connect on')
-    parser.add_argument('--api-port', default=8500,
+    parser.add_argument('--api-port',
+                        default=8500,
                         help='The consul API port to connect to')
-    parser.add_argument('--datacenter', default=None,
+    parser.add_argument('--datacenter',
+                        default=None,
                         help='The datacenter to specify for the connection')
-    parser.add_argument('--token', default=None,
-                        help='ACL token')
+    parser.add_argument('--token', default=None, help='ACL token')
 
     sparser = parser.add_subparsers(title='Commands', dest='command')
     add_register_args(sparser)
@@ -248,11 +259,8 @@ def register(consul, args):
     ttl = '%ss' % args.duration if args.ctype == 'ttl' else None
     tags = args.tags.split(',') if args.tags else None
     try:
-        consul.agent.service.register(args.name,
-                                      args.service_id,
-                                      args.address,
-                                      args.port,
-                                      tags, check, interval, ttl)
+        consul.agent.service.register(args.name, args.service_id, args.address,
+                                      args.port, tags, check, interval, ttl)
     except exceptions.ConnectionError:
         connection_error()
 
@@ -260,8 +268,8 @@ def register(consul, args):
 def main():
     """Entrypoint for the consulate cli application"""
     args = parse_cli_args()
-    consul = consulate.Consul(args.api_host, args.api_port,
-                              args.datacenter, args.token)
+    consul = consulate.Consul(args.api_host, args.api_port, args.datacenter,
+                              args.token)
     if args.command == 'register':
         register(consul, args)
     elif args.command == 'kv':

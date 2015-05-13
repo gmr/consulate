@@ -45,7 +45,8 @@ class Health(base.Endpoint):
         if passing:
             query_params['passing'] = ''
 
-        return self._get_list(['service', service_id], query_params=query_params)
+        return self._get_list(['service', service_id],
+                              query_params=query_params)
 
     def state(self, state):
         """Returns the checks in a given state where state is one of

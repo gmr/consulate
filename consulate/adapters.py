@@ -23,6 +23,7 @@ def prepare_data(fun):
     :param function fun: The decorated function
 
     """
+
     def inner(*args, **kwargs):
         """Inner wrapper function for the decorator
 
@@ -35,11 +36,11 @@ def prepare_data(fun):
         elif len(args) == 3 and not utils.is_string(args[2]):
             args = args[0], args[1], json.dumps(args[2])
         return fun(*args, **kwargs)
+
     return inner
 
 
 class Request(object):
-
     """The Request adapter class"""
 
     def __init__(self, timeout=None):
@@ -61,8 +62,7 @@ class Request(object):
         """
         LOGGER.debug("DELETE %s", uri)
         response = self.session.delete(uri, timeout=self.timeout)
-        return api.Response(response.status_code,
-                            response.content,
+        return api.Response(response.status_code, response.content,
                             response.headers)
 
     def get(self, uri):
@@ -74,8 +74,7 @@ class Request(object):
         """
         LOGGER.debug("GET %s", uri)
         response = self.session.get(uri, timeout=self.timeout)
-        return api.Response(response.status_code,
-                            response.content,
+        return api.Response(response.status_code, response.content,
                             response.headers)
 
     @prepare_data
@@ -94,15 +93,17 @@ class Request(object):
             headers = {'Content-Type': CONTENT_JSON}
         if not utils.PYTHON3 and data:
             data = data.encode('utf-8')
-        response = self.session.put(uri, data=data, headers=headers,
+        response = self.session.put(uri,
+                                    data=data,
+                                    headers=headers,
                                     timeout=self.timeout)
-        return api.Response(response.status_code,
-                            response.content,
+        return api.Response(response.status_code, response.content,
                             response.headers)
 
 
 class UnixSocketRequest(Request):
     """Use to communicate with Consul over a Unix socket"""
+
     def __init__(self, timeout=None):
         self.session = requests_unixsocket.Session()
         self.timeout = timeout

@@ -51,7 +51,7 @@ class ACL(base.Endpoint):
         :rtype: bool
 
         """
-        response = self._adapter.put(self._build_uri(['clone', acl_id]))
+        response = self._adapter.put(['clone', acl_id])
         return response.body.get('ID')
 
     def destroy(self, acl_id):
@@ -61,8 +61,7 @@ class ACL(base.Endpoint):
         :rtype: bool
 
         """
-        response = self._adapter.put(self._build_uri(['destroy', acl_id]))
-        return response.status_code == 200
+        return self._put_no_response_body(['destroy', acl_id])
 
     def info(self, acl_id):
         """Return a dict of information about the ACL
@@ -91,5 +90,4 @@ class ACL(base.Endpoint):
         payload = {'ID': acl_id, 'Name': name, 'Type': acl_type}
         if rules:
             payload['Rules'] = rules
-        response = self._adapter.put(self._build_uri(['update']), payload)
-        return response.status_code == 200
+        return self._put_no_response_body(['update'], None, payload)

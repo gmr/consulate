@@ -2,20 +2,22 @@
 Consulate: A client library for Consul
 
 """
-__version__ = '0.4.0'
-
+__version__ = '0.5.0'
 
 import logging
 try:
     from logging import NullHandler
 except ImportError:
+
     class NullHandler(logging.Handler):
         """Python 2.6 does not have a NullHandler"""
+
         def emit(self, record):
             """Emit a record
             :param record record: The record to emit
             """
             pass
+
 
 logging.getLogger('consulate').addHandler(NullHandler())
 
@@ -51,9 +53,14 @@ class Consul(object):
         (Default: :py:class:`consulate.adapters.Request`)
 
     """
-    def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT,
-                 datacenter=None, token=None,
-                 scheme=DEFAULT_SCHEME, adapter=None):
+
+    def __init__(self,
+                 host=DEFAULT_HOST,
+                 port=DEFAULT_PORT,
+                 datacenter=None,
+                 token=None,
+                 scheme=DEFAULT_SCHEME,
+                 adapter=None):
         """Create a new instance of the Consul class"""
         base_uri = self._base_uri(scheme, host, port)
         if adapter:
@@ -163,7 +170,6 @@ class Consul(object):
         if port:
             return '{0}://{1}:{2}/{3}'.format(scheme, host, port, VERSION)
         return '{0}://{1}/{2}'.format(scheme, utils.quote(host, ''), VERSION)
-
 
 # Backwards compatibility with 0.3.0
 Session = Consul

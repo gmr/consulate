@@ -88,8 +88,8 @@ class Catalog(base.Endpoint):
             payload['Service'] = service
         if check:
             payload['Check'] = check
-        response = self._adapter.put(self._build_uri(['register']), payload)
-        return response.status_code == 200
+
+        return self._adapter.put(['register'], None, payload)
 
     def deregister(self, node, datacenter=None,
                    check_id=None, service_id=None):
@@ -119,8 +119,7 @@ class Catalog(base.Endpoint):
             payload['CheckID'] = check_id
         if service_id:
             payload['ServiceID'] = service_id
-        response = self._adapter.put(self._build_uri(['deregister']), payload)
-        return response.status_code == 200
+        return self._adapter.put(['deregister'], None, payload)
 
     def datacenters(self):
         """Return all the datacenters that are known by the Consul server.

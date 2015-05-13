@@ -89,14 +89,13 @@ class Agent(base.Endpoint):
                 raise ValueError('Can not specify script and ttl together')
 
             # Register the check
-            response = self._adapter.put(self._build_uri(['register']),
-                                         {'ID': check_id,
-                                          'Name': name,
-                                          'Notes': notes,
-                                          'Script': script,
-                                          'Interval': interval,
-                                          'TTL': ttl})
-            return response.status_code == 200
+            return self._put_no_response_body(['register'], None,
+                                              {'ID': check_id,
+                                               'Name': name,
+                                               'Notes': notes,
+                                               'Script': script,
+                                               'Interval': interval,
+                                               'TTL': ttl})
 
         def deregister(self, check_id):
             """Remove a check from the local agent. The agent will take care
@@ -105,9 +104,7 @@ class Agent(base.Endpoint):
             :param str check_id: The check id
 
             """
-            response = self._adapter.get(self._build_uri(['deregister',
-                                                          check_id]))
-            return response.status_code == 200
+            return self._get_no_response_body(['deregister', check_id])
 
         def ttl_pass(self, check_id):
             """This endpoint is used with a check that is of the TTL type.
@@ -117,8 +114,7 @@ class Agent(base.Endpoint):
             :param str check_id: The check id
 
             """
-            response = self._adapter.get(self._build_uri(['pass', check_id]))
-            return response.status_code == 200
+            return self._get_no_response_body(['pass', check_id])
 
         def ttl_warn(self, check_id):
             """This endpoint is used with a check that is of the TTL type.
@@ -128,8 +124,7 @@ class Agent(base.Endpoint):
             :param str check_id: The check id
 
             """
-            response = self._adapter.get(self._build_uri(['warn', check_id]))
-            return response.status_code == 200
+            return self._get_no_response_body(['warn', check_id])
 
         def ttl_fail(self, check_id):
             """This endpoint is used with a check that is of the TTL type.
@@ -139,8 +134,7 @@ class Agent(base.Endpoint):
             :param str check_id: The check id
 
             """
-            response = self._adapter.get(self._build_uri(['fail', check_id]))
-            return response.status_code == 200
+            return self._get_no_response_body(['fail', check_id])
 
     class Service(base.Endpoint):
         """One of the main goals of service discovery is to provide a catalog
@@ -193,8 +187,7 @@ class Agent(base.Endpoint):
                     del payload[key]
 
             # Register the service
-            result = self._adapter.put(self._build_uri(['register']), payload)
-            return result.status_code == 200
+            return self._put_no_response_body(['register'], None, payload)
 
         def deregister(self, service_id):
             """Deregister the service from the local agent. The agent will
@@ -205,9 +198,7 @@ class Agent(base.Endpoint):
             :rtype: bool
 
             """
-            result = self._adapter.get(self._build_uri(['deregister',
-                                                        service_id]))
-            return result.status_code == 200
+            return self._get_no_response_body(['deregister', service_id])
 
     def checks(self):
         """return the all the checks that are registered with the local agent.
@@ -231,8 +222,7 @@ class Agent(base.Endpoint):
         node into the left state allows its old entries to be removed.
 
         """
-        result = self._adapter.get(self._build_uri(['force-leave', node]))
-        return result.status_code == 200
+        return self._get_no_response_body(['force-leave', node])
 
     def join(self, address, wan=False):
         """This endpoint is hit with a GET and is used to instruct the agent
@@ -246,9 +236,7 @@ class Agent(base.Endpoint):
 
         """
         query_params = {'wan': 1} if wan else None
-        result = self._adapter.get(self._build_uri(['join', address],
-                                                   query_params))
-        return result.status_code == 200
+        return self._get_no_response_body(['join', address], query_params)
 
     def members(self):
         """Returns the members the agent sees in the cluster gossip pool.

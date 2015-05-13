@@ -36,8 +36,7 @@ class KV(base.Endpoint):
 
         """
         item = item.lstrip('/')
-        response = self._adapter.get(self._build_uri([item]))
-        return response.status_code == 200
+        return self._get_no_response_body([item])
 
     def __delitem__(self, item):
         """Delete an item from the Key/Value service
