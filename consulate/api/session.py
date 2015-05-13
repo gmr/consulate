@@ -8,8 +8,13 @@ from consulate.api import base
 class Session(base.Endpoint):
     """Create, destroy, and query Consul sessions."""
 
-    def create(self, name=None, behavior='release', node=None, delay=None,
-               ttl=None, checks=None):
+    def create(self,
+               name=None,
+               behavior='release',
+               node=None,
+               delay=None,
+               ttl=None,
+               checks=None):
         """Initialize a new session.
 
         None of the fields are mandatory, and in fact no body needs to be PUT

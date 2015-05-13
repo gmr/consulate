@@ -8,7 +8,7 @@ except ImportError:
 try:
     from urllib import parse  # Python 3
 except ImportError:  # pragma: no cover
-    import urlparse as parse      # Python 2
+    import urlparse as parse  # Python 2
 import uuid
 
 import consulate
@@ -32,8 +32,8 @@ class ConsulTests(unittest.TestCase):
     @mock.patch('consulate.api.Event')
     @mock.patch('consulate.api.Session')
     @mock.patch('consulate.api.Status')
-    def setUp(self, status, session, event, acl, health, kv, catalog,
-              agent, adapter):
+    def setUp(self, status, session, event, acl, health, kv, catalog, agent,
+              adapter):
         self.host = '127.0.0.1'
         self.port = 8500
         self.dc = CONSUL_CONFIG['datacenter']
@@ -49,8 +49,7 @@ class ConsulTests(unittest.TestCase):
         self.session = session
         self.status = status
 
-        self.base_uri = '{0}://{1}:{2}/v1'.format(SCHEME,
-                                                  self.host, self.port)
+        self.base_uri = '{0}://{1}:{2}/v1'.format(SCHEME, self.host, self.port)
         self.consul = consulate.Consul(self.host, self.port, self.dc,
                                        self.token)
 
@@ -62,20 +61,17 @@ class ConsulTests(unittest.TestCase):
         expectation = 'http+unix://%2Fvar%2Flib%2Fconsul%2Fconsul.sock/v1'
         self.assertEquals(self.consul._base_uri('http+unix',
                                                 '/var/lib/consul/consul.sock',
-                                                None),
-                          expectation)
+                                                None), expectation)
 
     def test_acl_initialization(self):
-        self.assertTrue(self.acl.called_once_with(self.base_uri,
-                                                  self.adapter, self.dc,
-                                                  self.token))
+        self.assertTrue(self.acl.called_once_with(self.base_uri, self.adapter,
+                                                  self.dc, self.token))
 
     def test_adapter_initialization(self):
         self.assertTrue(self.adapter.called_once_with())
 
     def test_agent_initialization(self):
-        self.assertTrue(self.agent.called_once_with(self.base_uri,
-                                                    self.adapter,
+        self.assertTrue(self.agent.called_once_with(self.base_uri, self.adapter,
                                                     self.dc, self.token))
 
     def test_catalog_initialization(self):
@@ -84,9 +80,8 @@ class ConsulTests(unittest.TestCase):
                                                       self.token))
 
     def test_events_initialization(self):
-        self.assertTrue(self.event.called_once_with(self.base_uri,
-                                                    self.adapter, self.dc,
-                                                    self.token))
+        self.assertTrue(self.event.called_once_with(self.base_uri, self.adapter,
+                                                    self.dc, self.token))
 
     def test_kv_initialization(self):
         self.assertTrue(self.kv.called_once_with(self.base_uri, self.adapter,
@@ -198,8 +193,7 @@ class EndpointBuildURIWithDCTests(unittest.TestCase):
         self.assertEqual(parsed.scheme, SCHEME)
         self.assertEqual(parsed.netloc, 'localhost:8500')
         self.assertEqual(parsed.path, '/{0}/endpoint/foo/bar'.format(VERSION))
-        self.assertDictEqual(query_params, {'dc': [self.dc],
-                                            'baz': ['qux']})
+        self.assertDictEqual(query_params, {'dc': [self.dc], 'baz': ['qux']})
 
 
 class EndpointBuildURIWithTokenTests(unittest.TestCase):
@@ -233,8 +227,9 @@ class EndpointBuildURIWithTokenTests(unittest.TestCase):
         self.assertEqual(parsed.scheme, SCHEME)
         self.assertEqual(parsed.netloc, 'localhost:8500')
         self.assertEqual(parsed.path, '/{0}/endpoint/foo/bar'.format(VERSION))
-        self.assertDictEqual(query_params, {'token': [self.token],
-                                            'baz': ['qux']})
+        self.assertDictEqual(query_params,
+                             {'token': [self.token],
+                              'baz': ['qux']})
 
 
 class EndpointBuildURIWithDCAndTokenTests(unittest.TestCase):
@@ -260,8 +255,9 @@ class EndpointBuildURIWithDCAndTokenTests(unittest.TestCase):
         self.assertEqual(parsed.scheme, SCHEME)
         self.assertEqual(parsed.netloc, 'localhost:8500')
         self.assertEqual(parsed.path, '/{0}/endpoint/foo/bar'.format(VERSION))
-        self.assertDictEqual(query_params, {'dc': [self.dc],
-                                            'token': [self.token]})
+        self.assertDictEqual(query_params,
+                             {'dc': [self.dc],
+                              'token': [self.token]})
 
     def test_build_uri_with_params(self):
         result = self.endpoint._build_uri(['foo', 'bar'], {'baz': 'qux'})
@@ -270,9 +266,11 @@ class EndpointBuildURIWithDCAndTokenTests(unittest.TestCase):
         self.assertEqual(parsed.scheme, SCHEME)
         self.assertEqual(parsed.netloc, 'localhost:8500')
         self.assertEqual(parsed.path, '/{0}/endpoint/foo/bar'.format(VERSION))
-        self.assertDictEqual(query_params, {'dc': [self.dc],
-                                            'token': [self.token],
-                                            'baz': ['qux']})
+        self.assertDictEqual(
+            query_params,
+            {'dc': [self.dc],
+             'token': [self.token],
+             'baz': ['qux']})
 
 
 class EndpointGetTests(unittest.TestCase):
@@ -286,14 +284,17 @@ class EndpointGetTests(unittest.TestCase):
                                       self.token)
 
     def test_get_200_returns_response_body(self):
+
         @httmock.all_requests
         def response_content(_url_unused, request):
-            headers = {'X-Consul-Index': 4,
-                       'X-Consul-Knownleader': 'true',
-                       'X-Consul-Lastcontact': 0,
-                       'Date': 'Fri, 19 Dec 2014 20:44:28 GMT',
-                       'Content-Length': 13,
-                       'Content-Type': 'application/json'}
+            headers = {
+                'X-Consul-Index': 4,
+                'X-Consul-Knownleader': 'true',
+                'X-Consul-Lastcontact': 0,
+                'Date': 'Fri, 19 Dec 2014 20:44:28 GMT',
+                'Content-Length': 13,
+                'Content-Type': 'application/json'
+            }
             content = b'{"consul": []}'
             return httmock.response(200, content, headers, None, 0, request)
 
@@ -302,10 +303,13 @@ class EndpointGetTests(unittest.TestCase):
             self.assertEqual(values, {'consul': []})
 
     def test_get_404_returns_empty_list(self):
+
         @httmock.all_requests
         def response_content(_url_unused, request):
-            headers = {'content-length': 0,
-                       'content-type': 'text/plain; charset=utf-8'}
+            headers = {
+                'content-length': 0,
+                'content-type': 'text/plain; charset=utf-8'
+            }
             return httmock.response(404, None, headers, None, 0, request)
 
         with httmock.HTTMock(response_content):
@@ -324,14 +328,17 @@ class EndpointGetListTests(unittest.TestCase):
                                       self.token)
 
     def test_get_list_200_returns_response_body(self):
+
         @httmock.all_requests
         def response_content(_url_unused, request):
-            headers = {'X-Consul-Index': 4,
-                       'X-Consul-Knownleader': 'true',
-                       'X-Consul-Lastcontact': 0,
-                       'Date': 'Fri, 19 Dec 2014 20:44:28 GMT',
-                       'Content-Length': 13,
-                       'Content-Type': 'application/json'}
+            headers = {
+                'X-Consul-Index': 4,
+                'X-Consul-Knownleader': 'true',
+                'X-Consul-Lastcontact': 0,
+                'Date': 'Fri, 19 Dec 2014 20:44:28 GMT',
+                'Content-Length': 13,
+                'Content-Type': 'application/json'
+            }
             content = b'{"consul": []}'
             return httmock.response(200, content, headers, None, 0, request)
 
@@ -340,10 +347,13 @@ class EndpointGetListTests(unittest.TestCase):
             self.assertEqual(values, [{'consul': []}])
 
     def test_get_list_404_returns_empty_list(self):
+
         @httmock.all_requests
         def response_content(_url_unused, request):
-            headers = {'content-length': 0,
-                       'content-type': 'text/plain; charset=utf-8'}
+            headers = {
+                'content-length': 0,
+                'content-type': 'text/plain; charset=utf-8'
+            }
             return httmock.response(404, None, headers, None, 0, request)
 
         with httmock.HTTMock(response_content):

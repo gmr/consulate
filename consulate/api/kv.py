@@ -27,6 +27,7 @@ class KV(base.Endpoint):
     the additional fields exposed by the KV service.
 
     """
+
     def __contains__(self, item):
         """Return True if there is a value set in the Key/Value service for the
         given key.

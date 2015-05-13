@@ -9,8 +9,13 @@ class Event(base.Endpoint):
     """The Event endpoints are used to fire a new event and list recent events.
 
     """
-    def fire(self, name, payload=None, datacenter=None, node=None,
-             service=None, tag=None):
+
+    def fire(self, name,
+             payload=None,
+             datacenter=None,
+             node=None,
+             service=None,
+             tag=None):
         """Trigger a new user Event
 
         :param str name: The name of the event

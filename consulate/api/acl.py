@@ -10,6 +10,7 @@ class ACL(base.Endpoint):
     tokens.
 
     """
+
     def create(self, name, acl_type='client', rules=None):
         """The create endpoint is used to make a new token. A token has a name,
         a type, and a set of ACL rules.

@@ -13,6 +13,7 @@ class Health(base.Endpoint):
     provide the raw entries.
 
     """
+
     def checks(self, service_id):
         """Return checks for the given service.
 

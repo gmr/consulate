@@ -10,6 +10,7 @@ class Status(base.Endpoint):
     generally very low level, and not really useful for clients.
 
     """
+
     def leader(self):
         """Get the Raft leader for the datacenter the agent is running in.
 

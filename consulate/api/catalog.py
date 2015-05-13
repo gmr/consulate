@@ -12,11 +12,14 @@ class Catalog(base.Endpoint):
     Consul cluster.
 
     """
+
     def __init__(self, uri, adapter, dc=None, token=None):
         super(Catalog, self).__init__(uri, adapter, dc, token)
 
-    def register(self, node, address, datacenter=None,
-                 service=None, check=None):
+    def register(self, node, address,
+                 datacenter=None,
+                 service=None,
+                 check=None):
         """A a low level mechanism for directly registering or updating
         entries in the catalog. It is usually recommended to use the agent
         local endpoints, as they are simpler and perform anti-entropy.
@@ -91,8 +94,7 @@ class Catalog(base.Endpoint):
 
         return self._adapter.put(['register'], None, payload)
 
-    def deregister(self, node, datacenter=None,
-                   check_id=None, service_id=None):
+    def deregister(self, node, datacenter=None, check_id=None, service_id=None):
         """Directly remove entries in the catalog. It is usually recommended
         to use the agent local endpoints, as they are simpler and perform
         anti-entropy.

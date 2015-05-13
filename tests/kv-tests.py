@@ -26,33 +26,54 @@ ALL_DATA = (b'[{"CreateIndex":643,"ModifyIndex":643,"LockIndex":0,"Key":"bar",'
             b'difyIndex":644,"LockIndex":0,"Key":"quz","Flags":0,"Value":"dHJ1'
             b'ZQ=="}]')
 
-ALL_ITEMS = [{'CreateIndex': 643, 'Flags': 0,
-              'Key': 'bar', 'LockIndex': 0,
-              'ModifyIndex': 643, 'Value': 'baz'},
-             {'CreateIndex': 669, 'Flags': 0,
-              'Key': 'baz', 'LockIndex': 0,
-              'ModifyIndex': 669, 'Value': 'qux'},
-             {'CreateIndex': 666, 'Flags': 128,
-              'Key': 'corgie', 'LockIndex': 0,
-              'ModifyIndex': 666, 'Value': 'dog'},
-             {'CreateIndex': 642, 'Flags': 0,
-              'Key': 'foo', 'LockIndex': 0,
-              'ModifyIndex': 642, 'Value': 'bar'},
-             {'CreateIndex': 644, 'Flags': 0,
-              'Key': 'quz', 'LockIndex': 0,
-              'ModifyIndex': 644, 'Value': 'true'}]
+ALL_ITEMS = [{
+    'CreateIndex': 643,
+    'Flags': 0,
+    'Key': 'bar',
+    'LockIndex': 0,
+    'ModifyIndex': 643,
+    'Value': 'baz'
+}, {
+    'CreateIndex': 669,
+    'Flags': 0,
+    'Key': 'baz',
+    'LockIndex': 0,
+    'ModifyIndex': 669,
+    'Value': 'qux'
+}, {
+    'CreateIndex': 666,
+    'Flags': 128,
+    'Key': 'corgie',
+    'LockIndex': 0,
+    'ModifyIndex': 666,
+    'Value': 'dog'
+}, {
+    'CreateIndex': 642,
+    'Flags': 0,
+    'Key': 'foo',
+    'LockIndex': 0,
+    'ModifyIndex': 642,
+    'Value': 'bar'
+}, {
+    'CreateIndex': 644,
+    'Flags': 0,
+    'Key': 'quz',
+    'LockIndex': 0,
+    'ModifyIndex': 644,
+    'Value': 'true'
+}]
 
 
 @httmock.all_requests
 def kv_all_records_content(_url_unused, request):
-    return httmock.response(200, ALL_DATA,
-                            {'X-Consul-Index': 4,
-                             'X-Consul-Knownleader': 'true',
-                             'X-Consul-Lastcontact': 0,
-                             'Date': 'Fri, 19 Dec 2014 20:44:28 GMT',
-                             'Content-Length': len(ALL_DATA),
-                             'Content-Type': 'application/json'},
-                            None, 0, request)
+    return httmock.response(200, ALL_DATA, {
+        'X-Consul-Index': 4,
+        'X-Consul-Knownleader': 'true',
+        'X-Consul-Lastcontact': 0,
+        'Date': 'Fri, 19 Dec 2014 20:44:28 GMT',
+        'Content-Length': len(ALL_DATA),
+        'Content-Type': 'application/json'
+    }, None, 0, request)
 
 
 class KVTests(unittest.TestCase):
@@ -65,6 +86,7 @@ class KVTests(unittest.TestCase):
         self.kv = api.KV(self.base_uri, self.adapter, self.dc, self.token)
 
     def test_contains_evaluates_true(self):
+
         @httmock.all_requests
         def response_content(_url_unused, request):
             return httmock.response(200, None, {}, None, 0, request)
@@ -72,6 +94,7 @@ class KVTests(unittest.TestCase):
             self.assertIn('foo', self.kv)
 
     def test_contains_evaluates_false(self):
+
         @httmock.all_requests
         def response_content(_url_unused, request):
             return httmock.response(404, None, {}, None, 0, request)

@@ -19,11 +19,13 @@ CONSUL_CONFIG = json.load(open('consul-test.json', 'r'))
 
 
 def generate_key(func):
+
     @functools.wraps(func)
     def _decorator(self, *args, **kwargs):
         key = str(uuid.uuid4())[0:8]
         self.used_keys.append(key)
         func(self, key)
+
     return _decorator
 
 
@@ -184,22 +186,25 @@ class TestSession(unittest.TestCase):
 
     def test_session_create(self):
         name = str(uuid.uuid4())[0:8]
-        session_id = self.consul.session.create(name, behavior='delete',
+        session_id = self.consul.session.create(name,
+                                                behavior='delete',
                                                 ttl='60s')
         self.sessions.append(session_id)
         self.assertIsNotNone(session_id)
 
     def test_session_destroy(self):
         name = str(uuid.uuid4())[0:8]
-        session_id = self.consul.session.create(name, behavior='delete',
+        session_id = self.consul.session.create(name,
+                                                behavior='delete',
                                                 ttl='60s')
         self.consul.session.destroy(session_id)
-        self.assertNotIn(session_id, [s.get('ID') for s in
-                                      self.consul.session.list()])
+        self.assertNotIn(session_id, [s.get('ID')
+                                      for s in self.consul.session.list()])
 
     def test_session_info(self):
         name = str(uuid.uuid4())[0:8]
-        session_id = self.consul.session.create(name, behavior='delete',
+        session_id = self.consul.session.create(name,
+                                                behavior='delete',
                                                 ttl='60s')
         result = self.consul.session.info(session_id)
         self.assertEqual(session_id, result.get('ID'))
@@ -207,7 +212,8 @@ class TestSession(unittest.TestCase):
 
     def test_session_renew(self):
         name = str(uuid.uuid4())[0:8]
-        session_id = self.consul.session.create(name, behavior='delete',
+        session_id = self.consul.session.create(name,
+                                                behavior='delete',
                                                 ttl='60s')
         self.sessions.append(session_id)
         self.assertTrue(self.consul.session.renew(session_id))
@@ -218,7 +224,8 @@ class TestKVLocking(BaseTestCase):
     @generate_key
     def test_acquire_and_release_lock(self, key):
         lock_key = str(uuid.uuid4())[0:8]
-        session_id = self.consul.session.create(key, behavior='delete',
+        session_id = self.consul.session.create(key,
+                                                behavior='delete',
                                                 ttl='60s')
         self.assertTrue(self.consul.kv.acquire_lock(lock_key, session_id))
         self.assertTrue(self.consul.kv.release_lock(lock_key, session_id))
@@ -228,7 +235,8 @@ class TestKVLocking(BaseTestCase):
     def test_acquire_and_release_lock(self, key):
         lock_key = str(uuid.uuid4())[0:8]
         sid = self.consul.session.create(key, behavior='delete', ttl='60s')
-        sid2 = self.consul.session.create(key + '2', behavior='delete',
+        sid2 = self.consul.session.create(key + '2',
+                                          behavior='delete',
                                           ttl='60s')
         self.assertTrue(self.consul.kv.acquire_lock(lock_key, sid))
         self.assertFalse(self.consul.kv.acquire_lock(lock_key, sid2))
@@ -243,7 +251,9 @@ class TestAgent(unittest.TestCase):
         self.consul = consulate.Consul(token=CONSUL_CONFIG['acl_master_token'])
 
     def test_service_registration(self):
-        self.consul.agent.service.register('test-service', address='10.0.0.1',
-                                           port=5672, tags=['foo', 'bar'])
+        self.consul.agent.service.register('test-service',
+                                           address='10.0.0.1',
+                                           port=5672,
+                                           tags=['foo', 'bar'])
         self.assertIn('test-service', self.consul.agent.services()[0].keys())
         self.consul.agent.service.deregister('test-service')

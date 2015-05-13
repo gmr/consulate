@@ -12,6 +12,7 @@ class Agent(base.Endpoint):
     Consul cluster.
 
     """
+
     def __init__(self, uri, adapter, datacenter=None, token=None):
         """Create a new instance of the Agent class
 
@@ -23,8 +24,7 @@ class Agent(base.Endpoint):
         """
         super(Agent, self).__init__(uri, adapter, datacenter, token)
         self.check = Agent.Check(self._base_uri, adapter, datacenter, token)
-        self.service = Agent.Service(self._base_uri, adapter,
-                                     datacenter, token)
+        self.service = Agent.Service(self._base_uri, adapter, datacenter, token)
 
     class Check(base.Endpoint):
         """One of the primary roles of the agent is the management of system
@@ -54,8 +54,13 @@ class Agent(base.Endpoint):
                    dead man's switch.
 
         """
-        def register(self, name, script=None, check_id=None, interval=None,
-                     ttl=None, notes=None):
+
+        def register(self, name,
+                     script=None,
+                     check_id=None,
+                     interval=None,
+                     ttl=None,
+                     notes=None):
             """Add a new check to the local agent. Checks are either a script
             or TTL type. The agent is responsible for managing the status of
             the check and keeping the Catalog in sync.
@@ -89,13 +94,14 @@ class Agent(base.Endpoint):
                 raise ValueError('Can not specify script and ttl together')
 
             # Register the check
-            return self._put_no_response_body(['register'], None,
-                                              {'ID': check_id,
-                                               'Name': name,
-                                               'Notes': notes,
-                                               'Script': script,
-                                               'Interval': interval,
-                                               'TTL': ttl})
+            return self._put_no_response_body(['register'], None, {
+                'ID': check_id,
+                'Name': name,
+                'Notes': notes,
+                'Script': script,
+                'Interval': interval,
+                'TTL': ttl
+            })
 
         def deregister(self, check_id):
             """Remove a check from the local agent. The agent will take care
@@ -148,8 +154,14 @@ class Agent(base.Endpoint):
         """
         CHECK_EXCEPTION = 'check must be a tuple of script, interval, and ttl'
 
-        def register(self, name, service_id=None, address=None, port=None,
-                     tags=None, check=None, interval=None, ttl=None):
+        def register(self, name,
+                     service_id=None,
+                     address=None,
+                     port=None,
+                     tags=None,
+                     check=None,
+                     interval=None,
+                     ttl=None):
             """Add a new service to the local agent.
 
             :param str name: The name of the service
@@ -173,14 +185,16 @@ class Agent(base.Endpoint):
                 raise ValueError('Can not specify both a check and ttl')
 
             # Build the payload to send to consul
-            payload = {'id': service_id,
-                       'name': name,
-                       'port': port,
-                       'address': address,
-                       'tags': tags,
-                       'check': {'script': check,
-                                 'interval': interval,
-                                 'ttl': ttl}}
+            payload = {
+                'id': service_id,
+                'name': name,
+                'port': port,
+                'address': address,
+                'tags': tags,
+                'check': {'script': check,
+                          'interval': interval,
+                          'ttl': ttl}
+            }
 
             for key in list(payload.keys()):
                 if payload[key] is None:
