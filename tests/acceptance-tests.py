@@ -150,6 +150,13 @@ class TestKVSet(BaseTestCase):
         self.consul.kv.set(key, 'foo')
         self.assertEqual(self.consul.kv.get(key), 'foo')
 
+    @generate_key
+    def test_set_item_get_item_dict_value(self, key):
+        value = {'foo': 'bar'}
+        expectation = json.dumps(value)
+        self.consul.kv.set(key, value)
+        self.assertEqual(self.consul.kv.get(key), expectation)
+
     @unittest.skipIf(PYTHON3, 'No unicode strings in Python3')
     @generate_key
     def test_set_item_get_item_unicode_value(self, key):
