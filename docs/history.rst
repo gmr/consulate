@@ -1,5 +1,7 @@
 Version History
 ===============
+ - 0.5.1 - released *2015-05-13*
+  - Fix a regression with consualte cli introduced with UnixSockets (#36) - Dan Tracy
  - 0.5.0 - released *2015-05-13*
   - Add ability to talk to Consul via Unix Socket
   - Remove the automatic JSON deserialization attempt of KV values
