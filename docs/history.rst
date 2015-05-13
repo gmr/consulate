@@ -2,6 +2,7 @@ Version History
 ===============
  - 0.5.0 - released *2015-05-13*
   - Add ability to talk to Consul via Unix Socket
+  - Remove the automatic JSON deserialization attempt of KV values
   - Add timeout parameter when creating the consulate.Consul instance (#31) - Grzegorz Śliwiński
   - Add ability to specify a different request adapter when creating a consulate.Consul instance (#30)
   - Add a flag that will prevent consulate.KV.set_record from replacing a pre-existing value (#29) - Jakub Wierzbowski
