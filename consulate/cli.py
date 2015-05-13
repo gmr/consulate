@@ -6,6 +6,7 @@ import sys
 from requests import exceptions
 
 import consulate
+from consulate import adapters
 from consulate import utils
 
 
@@ -15,53 +16,53 @@ def connection_error():
     sys.exit(1)
 
 
+KV_PARSERS = [
+    ('backup', 'Backup to stdout or a JSON file', [
+        [['-f', '--file'],
+         {'help': 'JSON file to read instead of stdin',
+          'nargs': '?'}]]),
+    ('restore', 'Restore from stdin or a JSON file', [
+        [['-f', '--file'],
+         {'help': 'JSON file to read instead of stdin',
+          'nargs': '?'}],
+        [['-n', '--no-replace'],
+         {'help': 'Do not replace existing entries',
+          'action': 'store_true'}]]),
+    ('ls', 'List all of the keys', [
+        [['-l', '--long'],
+         {'help': 'Long format',
+          'action': 'store_true'}]]),
+    ('mkdir', 'Create a folder', [
+        [['path'],
+         {'help': 'The path to create'}]]),
+    ('get', 'Get a key from the database', [
+        [['key'],
+         {'help': 'The key to get'}]]),
+    ('set', 'Set a key in the database', [
+        [['key'], {'help': 'The key to set'}],
+        [['value'], {'help': 'The value of the key'}]]),
+    ('rm', 'Remove a key from the database', [
+        [['key'], {'help': 'The key to remove'}],
+        [['-r', '--recurse'],
+         {'help': 'Delete all keys prefixed with the specified key',
+          'action': 'store_true'}]])]
+
+
 def add_kv_args(parser):
     """Add the kv command and arguments.
 
     :param argparse.Subparser parser: parser
 
     """
-    kvp = parser.add_parser('kv', help='Key/Value Database Utilities')
+    kv_parser = parser.add_parser('kv', help='Key/Value Database Utilities')
 
-    kvsparsers = kvp.add_subparsers(dest='action',
-                                    title='Key/Value Database Utilities')
+    subparsers = kv_parser.add_subparsers(dest='action',
+                                          title='Key/Value Database Utilities')
 
-    backup = kvsparsers.add_parser('backup',
-                                   help='Backup to stdout or a JSON file')
-    backup.add_argument('-f', '--file',
-                        help='JSON file to read instead of stdin',
-                        nargs="?")
-
-    restore = kvsparsers.add_parser('restore',
-                                    help='Restore from stdin or a JSON file')
-    restore.add_argument('-f', '--file',
-                         help='JSON file to read instead of stdin',
-                         nargs="?",
-                         type=open)
-    restore.add_argument('-n', '--no-replace',
-                         help='Do not replace existing entries',
-                         action='store_true')
-
-    kvls = kvsparsers.add_parser('ls', help='List all of the keys')
-    kvls.add_argument('-l', '--long', help='Long format', action='store_true')
-
-    kvmkdir = kvsparsers.add_parser('mkdir', help='Create a folder')
-    kvmkdir.add_argument('path', help='The path to create')
-
-    kvget = kvsparsers.add_parser('get', help='Get a key from the database')
-    kvget.add_argument('key', help='The key to get')
-    kvset = kvsparsers.add_parser('set', help='Set a key in the database')
-    kvset.add_argument('key', help='The key to set')
-    kvset.add_argument('value', help='The value of the key')
-    kvrm = kvsparsers.add_parser('rm', help='Remove a key from the database')
-    kvrm.add_argument('key', help='The key to delete')
-    kvrm.add_argument('-r', '--recurse',
-                      action='store_true',
-                      help='Delete all keys prefixed with the specified key')
-
-    kvdel = kvsparsers.add_parser('del',
-                                  help='Deprecated method to remove a key')
-    kvdel.add_argument('key', help='The key to delete')
+    for (name, help_text, arguments) in KV_PARSERS:
+        parser = subparsers.add_parser(name, help=help_text)
+        for (args, kwargs) in arguments:
+            parser.add_argument(*args, **kwargs)
 
 
 def add_register_args(parser):
@@ -110,6 +111,9 @@ def parse_cli_args():
     """Create the argument parser and add the arguments"""
     parser = argparse.ArgumentParser(description='CLI utilities for Consul')
 
+    parser.add_argument('--api-scheme',
+                        default='http',
+                        help='The scheme to use for connecting to Consul with')
     parser.add_argument('--api-host',
                         default='localhost',
                         help='The consul host to connect on')
@@ -117,6 +121,7 @@ def parse_cli_args():
                         default=8500,
                         help='The consul API port to connect to')
     parser.add_argument('--datacenter',
+                        dest='dc',
                         default=None,
                         help='The datacenter to specify for the connection')
     parser.add_argument('--token', default=None, help='ACL token')
@@ -264,28 +269,26 @@ def register(consul, args):
     except exceptions.ConnectionError:
         connection_error()
 
+# Mapping dict to simplify the code in main()
+KV_ACTIONS = {
+    'backup': kv_backup,
+    'del': kv_delete,
+    'get': kv_get,
+    'ls': kv_ls,
+    'mkdir': kv_mkdir,
+    'restore': kv_restore,
+    'rm': kv_rm,
+    'set': kv_set}
+
 
 def main():
     """Entrypoint for the consulate cli application"""
     args = parse_cli_args()
-    consul = consulate.Consul(args.api_host, args.api_port, args.datacenter,
-                              args.token)
+
+    adapter = None if args.scheme == 'http+unix' else adapters.UnixSocketRequest
+    consul = consulate.Consul(args.api_host, args.api_port, args.dc, args.token,
+                              args.scheme, adapter)
     if args.command == 'register':
         register(consul, args)
     elif args.command == 'kv':
-        if args.action == 'backup':
-            kv_backup(consul, args)
-        elif args.action == 'del':
-            kv_delete(consul, args)
-        elif args.action == 'get':
-            kv_get(consul, args)
-        elif args.action == 'ls':
-            kv_ls(consul, args)
-        elif args.action == 'mkdir':
-            kv_mkdir(consul, args)
-        elif args.action == 'restore':
-            kv_restore(consul, args)
-        elif args.action == 'rm':
-            kv_rm(consul, args)
-        elif args.action == 'set':
-            kv_set(consul, args)
+        KV_ACTIONS[args.action](consul, args)
