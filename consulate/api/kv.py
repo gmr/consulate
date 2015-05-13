@@ -126,7 +126,7 @@ class KV(base.Endpoint):
             return response.get('Value', default)
         return response or default
 
-    def get_record(self, item, default=None):
+    def get_record(self, item):
         """Get the full record from the Key/Value service, returning
         all fields including the flag.
 
@@ -135,10 +135,7 @@ class KV(base.Endpoint):
         :raises: KeyError
 
         """
-        try:
-            return self._get_item(item)
-        except KeyError:
-            return default
+        return self._get_item(item)
 
     def find(self, prefix, separator=None):
         """Find all keys with the specified prefix, returning a dict of
@@ -337,7 +334,10 @@ class KV(base.Endpoint):
         index = 0
         if response.status_code == 200:
             index = response.body.get('ModifyIndex')
-            if response.body.get('Value') == value:
+            rvalue = response.body.get('Value')
+            if isinstance(rvalue, bytes):
+                rvalue = rvalue.encode('utf-8')
+            if rvalue == value:
                 return None
             if not replace:
                 return None
@@ -374,7 +374,7 @@ class KV(base.Endpoint):
         """
         value = self._prepare_value(value)
         if value and item.endswith('/'):
-            item = item.lstrip('/')
+            item = item.rstrip('/')
 
         index = self._get_modify_index(item, value, replace)
         if index is None:

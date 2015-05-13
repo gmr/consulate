@@ -118,9 +118,21 @@ class TestKVGetWithNoKey(BaseTestCase):
 class TestKVSet(BaseTestCase):
 
     @generate_key
+    def test_set_item_del_item(self, key):
+        self.consul.kv[key] = 'foo'
+        del self.consul.kv[key]
+        self.assertNotIn(key, self.consul.kv)
+
+    @generate_key
     def test_set_item_get_item_bool_value(self, key):
         self.consul.kv[key] = True
         self.assertTrue(self.consul.kv[key])
+
+    @generate_key
+    def test_set_path_with_value(self, key):
+        path = 'path/{0}/'.format(key)
+        self.consul.kv.set(path, 'bar')
+        self.assertEqual('bar', self.consul.kv[path[:-1]])
 
     @generate_key
     def test_set_item_get_item_int_value(self, key):
@@ -153,6 +165,30 @@ class TestKVSet(BaseTestCase):
         self.assertEqual(self.consul.kv.get(key), 'foo')
 
     @generate_key
+    def test_set_item_get_record(self, key):
+        self.consul.kv.set_record(key, 12, 'record')
+        record = self.consul.kv.get_record(key)
+        self.assertEqual('record', record['Value'])
+        self.assertEqual(12, record['Flags'])
+        self.assertIsInstance(record, dict)
+
+    @generate_key
+    def test_get_record_fail(self, key):
+        self.assertEqual(self.consul.kv.get_record(key), None)
+
+    @generate_key
+    def test_set_record_no_replace_get_item_str_value(self, key):
+        self.consul.kv.set(key, 'foo')
+        self.consul.kv.set_record(key, 0, 'foo', False)
+        self.assertEqual(self.consul.kv.get(key), 'foo')
+
+    @generate_key
+    def test_set_record_same_value_get_item_str_value(self, key):
+        self.consul.kv.set(key, 'foo')
+        self.consul.kv.set_record(key, 0, 'foo', True)
+        self.assertEqual(self.consul.kv.get(key), 'foo')
+
+    @generate_key
     def test_set_item_get_item_dict_value(self, key):
         value = {'foo': 'bar'}
         expectation = json.dumps(value)
@@ -170,8 +206,13 @@ class TestKVSet(BaseTestCase):
     def test_set_item_get_item_unicode_value(self, key):
         self.consul.kv.set(key, '✈')
         response = self.consul.kv.get(key)
-        print(repr(response))
         self.assertEqual(response, '✈')
+
+    @generate_key
+    def test_set_item_in_records(self, key):
+        self.consul.kv.set(key, 'zomg')
+        expectation = (key, 0, 'zomg')
+        self.assertIn(expectation, self.consul.kv.records())
 
 
 class TestSession(unittest.TestCase):
