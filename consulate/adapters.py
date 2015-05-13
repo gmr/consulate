@@ -13,8 +13,8 @@ from consulate import utils
 
 LOGGER = logging.getLogger(__name__)
 
-CONTENT_FORM = 'application/x-www-form-urlencoded; charset=UTF-8'
-CONTENT_JSON = 'application/json; charset=UTF-8'
+CONTENT_FORM = 'application/x-www-form-urlencoded; charset=utf-8'
+CONTENT_JSON = 'application/json; charset=utf-8'
 
 
 def prepare_data(fun):
@@ -31,8 +31,9 @@ def prepare_data(fun):
         :param dict kwargs: keyword arguments
 
         """
-        if kwargs.get('data') and not utils.is_string(kwargs.get('data')):
-            kwargs['data'] = json.dumps(kwargs['data'])
+        if kwargs.get('data'):
+            if not utils.is_string(kwargs.get('data')):
+                kwargs['data'] = json.dumps(kwargs['data'])
         elif len(args) == 3 and not utils.is_string(args[2]):
             args = args[0], args[1], json.dumps(args[2])
         return fun(*args, **kwargs)
