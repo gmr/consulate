@@ -14,7 +14,7 @@ import consulate
 from consulate import adapters
 from consulate import api
 
-SCHEME = consulate.SCHEME
+SCHEME = consulate.DEFAULT_SCHEME
 VERSION = consulate.VERSION
 
 ALL_DATA = ('[{"CreateIndex":643,"ModifyIndex":643,"LockIndex":0,"Key":"bar",'

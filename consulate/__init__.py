@@ -21,28 +21,43 @@ logging.getLogger('consulate').addHandler(NullHandler())
 
 from consulate import adapters
 from consulate import api
+from consulate import utils
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8500
-SCHEME = 'http'
+DEFAULT_SCHEME = 'http'
 VERSION = 'v1'
 
 
 class Consul(object):
-    """Access the Consul HTTP API via Python
+    """Access the Consul HTTP API via Python.
+
+    The default values connect to Consul via ``localhost:8500`` via http. If
+    you want to connect to Consul via a local UNIX socket, you'll need to
+    override both the ``scheme``, ``port`` and the ``adapter`` like so:
+
+    .. code:: python
+
+        consul = consulate.Consul('localhost', None, scheme='http+unix',
+                                  adapters=consulate.adapters.UnixSocketRequest)
+        services = consul.agent.services()
 
     :param str host: The host name to connect to (Default: localhost)
     :param int port: The port to connect on (Default: 8500)
     :param str datacenter: Specify a specific data center
     :param str token: Specify a ACL token to use
+    :param str scheme: Specify the scheme (Default: http)
+    :param class adapter: Specify to override the request adapter
+        (Default: :py:class:`consulate.adapters.Request`)
 
     """
     def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT,
-                 datacenter=None, token=None, adapter=None):
+                 datacenter=None, token=None,
+                 scheme=DEFAULT_SCHEME, adapter=None):
         """Create a new instance of the Consul class"""
-        base_uri = self._base_uri(host, port)
+        base_uri = self._base_uri(scheme, host, port)
         if adapter:
-            self._adapter = adapter
+            self._adapter = adapter()
         else:
             self._adapter = adapters.Request()
         self._acl = api.ACL(base_uri, self._adapter, datacenter, token)
@@ -135,15 +150,19 @@ class Consul(object):
         return self._status
 
     @staticmethod
-    def _base_uri(host, port):
-        """Return the base URI to use for API requests
+    def _base_uri(scheme, host, port):
+        """Return the base URI to use for API requests. Set ``port`` to None
+        when creating a UNIX Socket URL.
 
+        :param str scheme: The scheme to use (Default: http)
         :param str host: The host name to connect to (Default: localhost)
-        :param int port: The port to connect on (Default: 8500)
+        :param int|None port: The port to connect on (Default: 8500)
         :rtype: str
 
         """
-        return '{0}://{1}:{2}/{3}'.format(SCHEME, host, port, VERSION)
+        if port:
+            return '{0}://{1}:{2}/{3}'.format(scheme, host, port, VERSION)
+        return '{0}://{1}/{2}'.format(scheme, utils.quote(host, ''), VERSION)
 
 
 # Backwards compatibility with 0.3.0

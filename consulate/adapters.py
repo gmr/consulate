@@ -2,13 +2,11 @@
 HTTP Client Library Adapters
 
 """
+import json
 import logging
-import requests
 
-try:
-    import simplejson as json
-except ImportError:
-    import json
+import requests
+import requests_unixsocket
 
 from consulate import api
 from consulate import utils
@@ -52,7 +50,7 @@ class Request(object):
             to consul.
         """
         self.session = requests.Session()
-        self._timeout = timeout
+        self.timeout = timeout
 
     def delete(self, uri):
         """Perform a HTTP delete
@@ -62,7 +60,7 @@ class Request(object):
 
         """
         LOGGER.debug("DELETE %s", uri)
-        response = self.session.delete(uri, timeout=self._timeout)
+        response = self.session.delete(uri, timeout=self.timeout)
         return api.Response(response.status_code,
                             response.content,
                             response.headers)
@@ -75,7 +73,7 @@ class Request(object):
 
         """
         LOGGER.debug("GET %s", uri)
-        response = self.session.get(uri, timeout=self._timeout)
+        response = self.session.get(uri, timeout=self.timeout)
         return api.Response(response.status_code,
                             response.content,
                             response.headers)
@@ -96,9 +94,15 @@ class Request(object):
             headers = {'Content-Type': CONTENT_JSON}
         if not utils.PYTHON3 and data:
             data = data.encode('utf-8')
-        response = self.session.put(
-            uri, data=data, headers=headers, timeout=self._timeout
-        )
+        response = self.session.put(uri, data=data, headers=headers,
+                                    timeout=self.timeout)
         return api.Response(response.status_code,
                             response.content,
                             response.headers)
+
+
+class UnixSocketRequest(Request):
+    """Use to communicate with Consul over a Unix socket"""
+    def __init__(self, timeout=None):
+        self.session = requests_unixsocket.Session()
+        self.timeout = timeout

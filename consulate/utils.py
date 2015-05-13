@@ -3,6 +3,10 @@ Misc utility functions and constants
 
 """
 import sys
+try:
+    from urllib.parse import quote
+except ImportError:
+    from urllib import quote
 
 PYTHON3 = True if sys.version_info > (3, 0, 0) else False
 

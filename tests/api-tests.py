@@ -17,7 +17,7 @@ from consulate.api import base
 
 CONSUL_CONFIG = json.load(open('consul-test.json', 'r'))
 
-SCHEME = consulate.SCHEME
+SCHEME = consulate.DEFAULT_SCHEME
 VERSION = consulate.VERSION
 
 
@@ -55,8 +55,16 @@ class ConsulTests(unittest.TestCase):
                                        self.token)
 
     def test_base_uri(self):
-        self.assertEquals(self.consul._base_uri(self.host, self.port),
+        self.assertEquals(self.consul._base_uri(SCHEME, self.host, self.port),
                           self.base_uri)
+
+    def test_unix_socket_base_uri(self):
+        expectation = 'http+unix://%2Fvar%2Flib%2Fconsul%2Fconsul.sock/v1'
+        self.assertEquals(self.consul._base_uri('http+unix',
+                                                '/var/lib/consul/consul.sock',
+                                                None),
+                          expectation)
+
 
     def test_acl_initialization(self):
         self.assertTrue(self.acl.called_once_with(self.base_uri,
