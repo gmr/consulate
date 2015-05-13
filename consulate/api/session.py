@@ -9,7 +9,7 @@ class Session(base.Endpoint):
     """Create, destroy, and query Consul sessions."""
 
     def create(self, name=None, behavior='release', node=None, delay=None,
-               ttl=None, checks=None, dc=None):
+               ttl=None, checks=None):
         """Initialize a new session.
 
         None of the fields are mandatory, and in fact no body needs to be PUT
@@ -39,17 +39,12 @@ class Session(base.Endpoint):
         highly recommended that, if you override this list, you include the
         default "serfHealth".
 
-        By default, the agent's local dc is used and you can specify
-        another dc, However, it is not recommended to use
-        cross-dc sessions.
-
         :param str name: A human readable session name
         :param str behavior: One of ``release`` or ``delete``
         :param str node: A node to create the session on
         :param str delay: A lock delay for the session
         :param str ttl: The time to live for the session
         :param lists checks: A list of associated health checks
-        :param str dc: The data center to create the session on
         :return str: session ID
 
         """
@@ -64,70 +59,52 @@ class Session(base.Endpoint):
             payload['TTL'] = ttl
         if checks:
             payload['Checks'] = checks
-        return self._put_response_body(['create'], self._query(dc),
-                                       payload).get('ID')
+        return self._put_response_body(['create'], None, payload).get('ID')
 
-    def destroy(self, session_id, dc=None):
+    def destroy(self, session_id):
         """Destroy an existing session
 
         :param str session_id: The session to destroy
-        :param str dc: The optional data center to destroy the session from
         :return: bool
 
         """
-        return self._put_no_response_body(['destroy', session_id],
-                                          self._query(dc))
+        return self._put_no_response_body(['destroy', session_id])
 
-    def info(self, session_id, dc=None):
+    def info(self, session_id):
         """Returns the requested session information within a given dc.
         By default, the dc of the agent is queried.
 
         :param str session_id: The session to get info about
-        :param str dc: The optional data center to get session info from
         :return: dict
 
         """
-        return self._get_response_body(['info', session_id], self._query(dc))
+        return self._get_response_body(['info', session_id])
 
-    def list(self, dc=None):
+    def list(self):
         """Returns the active sessions for a given dc.
 
-        :param str dc: The optional data center to get a session list from
         :return: list
 
         """
-        return self._get_response_body(['list'], self._query(dc))
+        return self._get_response_body(['list'])
 
-    def node(self, node, dc=None):
+    def node(self, node):
         """Returns the active sessions for a given node and dc.
         By default, the dc of the agent is queried.
 
         :param str node: The node to get active sessions for
-        :param str dc: The optional data center to get node session data from
         :return: list
 
         """
-        return self._get_response_body(['node', node], self._query(dc))
+        return self._get_response_body(['node', node])
 
-    def renew(self, session_id, dc=None):
+    def renew(self, session_id):
         """Renew the given session. This is used with sessions that have a TTL,
         and it extends the expiration by the TTL. By default, the dc
         of the agent is queried.
 
         :param str session_id: The session to renew
-        :param str dc: The optional data center to for the session renewal
         :return: dict
 
         """
-        return self._put_response_body(['renew', session_id], self._query(dc))
-
-    @staticmethod
-    def _query(dc):
-        """Return the query args for a request specifying the data center
-        if it is specified.
-
-        :param str dc: The data center name
-        :rtype: dict
-
-        """
-        return {'dc': dc} if dc else {}
+        return self._put_response_body(['renew', session_id])
