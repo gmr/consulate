@@ -14,7 +14,7 @@ before_install:
 install:
     - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install --use-mirrors argparse unittest2; fi
     - pip install -r dev-requirements.txt
-script: nosetests --with-coverage --cover-package=consulate
+script: nosetests --with-coverage --cover-package=consulate --cover-branches
 after_success:
   - codecov
 deploy:
