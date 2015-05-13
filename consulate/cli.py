@@ -76,35 +76,24 @@ def add_register_args(parser):
     registerp = parser.add_parser('register',
                                   help='Register a service for this node')
     registerp.add_argument('name', help='The service name')
-    registerp.add_argument('-a', '--address',
-                           default=None,
+    registerp.add_argument('-a', '--address', default=None,
                            help='Specify an address')
     registerp.add_argument('-p', '--port', default=None, help='Specify a port')
-    registerp.add_argument('-s', '--service-id',
-                           default=None,
+    registerp.add_argument('-s', '--service-id', default=None,
                            help='Specify a service ID')
-    registerp.add_argument('-t', '--tags',
-                           default=[],
+    registerp.add_argument('-t', '--tags', default=[],
                            help='Specify a comma delimited list of tags')
-
     rsparsers = registerp.add_subparsers(dest='ctype',
                                          title='Service Check Options')
     check = rsparsers.add_parser('check',
                                  help='Define an external script-based check')
-
-    check.add_argument('interval',
-                       default=10,
-                       type=int,
+    check.add_argument('interval', default=10, type=int,
                        help='How often to run the check script')
-    check.add_argument('path',
-                       default=None,
+    check.add_argument('path', default=None,
                        help='Path to the script invoked by Consul')
     rsparsers.add_parser('no-check', help='Do not enable service monitoring')
-
     ttl = rsparsers.add_parser('ttl', help='Define a duration based TTL check')
-    ttl.add_argument('duration',
-                     type=int,
-                     default=10,
+    ttl.add_argument('duration', type=int, default=10,
                      help='TTL duration for a service with missing check data')
 
 
@@ -219,10 +208,7 @@ def kv_restore(consul, args):
         if not utils.PYTHON3 and isinstance(row[2], unicode):
             row[2] = row[2].encode('utf-8')
         try:
-            if args.no_replace:
-                consul.kv.set_record(row[0], row[1], row[2], False)
-            else:
-                consul.kv.set_record(row[0], row[1], row[2], True)
+            consul.kv.set_record(row[0], row[1], row[2], not args.no_replace)
         except exceptions.ConnectionError:
             connection_error()
 
