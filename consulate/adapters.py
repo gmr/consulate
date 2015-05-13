@@ -41,10 +41,18 @@ def prepare_data(fun):
 
 
 class Request(object):
+
     """The Request adapter class"""
-    def __init__(self):
-        """Create a new request adapter instance"""
+
+    def __init__(self, timeout=None):
+        """
+        Create a new request adapter instance.
+
+        :param int timeout: [optional] timeout to use while sending requests
+            to consul.
+        """
         self.session = requests.Session()
+        self._timeout = timeout
 
     def delete(self, uri):
         """Perform a HTTP delete
@@ -54,7 +62,7 @@ class Request(object):
 
         """
         LOGGER.debug("DELETE %s", uri)
-        response = self.session.delete(uri)
+        response = self.session.delete(uri, timeout=self._timeout)
         return api.Response(response.status_code,
                             response.content,
                             response.headers)
@@ -67,7 +75,7 @@ class Request(object):
 
         """
         LOGGER.debug("GET %s", uri)
-        response = self.session.get(uri)
+        response = self.session.get(uri, timeout=self._timeout)
         return api.Response(response.status_code,
                             response.content,
                             response.headers)
@@ -88,7 +96,9 @@ class Request(object):
             headers = {'Content-Type': CONTENT_JSON}
         if not utils.PYTHON3 and data:
             data = data.encode('utf-8')
-        response = self.session.put(uri, data=data, headers=headers)
+        response = self.session.put(
+            uri, data=data, headers=headers, timeout=self._timeout
+        )
         return api.Response(response.status_code,
                             response.content,
                             response.headers)

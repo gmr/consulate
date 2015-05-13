@@ -38,10 +38,13 @@ class Consul(object):
 
     """
     def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT,
-                 datacenter=None, token=None):
+                 datacenter=None, token=None, adapter=None):
         """Create a new instance of the Consul class"""
         base_uri = self._base_uri(host, port)
-        self._adapter = adapters.Request()
+        if adapter:
+            self._adapter = adapter
+        else:
+            self._adapter = adapters.Request()
         self._acl = api.ACL(base_uri, self._adapter, datacenter, token)
         self._agent = api.Agent(base_uri, self._adapter, datacenter, token)
         self._catalog = api.Catalog(base_uri, self._adapter, datacenter, token)
