@@ -40,8 +40,8 @@ class Consul(object):
 
     .. code:: python
 
-        consul = consulate.Consul('localhost', None, scheme='http+unix',
-                                  adapters=consulate.adapters.UnixSocketRequest)
+        consul = consulate.Consul('/path/to/socket', None, scheme='http+unix',
+                                  adapter=consulate.adapters.UnixSocketRequest)
         services = consul.agent.services()
 
     :param str host: The host name to connect to (Default: localhost)
