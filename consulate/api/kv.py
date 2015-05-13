@@ -99,9 +99,7 @@ class KV(base.Endpoint):
         :return: bool
 
         """
-        query_params = {'acquire': session}
-        response = self._adapter.put(self._build_uri([item], query_params))
-        return response.body
+        return self._put_response_body([item], {'acquire': session})
 
     def delete(self, item, recurse=False):
         """Delete an item from the Key/Value service
@@ -247,9 +245,7 @@ class KV(base.Endpoint):
         :return: bool
 
         """
-        query_params = {'release': session}
-        response = self._adapter.put(self._build_uri([item], query_params))
-        return response.body
+        return self._put_response_body([item], {'release': session})
 
     def set(self, item, value):
         """Set a value in the Key/Value service, using the CAS mechanism
@@ -324,6 +320,46 @@ class KV(base.Endpoint):
             return response.body
         return None
 
+    def _get_modify_index(self, item, value, replace):
+        """Get the modify index of the specified item. If replace is False
+        and an item is found, return ``None``. If the existing value
+        and the passed in value match, return ``None``. If no item exists in
+        the KV database, return ``0``, otherwise return the ``ModifyIndex``.
+
+        :param str item: The item to get the index for
+        :param str value: The item to evaluate for equality
+        :param bool replace: Should the item be replaced
+        :rtype: int|None
+
+        """
+        response = self._adapter.get(self._build_uri([item]))
+        index = 0
+        if response.status_code == 200:
+            index = response.body.get('ModifyIndex')
+            if response.body.get('Value') == value:
+                return None
+            if not replace:
+                return None
+        return index
+
+    @staticmethod
+    def _prepare_value(value):
+        """Prepare the value passed in and ensure that it is properly encoded
+
+        :param mixed value: The value to prepare
+        :rtype: str|unicode
+
+        """
+        if utils.is_string(value):
+            if utils.PYTHON3:
+                value = value.encode('utf-8')
+            elif not isinstance(value, unicode):
+                try:
+                    value.decode('ascii')
+                except UnicodeDecodeError:
+                    value = value.decode('utf-8')
+        return value
+
     def _set_item(self, item, value, flags=None, replace=True):
         """Internal method for setting a key/value pair with flags in the
         Key/Value service
@@ -335,24 +371,14 @@ class KV(base.Endpoint):
         :raises: KeyError
 
         """
-        if utils.is_string(value):
-            if utils.PYTHON3:
-                value = value.encode('utf-8')
-            elif not isinstance(value, unicode):
-                try:
-                    value.decode('ascii')
-                except UnicodeDecodeError:
-                    value = value.decode('utf-8')
-        if value:
+        value = self._prepare_value(value)
+        if value and item.endswith('/'):
             item = item.lstrip('/')
-        response = self._adapter.get(self._build_uri([item]))
-        index = 0
-        if response.status_code == 200:
-            index = response.body.get('ModifyIndex')
-            if response.body.get('Value') == value:
-                return True
-            if not replace:
-                return True
+
+        index = self._get_modify_index(item, value, replace)
+        if index is None:
+            return True
+
         query_params = {'cas': index}
         if flags is not None:
             query_params['flags'] = flags
