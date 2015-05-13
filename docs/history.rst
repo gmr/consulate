@@ -1,5 +1,17 @@
 Version History
 ===============
+ - 0.5.0 - released *2015-05-13*
+  - Add ability to talk to Consul via Unix Socket
+  - Add timeout parameter when creating the consulate.Consul instance (#31) - Grzegorz Śliwiński
+  - Add ability to specify a different request adapter when creating a consulate.Consul instance (#30)
+  - Add a flag that will prevent consulate.KV.set_record from replacing a pre-existing value (#29) - Jakub Wierzbowski
+  - Add a flag to the consulate cli for the restore command to prevent the replacement of pre-existing values (#29) - Jakub Wierzbowski
+  - Add query args to consulate.Health.service (#27) - Chen Lei
+  - Removed the ability to override the datacenter in consulate.Session APIs
+  - Address UTF-8 decoding/encoding issues with Python 3
+  - Remove optional simplejson use
+  - Remove default value arg for consulate.KV.get_record
+  - General code cleanup and reduction of duplicate code
  - 0.4.0 - released *2015-03-14*
   - Major internal restructure and code cleanup
   - consulate.Session renamed to consulate.Consul
