@@ -272,9 +272,13 @@ def main():
     """Entrypoint for the consulate cli application"""
     args = parse_cli_args()
 
-    adapter = None if args.scheme == 'http+unix' else adapters.UnixSocketRequest
-    consul = consulate.Consul(args.api_host, args.api_port, args.dc, args.token,
-                              args.scheme, adapter)
+    if args.api_scheme == 'http+unix':
+        adapter = None
+    else:
+        adapter = adapters.UnixSocketRequest
+
+    consul = consulate.Consul(args.api_host, args.api_port, args.dc,
+                              args.token, args.api_scheme, adapter)
     if args.command == 'register':
         register(consul, args)
     elif args.command == 'kv':
