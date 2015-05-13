@@ -1,4 +1,5 @@
 """Consulate CLI commands"""
+# pragma: no cover
 import argparse
 import json
 import sys
