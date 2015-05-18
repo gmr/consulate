@@ -92,6 +92,19 @@ KV Database Utilities Help:
         rm                  Remove a key from the database
         del                 Deprecated method to remove a key
 
+Locking Operations Help:
+
+.. code:: bash
+
+    usage: consulate [-h] lock [-d DURATION] operation
+
+    positional arguments:
+      operation             the operation to run
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -d, --duration        hold the lock for DURATION seconds
+
 API Usage Examples
 ------------------
 The following examples highlight the usage of Consulate and does not document

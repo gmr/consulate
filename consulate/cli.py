@@ -96,6 +96,18 @@ def add_register_args(parser):
     ttl.add_argument('duration', type=int, default=10,
                      help='TTL duration for a service with missing check data')
 
+def add_lock_args(parser):
+    """Add the lock command and arguments.
+
+    :param argparse.Subparser parser: parser
+
+    """
+    # Service registration
+    lockp = parser.add_parser('lock',
+                                  help='Lock this operation')
+    lockp.add_argument('operation', help='The operation to lock')
+    lockp.add_argument('-d', '--duration', default=None,
+                           help='Hold the lock for X seconds')
 
 def parse_cli_args():
     """Create the argument parser and add the arguments"""
@@ -119,6 +131,7 @@ def parse_cli_args():
     sparser = parser.add_subparsers(title='Commands', dest='command')
     add_register_args(sparser)
     add_kv_args(sparser)
+    add_lock_args(sparser)
     return parser.parse_args()
 
 
@@ -267,6 +280,32 @@ KV_ACTIONS = {
     'rm': kv_rm,
     'set': kv_set}
 
+def lock(consul, args):
+    """Handle operation locking
+
+    :param consulate.api_old.Consul consul: The Consul instance
+    :param argparser.namespace args: The cli args
+
+    """
+    try:
+        import time
+        import subprocess
+
+        lock_key = "{0}/last_run".format(args.operation.replace(' ', '/'))
+        session = consulate.Session()
+        consul.kv.acquire_lock(lock_key, session)
+        if args.duration:
+            now = int(time.time())
+            last_run = consul.kv.get(lock_key)
+            if last_run and int(last_run) + int(args.duration) > now:
+                sys.stdout.write("Last run happened fewer than "\
+                    "%s second ago. Exiting\n" % args.duration)
+                return
+            consul.kv[lock_key] = now
+        subprocess.call(args.operation.split())
+        consul.kv.release_lock(lock_key, session)
+    except exceptions.ConnectionError:
+        connection_error()
 
 def main():
     """Entrypoint for the consulate cli application"""
@@ -283,3 +322,6 @@ def main():
         register(consul, args)
     elif args.command == 'kv':
         KV_ACTIONS[args.action](consul, args)
+    elif args.command == 'lock':
+        lock(consul, args)
+
