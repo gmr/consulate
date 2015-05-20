@@ -133,8 +133,7 @@ class Response(object):
                 if utils.PYTHON3 and isinstance(body, bytes):
                     body = body.decode('utf-8')
                 value = json.loads(body, encoding='utf-8')
-            except (TypeError, ValueError) as error:
-                print("Error:", error)
+            except (TypeError, ValueError):
                 return body
             if isinstance(value, bool):
                 return value
