@@ -25,4 +25,7 @@ class Status(base.Endpoint):
         :rtype: list
 
         """
-        return self._get(['peers'])
+        value = self._get(['peers'])
+        if not isinstance(value, list):
+            return [value]
+        return value
