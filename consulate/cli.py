@@ -3,6 +3,7 @@
 import argparse
 import json
 import sys
+import os
 
 from requests import exceptions
 
@@ -337,11 +338,15 @@ def main():
     args = parse_cli_args()
 
     if args.api_scheme == 'http+unix':
-        adapter = None
-    else:
         adapter = adapters.UnixSocketRequest
+        port = None
+        api_host = os.environ.get('CONSUL_HTTP_ADDR').replace('unix://', '')
+    else:
+        adapter = None
+        port = args.api_port
+        api_host = args.api_host
 
-    consul = consulate.Consul(args.api_host, args.api_port, args.dc,
+    consul = consulate.Consul(api_host, port, args.dc,
                               args.token, args.api_scheme, adapter)
 
     if args.command == 'register':
