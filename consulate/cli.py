@@ -107,7 +107,7 @@ def add_run_once_args(parser):
     run_oncep = parser.add_parser('run_once',
                                   help='Lock this command')
     run_oncep.add_argument('prefix', help='the name of the lock which will be held in Consul.')
-    run_oncep.add_argument('operation', help='The command to lock')
+    run_oncep.add_argument('operation', nargs=argparse.REMAINDER, help='The command to lock')
     run_oncep.add_argument('-i', '--interval', default=None,
                            help='Hold the lock for X seconds')
 
@@ -292,7 +292,6 @@ def run_once(consul, args):
     try:
         import time
         import subprocess
-        import shlex
 
         session = consul.session
         if not consul.kv.acquire_lock(args.prefix, session):
@@ -311,7 +310,7 @@ def run_once(consul, args):
         # Should the subprocess return an error code, release the lock
         try:
             error = False
-            subprocess.check_output(shlex.split(args.operation))
+            subprocess.check_output(args.operation, stderr=subprocess.STDOUT)
         # If the subprocess fails
         except subprocess.CalledProcessError as e:
             sys.stdout.write('"{0}" exited with return code "{1}" and output {2}\n'.format(
