@@ -96,6 +96,16 @@ def add_register_args(parser):
     ttl.add_argument('duration', type=int, default=10,
                      help='TTL duration for a service with missing check data')
 
+def add_deregister_args(parser):
+    """Add the deregister command and arguments.
+
+    :param argparse.Subparser parser: parser
+
+    """
+    # Service registration
+    registerp = parser.add_parser('deregister',
+                                  help='Deregister a service for this node')
+    registerp.add_argument('service_id', help='The service registration id')
 
 def parse_cli_args():
     """Create the argument parser and add the arguments"""
@@ -118,6 +128,7 @@ def parse_cli_args():
 
     sparser = parser.add_subparsers(title='Commands', dest='command')
     add_register_args(sparser)
+    add_deregister_args(sparser)
     add_kv_args(sparser)
     return parser.parse_args()
 
@@ -256,6 +267,18 @@ def register(consul, args):
     except exceptions.ConnectionError:
         connection_error()
 
+def deregister(consul, args):
+    """Handle service deregistration.
+
+    :param consulate.api_old.Consul consul: The Consul instance
+    :param argparser.namespace args: The cli args
+
+    """
+    try:
+        consul.agent.service.deregister(args.service_id)
+    except exceptions.ConnectionError:
+        connection_error()
+
 # Mapping dict to simplify the code in main()
 KV_ACTIONS = {
     'backup': kv_backup,
@@ -281,5 +304,7 @@ def main():
                               args.token, args.api_scheme, adapter)
     if args.command == 'register':
         register(consul, args)
+    elif args.command == 'deregister':
+        deregister(consul, args)
     elif args.command == 'kv':
         KV_ACTIONS[args.action](consul, args)
