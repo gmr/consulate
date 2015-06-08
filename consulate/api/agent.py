@@ -60,13 +60,15 @@ class Agent(base.Endpoint):
                      check_id=None,
                      interval=None,
                      ttl=None,
-                     notes=None):
+                     notes=None,
+                     http=None):
             """Add a new check to the local agent. Checks are either a script
             or TTL type. The agent is responsible for managing the status of
             the check and keeping the Catalog in sync.
 
             The ``name`` field is mandatory, as is either ``script`` and
-            ``interval`` or ``ttl``. Only one of ``script`` and ``interval``
+            ``interval``, ``http`` and ``interval`` or ``ttl``.
+            Only one of ``script`` and ``interval``, ``http`` and  ``interval``
             or ``ttl`` should be provided.  If an ``check_id`` is not
             provided, it is set to ``name``. You cannot have  duplicate
             ``check_id`` entries per agent, so it may be necessary to provide
@@ -75,14 +77,19 @@ class Agent(base.Endpoint):
 
             If a ``script`` is provided, the check type is a script, and Consul
             will evaluate the script every ``interval`` to update the status.
+            If a ``http`` URL is provided, Consul will poll the URL every
+            ``interval`` to update the status - only 2xx results are considered
+            healthy.
             If a ``ttl`` type is used, then the ``ttl`` update APIs must be
             used to periodically update the state of the check.
 
             :param str name: The check name
+            :param str http: The URL to poll for health checks
             :param str script: The path to the script to run
             :param str check_id: The optional check id
             :param int interval: The interval to run the check
             :param int ttl: The ttl to specify for the check
+            :param str notes: Administrative notes.
             :rtype: bool
             :raises: ValueError
 
@@ -93,12 +100,22 @@ class Agent(base.Endpoint):
             elif script and ttl:
                 raise ValueError('Can not specify script and ttl together')
 
+            if http and not interval:
+                raise ValueError('Must specify interval when using http')
+            elif http and ttl:
+                raise ValueError('Can not specify http and ttl together')
+
+            if http and script:
+                raise ValueError('Can not specify script and http together')
+
+
             # Register the check
             return self._put_no_response_body(['register'], None, {
                 'ID': check_id,
                 'Name': name,
                 'Notes': notes,
                 'Script': script,
+                'HTTP': http,
                 'Interval': interval,
                 'TTL': ttl
             })
@@ -161,7 +178,8 @@ class Agent(base.Endpoint):
                      tags=None,
                      check=None,
                      interval=None,
-                     ttl=None):
+                     ttl=None,
+                     httpcheck=None):
             """Add a new service to the local agent.
 
             :param str name: The name of the service
@@ -169,9 +187,10 @@ class Agent(base.Endpoint):
             :param str address: The service IP address
             :param int port: The service port
             :param list tags: A list of tags for the service
-            :param str check: The path to the check to run
-            :param str interval: The script execution interval
+            :param str check: The path to the check script to run
+            :param str interval: The check execution interval
             :param str ttl: The TTL for external script check pings
+            :param str httpcheck: An URL to check every interval
             :rtype: bool
             :raises: ValueError
 
@@ -181,8 +200,21 @@ class Agent(base.Endpoint):
                 raise ValueError('port must be an integer')
             elif tags and not isinstance(tags, list):
                 raise ValueError('tags must be a list of strings')
-            elif check and ttl:
+            elif (check or httpcheck) and ttl:
                 raise ValueError('Can not specify both a check and ttl')
+
+            if (check or httpcheck) and not interval:
+                raise ValueError('An interval is required for check scripts and http checks.')
+
+            check_spec = None
+            if check:
+                check_spec = {'script': check,
+                              'interval': interval}
+            elif httpcheck:
+                check_spec = {'HTTP': httpcheck,
+                              'interval': interval}
+            elif ttl:
+                check_spec = {'TTL': ttl}
 
             # Build the payload to send to consul
             payload = {
@@ -190,11 +222,11 @@ class Agent(base.Endpoint):
                 'name': name,
                 'port': port,
                 'address': address,
-                'tags': tags,
-                'check': {'script': check,
-                          'interval': interval,
-                          'ttl': ttl}
+                'tags': tags
             }
+
+            if check_spec:
+                payload['check'] = check_spec
 
             for key in list(payload.keys()):
                 if payload[key] is None:

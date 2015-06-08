@@ -78,7 +78,7 @@ def add_register_args(parser):
     registerp.add_argument('name', help='The service name')
     registerp.add_argument('-a', '--address', default=None,
                            help='Specify an address')
-    registerp.add_argument('-p', '--port', default=None, help='Specify a port')
+    registerp.add_argument('-p', '--port', default=None, type=int, help='Specify a port')
     registerp.add_argument('-s', '--service-id', default=None,
                            help='Specify a service ID')
     registerp.add_argument('-t', '--tags', default=[],
@@ -91,11 +91,27 @@ def add_register_args(parser):
                        help='How often to run the check script')
     check.add_argument('path', default=None,
                        help='Path to the script invoked by Consul')
+    httpcheck = rsparsers.add_parser('httpcheck',
+                                 help='Define an HTTP-based check')
+    httpcheck.add_argument('interval', default=10, type=int,
+                       help='How often to run the check script')
+    httpcheck.add_argument('url', default=None,
+                       help='HTTP URL to be polled by Consul')
     rsparsers.add_parser('no-check', help='Do not enable service monitoring')
     ttl = rsparsers.add_parser('ttl', help='Define a duration based TTL check')
     ttl.add_argument('duration', type=int, default=10,
                      help='TTL duration for a service with missing check data')
 
+def add_deregister_args(parser):
+    """Add the deregister command and arguments.
+
+    :param argparse.Subparser parser: parser
+
+    """
+    # Service registration
+    registerp = parser.add_parser('deregister',
+                                  help='Deregister a service for this node')
+    registerp.add_argument('service_id', help='The service registration id')
 
 def parse_cli_args():
     """Create the argument parser and add the arguments"""
@@ -118,6 +134,7 @@ def parse_cli_args():
 
     sparser = parser.add_subparsers(title='Commands', dest='command')
     add_register_args(sparser)
+    add_deregister_args(sparser)
     add_kv_args(sparser)
     return parser.parse_args()
 
@@ -247,12 +264,25 @@ def register(consul, args):
 
     """
     check = args.path if args.ctype == 'check' else None
-    interval = '%ss' % args.interval if args.ctype == 'check' else None
+    httpcheck = args.url if args.ctype == 'httpcheck' else None
+    interval = '%ss' % args.interval if 'check' in args.ctype else None
     ttl = '%ss' % args.duration if args.ctype == 'ttl' else None
     tags = args.tags.split(',') if args.tags else None
     try:
         consul.agent.service.register(args.name, args.service_id, args.address,
-                                      args.port, tags, check, interval, ttl)
+                                      args.port, tags, check, interval, ttl, httpcheck)
+    except exceptions.ConnectionError:
+        connection_error()
+
+def deregister(consul, args):
+    """Handle service deregistration.
+
+    :param consulate.api_old.Consul consul: The Consul instance
+    :param argparser.namespace args: The cli args
+
+    """
+    try:
+        consul.agent.service.deregister(args.service_id)
     except exceptions.ConnectionError:
         connection_error()
 
@@ -281,5 +311,7 @@ def main():
                               args.token, args.api_scheme, adapter)
     if args.command == 'register':
         register(consul, args)
+    elif args.command == 'deregister':
+        deregister(consul, args)
     elif args.command == 'kv':
         KV_ACTIONS[args.action](consul, args)
