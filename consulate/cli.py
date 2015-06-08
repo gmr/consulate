@@ -91,6 +91,12 @@ def add_register_args(parser):
                        help='How often to run the check script')
     check.add_argument('path', default=None,
                        help='Path to the script invoked by Consul')
+    httpcheck = rsparsers.add_parser('httpcheck',
+                                 help='Define an HTTP-based check')
+    httpcheck.add_argument('interval', default=10, type=int,
+                       help='How often to run the check script')
+    httpcheck.add_argument('url', default=None,
+                       help='HTTP URL to be polled by Consul')
     rsparsers.add_parser('no-check', help='Do not enable service monitoring')
     ttl = rsparsers.add_parser('ttl', help='Define a duration based TTL check')
     ttl.add_argument('duration', type=int, default=10,
@@ -258,12 +264,13 @@ def register(consul, args):
 
     """
     check = args.path if args.ctype == 'check' else None
-    interval = '%ss' % args.interval if args.ctype == 'check' else None
+    httpcheck = args.url if args.ctype == 'httpcheck' else None
+    interval = '%ss' % args.interval if 'check' in args.ctype else None
     ttl = '%ss' % args.duration if args.ctype == 'ttl' else None
     tags = args.tags.split(',') if args.tags else None
     try:
         consul.agent.service.register(args.name, args.service_id, args.address,
-                                      args.port, tags, check, interval, ttl)
+                                      args.port, tags, check, interval, ttl, httpcheck)
     except exceptions.ConnectionError:
         connection_error()
 
