@@ -78,7 +78,7 @@ def add_register_args(parser):
     registerp.add_argument('name', help='The service name')
     registerp.add_argument('-a', '--address', default=None,
                            help='Specify an address')
-    registerp.add_argument('-p', '--port', default=None, help='Specify a port')
+    registerp.add_argument('-p', '--port', default=None, type=int, help='Specify a port')
     registerp.add_argument('-s', '--service-id', default=None,
                            help='Specify a service ID')
     registerp.add_argument('-t', '--tags', default=[],
