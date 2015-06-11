@@ -265,7 +265,7 @@ def register(consul, args):
     """
     check = args.path if args.ctype == 'check' else None
     httpcheck = args.url if args.ctype == 'httpcheck' else None
-    interval = '%ss' % args.interval if 'check' in args.ctype else None
+    interval = '%ss' % args.interval if args.ctype in ['check', 'httpcheck'] else None
     ttl = '%ss' % args.duration if args.ctype == 'ttl' else None
     tags = args.tags.split(',') if args.tags else None
     try:
