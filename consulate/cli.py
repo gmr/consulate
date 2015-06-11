@@ -303,9 +303,9 @@ def main():
     args = parse_cli_args()
 
     if args.api_scheme == 'http+unix':
-        adapter = None
-    else:
         adapter = adapters.UnixSocketRequest
+    else:
+        adapter = None
 
     consul = consulate.Consul(args.api_host, args.api_port, args.dc,
                               args.token, args.api_scheme, adapter)

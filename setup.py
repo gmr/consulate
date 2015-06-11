@@ -1,8 +1,9 @@
 from setuptools import setup
 import sys
 
-install_requires = ['requests>=2.0.0,<3.0.0',
-                    'requests-unixsocket>=0.1.4,<=1.0.0']
+install_requires = ['requests>=2.0.0,<3.0.0']
+
+extras_require = {'unixsocket': ['requests-unixsocket>=0.1.4,<=1.0.0'] }
 
 if sys.version_info < (2, 7, 0):
     install_requires.append('argparse')
@@ -14,6 +15,7 @@ setup(name='consulate',
       maintainer_email="gavinr@aweber.com",
       url="https://consulate.readthedocs.org",
       install_requires=install_requires,
+      extras_require=extras_require,
       license='BSD',
       package_data={'': ['LICENSE', 'README.rst']},
       packages=['consulate', 'consulate.api'],
