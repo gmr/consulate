@@ -1,8 +1,10 @@
 """Consulate CLI commands"""
 # pragma: no cover
 import argparse
+import urlparse
 import json
 import sys
+import os
 
 from requests import exceptions
 
@@ -10,6 +12,8 @@ import consulate
 from consulate import adapters
 from consulate import utils
 
+
+CONSUL_ENV_VAR = 'CONSUL_RPC_ADDR'
 
 def connection_error():
     """Common exit routine when consulate can't connect to Consul"""
@@ -101,14 +105,17 @@ def parse_cli_args():
     """Create the argument parser and add the arguments"""
     parser = argparse.ArgumentParser(description='CLI utilities for Consul')
 
+    env_var = os.environ.get(CONSUL_ENV_VAR, '')
+    parsed_defaults = urlparse.urlparse(env_var)
+
     parser.add_argument('--api-scheme',
-                        default='http',
+                        default=parsed_defaults.scheme or 'http',
                         help='The scheme to use for connecting to Consul with')
     parser.add_argument('--api-host',
-                        default='localhost',
+                        default=parsed_defaults.hostname or 'localhost',
                         help='The consul host to connect on')
     parser.add_argument('--api-port',
-                        default=8500,
+                        default=parsed_defaults.port or 8500,
                         help='The consul API port to connect to')
     parser.add_argument('--datacenter',
                         dest='dc',
