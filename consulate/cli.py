@@ -119,7 +119,6 @@ def parse_cli_args():
                         default='http',
                         help='The scheme to use for connecting to Consul with')
     parser.add_argument('--api-host',
-                        default='localhost',
                         help='The consul host to connect on')
     parser.add_argument('--api-port',
                         default=8500,
@@ -339,11 +338,17 @@ def main():
     if args.api_scheme == 'http+unix':
         adapter = adapters.UnixSocketRequest
         port = None
+
         api_host = os.environ.get('CONSUL_HTTP_ADDR').replace('unix://', '')
+        if args.api_host:
+            api_host = args.api_host
     else:
         adapter = None
         port = args.api_port
-        api_host = args.api_host
+
+        api_host = 'localhost'
+        if args.api_host:
+            api_host = args.api_host
 
     consul = consulate.Consul(api_host, port, args.dc,
                               args.token, args.api_scheme, adapter)
