@@ -292,7 +292,7 @@ def run_once(consul, args):
         import time
         import subprocess
 
-        session = consul.session
+        session = consul.session.create()
         if not consul.kv.acquire_lock(args.prefix, session):
             sys.stdout.write('Cannot obtain the required lock. Exiting\n')
             sys.exit(2)
@@ -326,6 +326,7 @@ def run_once(consul, args):
             error = True
 
         consul.kv.release_lock(args.prefix, session)
+        consul.session.destroy(session)
         if error:
             sys.exit(1)
     except exceptions.ConnectionError:
