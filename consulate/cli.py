@@ -298,13 +298,17 @@ def run_once(consul, args):
             sys.exit(2)
         if args.interval:
             now = int(time.time())
-            last_run = consul.kv.get(args.prefix)
+            last_run = consul.kv.get("{0}_last_run".format(args.prefix))
             if str(last_run) not in ['null', 'None'] and \
                 int(last_run) + int(args.interval) > now:
                 sys.stdout.write("Last run happened fewer than "\
                     "{0} second ago. Exiting\n".format(args.interval))
+                consul.kv.release_lock(args.prefix, session)
+                consul.session.destroy(session)
                 return
-            consul.kv[args.prefix] = now
+            consul.kv["{0}_last_run".format(args.prefix)] = now
+        consul.kv.release_lock(args.prefix, session)
+        consul.session.destroy(session)
 
         # Should the subprocess return an error code, release the lock
         try:
@@ -324,9 +328,6 @@ def run_once(consul, args):
             sys.stdout.write('"{0}" exited with error "{1}"\n'.format(
                 args.operation, e))
             error = True
-
-        consul.kv.release_lock(args.prefix, session)
-        consul.session.destroy(session)
         if error:
             sys.exit(1)
     except exceptions.ConnectionError:
