@@ -265,7 +265,7 @@ def register(consul, args):
     """
     check = args.path if args.ctype == 'check' else None
     httpcheck = args.url if args.ctype == 'httpcheck' else None
-    interval = '%ss' % args.interval if 'check' in args.ctype else None
+    interval = '%ss' % args.interval if args.ctype in ['check', 'httpcheck'] else None
     ttl = '%ss' % args.duration if args.ctype == 'ttl' else None
     tags = args.tags.split(',') if args.tags else None
     try:
@@ -303,9 +303,9 @@ def main():
     args = parse_cli_args()
 
     if args.api_scheme == 'http+unix':
-        adapter = None
-    else:
         adapter = adapters.UnixSocketRequest
+    else:
+        adapter = None
 
     consul = consulate.Consul(args.api_host, args.api_port, args.dc,
                               args.token, args.api_scheme, adapter)
