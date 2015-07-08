@@ -1,6 +1,7 @@
 """Consulate CLI commands"""
 # pragma: no cover
 import argparse
+import base64
 import json
 import sys
 
@@ -221,6 +222,11 @@ def kv_restore(consul, args):
     handle = open(args.file, 'r') if args.file else sys.stdin
     data = json.load(handle)
     for row in data:
+        if isinstance(row, dict):
+            # translate raw api export to internal representation
+            if row['Value'] is not None:
+                row['Value'] = base64.b64decode(row['Value'])
+            row = [row['Key'], row['Flags'], row['Value']]
         # Here's an awesome thing to make things work
         if not utils.PYTHON3 and isinstance(row[2], unicode):
             row[2] = row[2].encode('utf-8')
