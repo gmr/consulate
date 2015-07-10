@@ -190,7 +190,10 @@ def kv_ls(consul, args):
     try:
         for key in consul.kv.keys():
             if args.long:
-                print('{0:>14} {1}'.format(len(consul.kv[key]), key))
+                keylen = 0
+                if consul.kv[key]:
+                    keylen = len(consul.kv[key])
+                print('{0:>14} {1}'.format(keylen, key))
             else:
                 print(key)
     except exceptions.ConnectionError:
