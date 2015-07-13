@@ -1,4 +1,5 @@
 -r requirements.txt
+-r optional-requirements.txt
 coverage==3.7.1
 httmock==1.2.2
 mock==1.0.1

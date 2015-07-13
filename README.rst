@@ -39,6 +39,8 @@ setting, and deleting keys from the KV database.
 
     optional arguments:
       -h, --help            show this help message and exit
+      --api-scheme API_SCHEME
+                            The scheme to use for connecting to Consul with
       --api-host API_HOST   The consul host to connect on
       --api-port API_PORT   The consul API port to connect to
       --datacenter DATACENTER
