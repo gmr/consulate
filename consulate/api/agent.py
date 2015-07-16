@@ -108,7 +108,6 @@ class Agent(base.Endpoint):
             if http and script:
                 raise ValueError('Can not specify script and http together')
 
-
             # Register the check
             return self._put_no_response_body(['register'], None, {
                 'ID': check_id,
