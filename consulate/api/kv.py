@@ -335,17 +335,6 @@ class KV(base.Endpoint):
         if response.status_code == 200:
             index = response.body.get('ModifyIndex')
             rvalue = response.body.get('Value')
-            if isinstance(rvalue, bytes):
-                if utils.PYTHON3:
-                    try:
-                        rvalue = str(rvalue, 'utf-8')
-                    except UnicodeDecodeError:
-                        pass
-                else:
-                    try:
-                        rvalue = rvalue.encode('utf-8')
-                    except UnicodeDecodeError:
-                        pass
             if rvalue == value:
                 return None
             if not replace:
@@ -357,21 +346,18 @@ class KV(base.Endpoint):
         """Prepare the value passed in and ensure that it is properly encoded
 
         :param mixed value: The value to prepare
-        :rtype: str|unicode
+        :rtype: bytes
 
         """
-        if utils.is_string(value):
+        if not utils.is_string(value) or isinstance(value, bytes):
+            return value
+        try:
             if utils.PYTHON3:
-                if isinstance(value, bytes):
-                    try:
-                        value = str(value, 'utf-8')
-                    except UnicodeDecodeError:
-                        pass
-            elif not isinstance(value, unicode):
-                try:
-                    value.decode('utf-8')
-                except UnicodeDecodeError:
-                    pass
+                return value.encode('utf-8')
+            elif isinstance(value, unicode):
+                return value.encode('utf-8')
+        except UnicodeDecodeError:
+            return value
         return value
 
     def _set_item(self, item, value, flags=None, replace=True):

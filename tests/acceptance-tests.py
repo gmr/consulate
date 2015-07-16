@@ -198,20 +198,27 @@ class TestKVSet(BaseTestCase):
     @unittest.skipIf(PYTHON3, 'No unicode strings in Python3')
     @generate_key
     def test_set_item_get_item_unicode_value(self, key):
-        self.consul.kv.set(key, u'✈')
-        self.assertEqual(self.consul.kv.get(key), u'✈')
+        self.consul.kv.set(key, u'I like to ✈')
+        self.assertEqual(self.consul.kv.get(key), u'I like to ✈')
 
     @unittest.skipIf(not PYTHON3, 'No native unicode strings in Python2')
     @generate_key
     def test_set_item_get_item_unicode_value(self, key):
-        self.consul.kv.set(key, '✈')
+        self.consul.kv.set(key, 'I like to ✈')
         response = self.consul.kv.get(key)
-        self.assertEqual(response, '✈')
+        self.assertEqual(response, 'I like to ✈')
 
     @generate_key
     def test_set_item_in_records(self, key):
         self.consul.kv.set(key, 'zomg')
         expectation = (key, 0, 'zomg')
+        self.assertIn(expectation, self.consul.kv.records())
+
+    @generate_key
+    def test_set_binary_value(self, key):
+        value = uuid.uuid4().bytes
+        self.consul.kv.set(key, value)
+        expectation = (key, 0, value)
         self.assertIn(expectation, self.consul.kv.records())
 
 
