@@ -80,7 +80,8 @@ def add_register_args(parser):
     registerp.add_argument('name', help='The service name')
     registerp.add_argument('-a', '--address', default=None,
                            help='Specify an address')
-    registerp.add_argument('-p', '--port', default=None, type=int, help='Specify a port')
+    registerp.add_argument('-p', '--port', default=None, type=int,
+                           help='Specify a port')
     registerp.add_argument('-s', '--service-id', default=None,
                            help='Specify a service ID')
     registerp.add_argument('-t', '--tags', default=[],
@@ -293,7 +294,8 @@ def register(consul, args):
     tags = args.tags.split(',') if args.tags else None
     try:
         consul.agent.service.register(args.name, args.service_id, args.address,
-                                      args.port, tags, check, interval, ttl, httpcheck)
+                                      int(args.port), tags, check, interval,
+                                      ttl, httpcheck)
     except exceptions.ConnectionError:
         connection_error()
 
