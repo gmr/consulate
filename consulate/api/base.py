@@ -51,7 +51,7 @@ class Endpoint(object):
                                         urlencode(query_params))
         return '{0}/{1}'.format(self._base_uri, path)
 
-    def _get(self, params, query_params=None):
+    def _get(self, params, query_params=None, raise_on_404=False):
         """Perform a GET request
 
         :param list params: List of path parts
@@ -64,7 +64,9 @@ class Endpoint(object):
         elif response.status_code == 401:
             raise exceptions.ACLDisabled(response.body)
         elif response.status_code == 403:
-            raise exceptions.ACLForbidden(response.body)
+            raise exceptions.Forbidden(response.body)
+        elif response.status_code == 404 and raise_on_404:
+            raise exceptions.NotFound(response.body)
         return []
 
     def _get_list(self, params, query_params=None):
@@ -126,9 +128,9 @@ class Response(object):
         :rtype: dict or str
 
         """
+        if body is None:
+            return None
         if self.status_code == 200:
-            if body is None:
-                return None
             try:
                 if utils.PYTHON3 and isinstance(body, bytes):
                     try:
@@ -138,6 +140,8 @@ class Response(object):
                 value = json.loads(body, encoding='utf-8')
             except (TypeError, ValueError):
                 return body
+            if value is None:
+                return None
             if isinstance(value, bool):
                 return value
             if 'error' not in value:
