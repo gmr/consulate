@@ -25,6 +25,8 @@ from consulate import adapters
 from consulate import api
 from consulate import utils
 
+from consulate.exceptions import *
+
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8500
 DEFAULT_SCHEME = 'http'
