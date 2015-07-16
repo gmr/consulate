@@ -4,6 +4,7 @@ import argparse
 import base64
 import json
 import sys
+import os
 
 from requests import exceptions
 
@@ -103,6 +104,19 @@ def add_register_args(parser):
     ttl.add_argument('duration', type=int, default=10,
                      help='TTL duration for a service with missing check data')
 
+def add_run_once_args(parser):
+    """Add the run_once command and arguments.
+
+    :param argparse.Subparser parser: parser
+
+    """
+    run_oncep = parser.add_parser('run_once',
+                                  help='Lock this command')
+    run_oncep.add_argument('prefix', help='the name of the lock which will be held in Consul.')
+    run_oncep.add_argument('operation', nargs=argparse.REMAINDER, help='The command to lock')
+    run_oncep.add_argument('-i', '--interval', default=None,
+                           help='Hold the lock for X seconds')
+
 def add_deregister_args(parser):
     """Add the deregister command and arguments.
 
@@ -122,7 +136,6 @@ def parse_cli_args():
                         default='http',
                         help='The scheme to use for connecting to Consul with')
     parser.add_argument('--api-host',
-                        default='localhost',
                         help='The consul host to connect on')
     parser.add_argument('--api-port',
                         default=8500,
@@ -137,6 +150,7 @@ def parse_cli_args():
     add_register_args(sparser)
     add_deregister_args(sparser)
     add_kv_args(sparser)
+    add_run_once_args(sparser)
     return parser.parse_args()
 
 
@@ -306,6 +320,57 @@ KV_ACTIONS = {
     'rm': kv_rm,
     'set': kv_set}
 
+def run_once(consul, args):
+    """Ensure only one process can run a command at a time
+
+    :param consulate.api_old.Consul consul: The Consul instance
+    :param argparser.namespace args: The cli args
+
+    """
+    try:
+        import time
+        import subprocess
+
+        session = consul.session.create()
+        if not consul.kv.acquire_lock(args.prefix, session):
+            sys.stdout.write('Cannot obtain the required lock. Exiting\n')
+            sys.exit(2)
+        if args.interval:
+            now = int(time.time())
+            last_run = consul.kv.get("{0}_last_run".format(args.prefix))
+            if str(last_run) not in ['null', 'None'] and \
+                int(last_run) + int(args.interval) > now:
+                sys.stdout.write("Last run happened fewer than "\
+                    "{0} second ago. Exiting\n".format(args.interval))
+                consul.kv.release_lock(args.prefix, session)
+                consul.session.destroy(session)
+                return
+            consul.kv["{0}_last_run".format(args.prefix)] = now
+        consul.kv.release_lock(args.prefix, session)
+        consul.session.destroy(session)
+
+        # Should the subprocess return an error code, release the lock
+        try:
+            error = False
+            subprocess.check_output(args.operation, stderr=subprocess.STDOUT)
+        # If the subprocess fails
+        except subprocess.CalledProcessError as e:
+            sys.stdout.write('"{0}" exited with return code "{1}" and output {2}\n'.format(
+                args.operation, e.returncode, e.output))
+            error = True
+        # If the command doesn't exist
+        except OSError as e:
+            sys.stdout.write('"{0}" command does not exist\n'.format(args.operation))
+            error = True
+        # Otherwise
+        except Exception as e:
+            sys.stdout.write('"{0}" exited with error "{1}"\n'.format(
+                args.operation, e))
+            error = True
+        if error:
+            sys.exit(1)
+    except exceptions.ConnectionError:
+        connection_error()
 
 def main():
     """Entrypoint for the consulate cli application"""
@@ -313,14 +378,28 @@ def main():
 
     if args.api_scheme == 'http+unix':
         adapter = adapters.UnixSocketRequest
+        port = None
+
+        api_host = os.environ.get('CONSUL_HTTP_ADDR').replace('unix://', '')
+        if args.api_host:
+            api_host = args.api_host
     else:
         adapter = None
+        port = args.api_port
 
-    consul = consulate.Consul(args.api_host, args.api_port, args.dc,
+        api_host = 'localhost'
+        if args.api_host:
+            api_host = args.api_host
+
+    consul = consulate.Consul(api_host, port, args.dc,
                               args.token, args.api_scheme, adapter)
+
     if args.command == 'register':
         register(consul, args)
     elif args.command == 'deregister':
         deregister(consul, args)
     elif args.command == 'kv':
         KV_ACTIONS[args.action](consul, args)
+    elif args.command == 'run_once':
+        run_once(consul, args)
+
