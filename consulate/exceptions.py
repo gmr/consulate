@@ -14,6 +14,13 @@ class ACLDisabled(ConsulateException):
     pass
 
 
-class ACLForbidden(ConsulateException):
+class Forbidden(ConsulateException):
     """Raised when ACLs are enabled and the token does not validate"""
+    pass
+
+
+class NotFound(ConsulateException):
+    """Raised when an operation is attempted with a value that can not be found
+
+    """
     pass
