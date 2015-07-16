@@ -6,6 +6,7 @@
 .tox
 build
 dist
+env
 tests/cover
 cover
 docs/_build
