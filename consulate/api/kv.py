@@ -362,10 +362,11 @@ class KV(base.Endpoint):
         """
         if utils.is_string(value):
             if utils.PYTHON3:
-                try:
-                    value = str(value, 'utf-8')
-                except UnicodeDecodeError:
-                    pass
+                if isinstance(value, bytes):
+                    try:
+                        value = str(value, 'utf-8')
+                    except UnicodeDecodeError:
+                        pass
             elif not isinstance(value, unicode):
                 try:
                     value.decode('utf-8')
