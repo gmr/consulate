@@ -16,6 +16,13 @@ and can be installed with easy_install or pip:
 
     pip install consulate
 
+If you require communicating with Consul via a Unix socket, there is an extra
+dependency that is installed via:
+
+.. code:: bash
+
+    pip install consulate[unixsocket]
+
 Command Line Utilities
 ----------------------
 Consulate comes with two command line utilities that make working with Consul
