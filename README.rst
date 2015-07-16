@@ -33,9 +33,11 @@ setting, and deleting keys from the KV database.
 
 .. code:: bash
 
-    usage: consulate [-h] [--api-host API_HOST] [--api-port API_PORT]
-                     [--datacenter DATACENTER]
-                     {register,kv} ...
+    usage: consulate [-h] [--api-scheme API_SCHEME] [--api-host API_HOST]
+                     [--api-port API_PORT] [--datacenter DC] [--token TOKEN]
+                     {register,deregister,kv,run_once} ...
+
+    CLI utilities for Consul
 
     optional arguments:
       -h, --help            show this help message and exit
@@ -43,34 +45,40 @@ setting, and deleting keys from the KV database.
                             The scheme to use for connecting to Consul with
       --api-host API_HOST   The consul host to connect on
       --api-port API_PORT   The consul API port to connect to
-      --datacenter DATACENTER
-                            The datacenter to specify for the connection
+      --datacenter DC       The datacenter to specify for the connection
+      --token TOKEN         ACL token
 
     Commands:
-      {register,kv}
+      {register,deregister,kv,run_once}
         register            Register a service for this node
+        deregister          Deregister a service for this node
         kv                  Key/Value Database Utilities
+        run_once            Lock command
 
 Service Registration Help:
 
 .. code:: bash
 
-    usage: consulate register [-h] [-s SERVICE_ID] [-t TAGS]
-                              {check,no-check,ttl} ... name port
+    usage: consulate register [-h] [-a ADDRESS] [-p PORT] [-s SERVICE_ID]
+                              [-t TAGS]
+                              name {check,httpcheck,no-check,ttl} ...
 
     positional arguments:
       name                  The service name
-      port                  The port the service runs on
 
     optional arguments:
       -h, --help            show this help message and exit
+      -a ADDRESS, --address ADDRESS
+                            Specify an address
+      -p PORT, --port PORT  Specify a port
       -s SERVICE_ID, --service-id SERVICE_ID
                             Specify a service ID
       -t TAGS, --tags TAGS  Specify a comma delimited list of tags
 
     Service Check Options:
-      {check,no-check,ttl}
+      {check,httpcheck,no-check,ttl}
         check               Define an external script-based check
+        httpcheck           Define an HTTP-based check
         no-check            Do not enable service monitoring
         ttl                 Define a duration based TTL check
 
@@ -78,13 +86,13 @@ KV Database Utilities Help:
 
 .. code:: bash
 
-    usage: consulate kv [-h] {backup,restore,ls,mkdir,get,set,rm,del} ...
+    usage: consulate kv [-h] {backup,restore,ls,mkdir,get,set,rm} ...
 
     optional arguments:
       -h, --help            show this help message and exit
 
     Key/Value Database Utilities:
-      {backup,restore,ls,mkdir,get,set,rm,del}
+      {backup,restore,ls,mkdir,get,set,rm}
         backup              Backup to stdout or a JSON file
         restore             Restore from stdin or a JSON file
         ls                  List all of the keys
@@ -92,7 +100,6 @@ KV Database Utilities Help:
         get                 Get a key from the database
         set                 Set a key in the database
         rm                  Remove a key from the database
-        del                 Deprecated method to remove a key
 
 Locking Operations Help:
 
