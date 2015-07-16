@@ -6,10 +6,10 @@ import json
 import logging
 
 import requests
-# Module imported lazily by UnixSocketRequest.__init__()
-# The rest of this library will work without UNIX socket support
-# even if requests_unixsocket cannot be loaded
-requests_unixsocket = None
+try:
+    import requests_unixsocket
+except ImportError:
+    requests_unixsocket = None
 
 from consulate import api
 from consulate import utils
@@ -110,13 +110,10 @@ class Request(object):
         return api.Response(response.status_code, response.content,
                             response.headers)
 
+
 class UnixSocketRequest(Request):
     """Use to communicate with Consul over a Unix socket"""
 
     def __init__(self, timeout=None):
         super(UnixSocketRequest, self).__init__(timeout)
-        # Load the requests_unixsocket module on demand only.
-        global requests_unixsocket
-        if requests_unixsocket is None:
-            import requests_unixsocket
         self.session = requests_unixsocket.Session()
