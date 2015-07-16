@@ -15,6 +15,13 @@ import consulate
 
 from consulate.utils import PYTHON3
 
+ACL_RULES = """key "" {
+  policy = "read"
+}
+key "foo/" {
+  policy = "write"
+}
+"""
 CONSUL_CONFIG = json.load(open('consul-test.json', 'r'))
 
 
@@ -43,6 +50,13 @@ class BaseTestCase(unittest.TestCase):
                 pass
 
 
+class ForbiddenTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.consul = consulate.Consul()
+        self.used_keys = list()
+
+
 class TestACL(BaseTestCase):
 
     def setUp(self):
@@ -58,6 +72,21 @@ class TestACL(BaseTestCase):
         acl_id = self.consul.acl.create(key)
         self.acl_list.append(acl_id)
         self.assertTrue(self.consul.acl.destroy(acl_id))
+
+    @generate_key
+    def test_clone_not_found(self, key):
+        self.assertRaises(consulate.NotFound, self.consul.acl.clone, key)
+
+    @generate_key
+    def test_info_not_found(self, key):
+        self.assertRaises(consulate.NotFound, self.consul.acl.info, key)
+
+    @generate_key
+    def test_create_with_rules(self, key):
+        acl_id = self.consul.acl.create(key, rules=ACL_RULES)
+        self.acl_list.append(acl_id)
+        value = self.consul.acl.info(acl_id)
+        self.assertEqual(value['Rules'], ACL_RULES)
 
     @generate_key
     def test_create_and_info(self, key):
@@ -76,6 +105,15 @@ class TestACL(BaseTestCase):
         self.assertIn(acl_id, [r.get('ID') for r in data])
 
     @generate_key
+    def test_create_and_clone(self, key):
+        acl_id = self.consul.acl.create(key)
+        self.acl_list.append(acl_id)
+        clone_id = self.consul.acl.clone(acl_id)
+        self.acl_list.append(clone_id)
+        data = self.consul.acl.list()
+        self.assertIn(clone_id, [r.get('ID') for r in data])
+
+    @generate_key
     def test_create_and_update(self, key):
         acl_id = self.consul.acl.create(key)
         self.acl_list.append(acl_id)
@@ -83,6 +121,50 @@ class TestACL(BaseTestCase):
         data = self.consul.acl.list()
         self.assertIn('Foo', [r.get('Name') for r in data])
         self.assertIn(acl_id, [r.get('ID') for r in data])
+
+    @generate_key
+    def test_update_not_found_adds_new_key(self, key):
+        self.assertTrue(self.consul.acl.update(key, 'Foo2'))
+        data = self.consul.acl.list()
+        self.assertIn('Foo2', [r.get('Name') for r in data])
+        self.assertIn(key, [r.get('ID') for r in data])
+
+    @generate_key
+    def test_update_with_rules(self, key):
+        self.consul.acl.update(key, name='test', rules=ACL_RULES)
+        self.acl_list.append(key)
+        value = self.consul.acl.info(key)
+        self.assertEqual(value['Rules'], ACL_RULES)
+
+
+    # Re-enable when Consul supports a 404 for an invalid ACL id
+    # @generate_key
+    # def test_destroy_not_found(self, key):
+    #     self.assertRaises(consulate.NotFound, self.consul.acl.destroy, key)
+
+
+class TestACLErrors(ForbiddenTestCase):
+
+    @generate_key
+    def test_create_is_forbidden(self, key):
+        self.assertRaises(consulate.Forbidden, self.consul.acl.create, key)
+
+    # This should happen, but it currently does not
+    # @generate_key
+    # def test_clone_is_forbidden(self, key):
+    #     self.assertRaises(consulate.Forbidden, self.consul.acl.clone, key)
+
+    @generate_key
+    def test_destroy_is_forbidden(self, key):
+        self.assertRaises(consulate.Forbidden, self.consul.acl.destroy, key)
+
+    def test_list_is_forbidden(self):
+        self.assertRaises(consulate.Forbidden, self.consul.acl.list)
+
+    @generate_key
+    def test_update_is_forbidden(self, key):
+        self.assertRaises(consulate.Forbidden, self.consul.acl.update, key,
+                          'value')
 
 
 class TestEvent(BaseTestCase):
