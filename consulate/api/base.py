@@ -131,7 +131,10 @@ class Response(object):
                 return None
             try:
                 if utils.PYTHON3 and isinstance(body, bytes):
-                    body = body.decode('utf-8')
+                    try:
+                        body = body.decode('utf-8')
+                    except UnicodeDecodeError:
+                        pass
                 value = json.loads(body, encoding='utf-8')
             except (TypeError, ValueError):
                 return body
@@ -143,7 +146,10 @@ class Response(object):
                         try:
                             row['Value'] = base64.b64decode(row['Value'])
                             if isinstance(row['Value'], bytes):
-                                row['Value'] = row['Value'].decode('utf-8')
+                                try:
+                                    row['Value'] = row['Value'].decode('utf-8')
+                                except UnicodeDecodeError:
+                                    pass
                         except TypeError:
                             pass
             if isinstance(value, list) and len(value) == 1:

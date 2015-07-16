@@ -336,7 +336,16 @@ class KV(base.Endpoint):
             index = response.body.get('ModifyIndex')
             rvalue = response.body.get('Value')
             if isinstance(rvalue, bytes):
-                rvalue = rvalue.encode('utf-8')
+                if utils.PYTHON3:
+                    try:
+                        rvalue = str(rvalue, 'utf-8')
+                    except UnicodeDecodeError:
+                        pass
+                else:
+                    try:
+                        rvalue = rvalue.encode('utf-8')
+                    except UnicodeDecodeError:
+                        pass
             if rvalue == value:
                 return None
             if not replace:
@@ -353,12 +362,15 @@ class KV(base.Endpoint):
         """
         if utils.is_string(value):
             if utils.PYTHON3:
-                value = value.encode('utf-8')
+                try:
+                    value = str(value, 'utf-8')
+                except UnicodeDecodeError:
+                    pass
             elif not isinstance(value, unicode):
                 try:
-                    value.decode('ascii')
+                    value.decode('utf-8')
                 except UnicodeDecodeError:
-                    value = value.decode('utf-8')
+                    pass
         return value
 
     def _set_item(self, item, value, flags=None, replace=True):
