@@ -50,8 +50,14 @@ KV_PARSERS = [
         [['path'],
          {'help': 'The path to create'}]]),
     ('get', 'Get a key from the database', [
-        [['key'],
-         {'help': 'The key to get'}]]),
+        [['key'], {'help': 'The key to get'}],
+        [['-r', '--recurse'],
+         {'help': 'Get all keys prefixed with the specified key',
+          'action': 'store_true'}],
+        [['-t', '--trim'],
+         {'help': 'Number of levels of prefix to trim from returned key',
+          'type': int,
+          'default': 0}]]),
     ('set', 'Set a key in the database', [
         [['key'], {'help': 'The key to set'}],
         [['value'], {'help': 'The value of the key'}]]),
@@ -209,7 +215,18 @@ def kv_get(consul, args):
 
     """
     try:
-        sys.stdout.write("%s\n" % consul.kv.get(args.key))
+        if args.recurse:
+            for key in sorted(consul.kv.find(args.key)):
+                displaykey = key
+                if args.trim:
+                    keyparts = displaykey.split('/')
+                    if (args.trim >= len(keyparts)):
+                        displaykey = keyparts[-1]
+                    else:
+                        displaykey = '/'.join(keyparts[args.trim:])
+                sys.stdout.write('%s\t%s\n' % (displaykey, consul.kv.get(key)))
+        else:
+            sys.stdout.write('%s\n' % consul.kv.get(args.key))
     except exceptions.ConnectionError:
         connection_error()
 
