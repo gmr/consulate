@@ -1,5 +1,23 @@
 Version History
 ===============
+ - 0.6.0 - released *2015-07-22*
+  - Added --recurse and --trim to cli kv_get (#58) - Matt Walker
+  - Add run-once functionality to CLI (#57) - Harrison Dahme
+  - Fix cli kv ls -l to report empty key lengths as 0 (#55) - Matt Walker
+  - Add ability to restore from API output (#53) - Morgan Delagrange
+  - If specified, use CONSUL_RPC_ADDR as defaults for API scheme/host/port in CLI app (#50) - Mike Dougherty
+  - Fix a recursion introduced in 0.5.0 with catalog.register (#49)
+  - Unix socket support moved to extras install, no longer required (#48) - Anders Daljord Morken
+  - Add support for HTTP health checks and CLI support for deregistering services (#47) - Anders Daljord Morken
+  - Handle an edge case where argparse doesn't properly pass int values (#45)
+  - Handle binary data properly (#41)
+  - Add --base64 flag to kv backup/restore for backing up and restoring binary data (#41)
+  - Fix status.peers() returning string instead of list if only one peer exists (#39)
+  - Remove print debugging on error message (#37) - Christian Kauhaus
+  - Added additional test coverage
+  - Expose consulate.exceptions.* at consulate package level
+  - consulate.exceptions.ACLForbidden renamed to consulate.exceptions.Forbidden
+  - Fix content encoding issues with Python 3
  - 0.5.1 - released *2015-05-13*
   - Fix a regression with consualte cli introduced with UnixSockets (#36) - Dan Tracy
  - 0.5.0 - released *2015-05-13*
