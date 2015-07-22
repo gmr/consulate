@@ -40,13 +40,13 @@ def connection_error():
 
 KV_PARSERS = [
     ('backup', 'Backup to stdout or a JSON file', [
-        [['-b', '--base64'], {'help': 'Base64 encode key values',
+        [['-b', '--base64'], {'help': 'Base64 encode values',
                               'action': 'store_true'}],
         [['-f', '--file'],
          {'help': 'JSON file to read instead of stdin',
           'nargs': '?'}]]),
     ('restore', 'Restore from stdin or a JSON file', [
-        [['-b', '--base64'], {'help': 'Restore from Base64 encode key values',
+        [['-b', '--base64'], {'help': 'Restore from Base64 encode values',
                               'action': 'store_true'}],
         [['-f', '--file'],
          {'help': 'JSON file to read instead of stdin',
