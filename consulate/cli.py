@@ -14,6 +14,8 @@ from consulate import adapters
 from consulate import utils
 
 CONSUL_ENV_VAR = 'CONSUL_RPC_ADDR'
+EPILOG = ('If the CONSUL_RPC_ADDR environment variable is set, it will be '
+          'parsed and used for default values when connecting.')
 
 
 def on_error(message, exit_code=2):
@@ -158,7 +160,8 @@ def add_deregister_args(parser):
 
 def parse_cli_args():
     """Create the argument parser and add the arguments"""
-    parser = argparse.ArgumentParser(description='CLI utilities for Consul')
+    parser = argparse.ArgumentParser(description='CLI utilities for Consul',
+                                     epilog=EPILOG)
 
     env_var = os.environ.get(CONSUL_ENV_VAR, '')
     parsed_defaults = urlparse.urlparse(env_var)
@@ -183,6 +186,10 @@ def parse_cli_args():
     add_deregister_args(sparser)
     add_kv_args(sparser)
     add_run_once_args(sparser)
+
+
+
+
     return parser.parse_args()
 
 
