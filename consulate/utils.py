@@ -23,3 +23,16 @@ def is_string(value):
     if not PYTHON3:
         checks.append(isinstance(value, unicode))
     return any(checks)
+
+
+def maybe_encode(value):
+    """If the value passed in is a str, encode it as UTF-8 bytes for Python 3
+
+    :param str|bytes value: The value to maybe encode
+    :rtype: bytes
+
+    """
+    try:
+        return value.encode('utf-8')
+    except AttributeError:
+        return value

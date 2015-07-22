@@ -5,7 +5,10 @@ import base64
 import json
 import sys
 import os
-import urlparse
+try:
+    import urlparse
+except ImportError:
+    import urllib.parse as urlparse
 
 from requests import exceptions
 
@@ -37,10 +40,14 @@ def connection_error():
 
 KV_PARSERS = [
     ('backup', 'Backup to stdout or a JSON file', [
+        [['-b', '--base64'], {'help': 'Base64 encode key values',
+                              'action': 'store_true'}],
         [['-f', '--file'],
          {'help': 'JSON file to read instead of stdin',
           'nargs': '?'}]]),
     ('restore', 'Restore from stdin or a JSON file', [
+        [['-b', '--base64'], {'help': 'Restore from Base64 encode key values',
+                              'action': 'store_true'}],
         [['-f', '--file'],
          {'help': 'JSON file to read instead of stdin',
           'nargs': '?'}],
@@ -186,10 +193,6 @@ def parse_cli_args():
     add_deregister_args(sparser)
     add_kv_args(sparser)
     add_run_once_args(sparser)
-
-
-
-
     return parser.parse_args()
 
 
@@ -201,9 +204,16 @@ def kv_backup(consul, args):
 
     """
     handle = open(args.file, 'w') if args.file else sys.stdout
-    print(consul.kv.records())
+    records = consul.kv.records()
+    if args.base64:
+        if utils.PYTHON3:
+            records = [(k, f, str(base64.b64encode(utils.maybe_encode(v)),
+                                  'ascii'))
+                       for k,f,v in records]
+        else:
+            records = [(k, f, base64.b64encode(v)) for k,f,v in records]
     try:
-        handle.write(json.dumps(consul.kv.records()) + '\n')
+        handle.write(json.dumps(records) + '\n')
     except exceptions.ConnectionError:
         connection_error()
 
@@ -295,6 +305,10 @@ def kv_restore(consul, args):
             if row['Value'] is not None:
                 row['Value'] = base64.b64decode(row['Value'])
             row = [row['Key'], row['Flags'], row['Value']]
+
+        if args.base64:
+            row[2] = base64.b64decode(row[2])
+
         # Here's an awesome thing to make things work
         if not utils.PYTHON3 and isinstance(row[2], unicode):
             row[2] = row[2].encode('utf-8')
