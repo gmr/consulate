@@ -62,6 +62,9 @@ setting, and deleting keys from the KV database.
         kv                  Key/Value Database Utilities
         run_once            Lock command
 
+    If the CONSUL_RPC_ADDR environment variable is set, it will be parsed and used
+    for default values when connecting.
+
 Service Registration Help:
 
 .. code:: bash
