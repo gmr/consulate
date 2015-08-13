@@ -211,7 +211,7 @@ def kv_backup(consul, args):
                                   'ascii'))
                        for k,f,v in records]
         else:
-            records = [(k, f, base64.b64encode(v)) for k,f,v in records]
+            records = [(k, f, base64.b64encode(v) if v else v) for k,f,v in records]
     try:
         handle.write(json.dumps(records) + '\n')
     except exceptions.ConnectionError:
