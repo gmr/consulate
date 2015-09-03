@@ -419,21 +419,28 @@ def run_once(consul, args):
 
         # Should the subprocess return an error code, release the lock
         try:
-            subprocess.check_output(args.command_to_run, stderr=subprocess.STDOUT)
+            print subprocess.check_output(args.command_to_run[0].strip(), stderr=subprocess.STDOUT, shell=True)
         # If the subprocess fails
         except subprocess.CalledProcessError as e:
             on_error('"{0}" exited with return code "{1}" '
                      'and output {2}'.format(args.command_to_run,
                                              e.returncode,
                                              e.output), 1)
+            consul.kv.release_lock(args.lock, session)
+            consul.session.destroy(session)
+
         # If the command doesn't exist
         except OSError as e:
             on_error('"{0}" command does not exist\n'.format(args.command_to_run), 1)
+            consul.kv.release_lock(args.lock, session)
+            consul.session.destroy(session)
 
         # Otherwise
         except Exception as e:
             on_error('"{0}" exited with error "{1}"'.format(args.command_to_run, e),
                      1)
+            consul.kv.release_lock(args.lock, session)
+            consul.session.destroy(session)
 
     except exceptions.ConnectionError:
         connection_error()
