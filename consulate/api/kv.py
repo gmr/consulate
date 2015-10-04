@@ -7,6 +7,7 @@ from consulate import utils
 
 
 class KV(base.Endpoint):
+
     """The :py:class:`consul.api.KV` class implements a :py:class:`dict` like
     interface for working with the Key/Value service. Simply use items on the
     :py:class:`consulate.Session` like you would with a :py:class:`dict` to
@@ -100,7 +101,7 @@ class KV(base.Endpoint):
         :return: bool
 
         """
-        return self._put_response_body([item], {'acquire': session})
+        return self._set_item(item, value, params={'acquire': session})
 
     def delete(self, item, recurse=False):
         """Delete an item from the Key/Value service
@@ -235,7 +236,7 @@ class KV(base.Endpoint):
         return [(item['Key'], item['Flags'], item['Value'])
                 for item in self._get_all_items()]
 
-    def release_lock(self, item, session):
+    def release_lock(self, item, value, session):
         """Release an existing lock from the Consul KV database.
 
         :param str item: The item in the Consul KV database
@@ -243,7 +244,8 @@ class KV(base.Endpoint):
         :return: bool
 
         """
-        return self._put_response_body([item], {'release': session})
+
+        return self._set_item(item, value, params={'release': session})
 
     def set(self, item, value):
         """Set a value in the Key/Value service, using the CAS mechanism
@@ -360,7 +362,7 @@ class KV(base.Endpoint):
             return value
         return value
 
-    def _set_item(self, item, value, flags=None, replace=True):
+    def _set_item(self, item, value, flags=None, replace=True, params={}):
         """Internal method for setting a key/value pair with flags in the
         Key/Value service
 
@@ -380,6 +382,8 @@ class KV(base.Endpoint):
             return True
 
         query_params = {'cas': index}
+        query_params.update(params)
+
         if flags is not None:
             query_params['flags'] = flags
         response = self._adapter.put(self._build_uri([item], query_params),
