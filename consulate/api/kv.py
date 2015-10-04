@@ -92,7 +92,7 @@ class KV(base.Endpoint):
         """
         self._set_item(item, value)
 
-    def acquire_lock(self, item, session):
+    def acquire_lock(self, item, value, session):
         """Use Consul for locking by specifying the item/key to lock with
         and a session value for removing the lock.
 
