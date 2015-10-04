@@ -101,7 +101,8 @@ class KV(base.Endpoint):
         :return: bool
 
         """
-        return self._set_item(item, value, params={'acquire': session})
+        response = self._set_item(item, value, params={'acquire': session})
+        return response.body
 
     def delete(self, item, recurse=False):
         """Delete an item from the Key/Value service
@@ -245,7 +246,8 @@ class KV(base.Endpoint):
 
         """
 
-        return self._set_item(item, value, params={'release': session})
+        response = self._set_item(item, value, params={'release': session})
+        return response.body
 
     def set(self, item, value):
         """Set a value in the Key/Value service, using the CAS mechanism
