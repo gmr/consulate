@@ -92,7 +92,7 @@ class KV(base.Endpoint):
         """
         self._set_item(item, value)
 
-    def acquire_lock(self, item, value, session):
+    def acquire_lock(self, item, session, value=None):
         """Use Consul for locking by specifying the item/key to lock with
         and a session value for removing the lock.
 
@@ -236,7 +236,7 @@ class KV(base.Endpoint):
         return [(item['Key'], item['Flags'], item['Value'])
                 for item in self._get_all_items()]
 
-    def release_lock(self, item, value, session):
+    def release_lock(self, item, session, value=None):
         """Release an existing lock from the Consul KV database.
 
         :param str item: The item in the Consul KV database
