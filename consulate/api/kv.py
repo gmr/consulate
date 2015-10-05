@@ -90,7 +90,10 @@ class KV(base.Endpoint):
         :raises: KeyError
 
         """
-        self._set_item(item, value)
+        response = self._set_item(item, value)
+        if not response.body:
+            raise KeyError(
+                'Error setting "{0}" ({1})'.format(item, response.status_code))
 
     def acquire_lock(self, item, session, value=None):
         """Use Consul for locking by specifying the item/key to lock with
@@ -270,9 +273,13 @@ class KV(base.Endpoint):
         :param str item: The key to set
         :param mixed value: The value to set
         :param replace: If True existing value will be overwritten:
+        :raises: KeyError
 
         """
-        self._set_item(item, value, flags, replace)
+        _ = self._set_item(item, value, flags, replace)
+        if not response:
+            raise KeyError(
+                'Error setting "{0}" ({1})'.format(item, response.status_code))
 
     def values(self):
         """Return a list of all of the values in the Key/Value service
@@ -375,7 +382,7 @@ class KV(base.Endpoint):
         :param int flags: User defined flags to set
         :param bool replace: Overwrite existing values
         :param dict params: Use provided parameters for query, default cas: index
-        :raises: KeyError
+        :rtype: response
 
         """
         value = self._prepare_value(value)
@@ -397,5 +404,6 @@ class KV(base.Endpoint):
         response = self._adapter.put(self._build_uri([item], query_params),
                                      value)
         if not response.status_code == 200 or not response.body:
-            raise KeyError(
-                'Error setting "{0}" ({1})'.format(item, response.status_code))
+            return response
+
+        return response
