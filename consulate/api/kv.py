@@ -98,6 +98,7 @@ class KV(base.Endpoint):
 
         :param str item: The item in the Consul KV database
         :param str session: The session value for the lock
+        :param mixed value: The value to set
         :return: bool
 
         """
@@ -242,6 +243,7 @@ class KV(base.Endpoint):
 
         :param str item: The item in the Consul KV database
         :param str session: The session value for the lock
+        :param mixed value: The value to set
         :return: bool
 
         """
@@ -364,7 +366,7 @@ class KV(base.Endpoint):
             return value
         return value
 
-    def _set_item(self, item, value, flags=None, replace=True, params={}):
+    def _set_item(self, item, value, flags=None, replace=True, params=None):
         """Internal method for setting a key/value pair with flags in the
         Key/Value service
 
@@ -372,6 +374,7 @@ class KV(base.Endpoint):
         :param mixed value: The value to set
         :param int flags: User defined flags to set
         :param bool replace: Overwrite existing values
+        :param dict params: Use provided parameters for query, default cas: index
         :raises: KeyError
 
         """
@@ -383,11 +386,14 @@ class KV(base.Endpoint):
         if index is None:
             return True
 
-        query_params = {'cas': index}
-        query_params.update(params)
+        if params and isinstance(params, dict):
+            query_params = params
+        else:
+            query_params = {'cas': index}
 
         if flags is not None:
             query_params['flags'] = flags
+
         response = self._adapter.put(self._build_uri([item], query_params),
                                      value)
         if not response.status_code == 200 or not response.body:
