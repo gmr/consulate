@@ -276,7 +276,7 @@ class KV(base.Endpoint):
         :raises: KeyError
 
         """
-        _ = self._set_item(item, value, flags, replace)
+        response = self._set_item(item, value, flags, replace)
         if not response:
             raise KeyError(
                 'Error setting "{0}" ({1})'.format(item, response.status_code))
