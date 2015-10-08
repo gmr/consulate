@@ -3,7 +3,7 @@ Consul KV Endpoint Access
 
 """
 from consulate.api import base
-from consulate import utils
+from consulate import utils, exceptions
 
 
 class KV(base.Endpoint):
@@ -385,5 +385,8 @@ class KV(base.Endpoint):
         response = self._adapter.put(self._build_uri([item], query_params),
                                      value)
         if not response.status_code == 200 or not response.body:
+            if response.status_code == 500:
+                raise exceptions.ServerError(
+                    response.body or 'Internal Consul server error')
             raise KeyError(
                 'Error setting "{0}" ({1})'.format(item, response.status_code))

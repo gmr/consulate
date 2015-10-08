@@ -24,3 +24,8 @@ class NotFound(ConsulateException):
 
     """
     pass
+
+
+class ServerError(ConsulateException):
+    """An internal Consul server error occurred"""
+    pass
