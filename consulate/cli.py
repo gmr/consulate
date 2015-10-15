@@ -306,7 +306,7 @@ def kv_restore(consul, args):
                 row['Value'] = base64.b64decode(row['Value'])
             row = [row['Key'], row['Flags'], row['Value']]
 
-        if args.base64:
+        if args.base64 and row[2] is not None:
             row[2] = base64.b64decode(row[2])
 
         # Here's an awesome thing to make things work
