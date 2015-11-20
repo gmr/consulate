@@ -147,7 +147,7 @@ def add_run_once_args(parser):
     run_oncep.add_argument('lock',
                            help='The name of the lock which will be '
                                 'held in Consul.')
-    run_oncep.add_argument('command', nargs=argparse.REMAINDER,
+    run_oncep.add_argument('command_to_run', nargs=argparse.REMAINDER,
                            help='The command to lock')
     run_oncep.add_argument('-i', '--interval', default=None,
                            help='Hold the lock for X seconds')
@@ -401,39 +401,46 @@ def run_once(consul, args):
         import subprocess
 
         session = consul.session.create()
-        if not consul.kv.acquire_lock(args.prefix, session):
+        if not consul.kv.acquire_lock(args.lock, session):
             on_error('Cannot obtain the required lock. Exiting')
         if args.interval:
             now = int(time.time())
-            last_run = consul.kv.get("{0}_last_run".format(args.prefix))
+            last_run = consul.kv.get("{0}_last_run".format(args.lock))
             if str(last_run) not in ['null', 'None'] and \
                     int(last_run) + int(args.interval) > now:
                 sys.stdout.write('Last run happened fewer than {0} '
                                  'second ago. Exiting\n'.format(args.interval))
-                consul.kv.release_lock(args.prefix, session)
+                consul.kv.release_lock(args.lock, session)
                 consul.session.destroy(session)
                 return
-            consul.kv["{0}_last_run".format(args.prefix)] = now
-        consul.kv.release_lock(args.prefix, session)
+            consul.kv["{0}_last_run".format(args.lock)] = now
+        consul.kv.release_lock(args.lock, session)
         consul.session.destroy(session)
 
         # Should the subprocess return an error code, release the lock
         try:
-            subprocess.check_output(args.operation, stderr=subprocess.STDOUT)
+            print subprocess.check_output(args.command_to_run[0].strip(), stderr=subprocess.STDOUT, shell=True)
         # If the subprocess fails
         except subprocess.CalledProcessError as e:
             on_error('"{0}" exited with return code "{1}" '
-                     'and output {2}'.format(args.operation,
+                     'and output {2}'.format(args.command_to_run,
                                              e.returncode,
                                              e.output), 1)
+            consul.kv.release_lock(args.lock, session)
+            consul.session.destroy(session)
+
         # If the command doesn't exist
         except OSError as e:
-            on_error('"{0}" command does not exist\n'.format(args.operation), 1)
+            on_error('"{0}" command does not exist\n'.format(args.command_to_run), 1)
+            consul.kv.release_lock(args.lock, session)
+            consul.session.destroy(session)
 
         # Otherwise
         except Exception as e:
-            on_error('"{0}" exited with error "{1}"'.format(args.operation, e),
+            on_error('"{0}" exited with error "{1}"'.format(args.command_to_run, e),
                      1)
+            consul.kv.release_lock(args.lock, session)
+            consul.session.destroy(session)
 
     except exceptions.ConnectionError:
         connection_error()
