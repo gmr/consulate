@@ -42,9 +42,10 @@ KV_PARSERS = [
     ('backup', 'Backup to stdout or a JSON file', [
         [['-b', '--base64'], {'help': 'Base64 encode values',
                               'action': 'store_true'}],
-        [['-f', '--file'],
-         {'help': 'JSON file to read instead of stdin',
-          'nargs': '?'}]]),
+        [['-f', '--file'], {'help': 'JSON file to write instead of stdin',
+                            'nargs': '?'}],
+        [['-p', '--pretty'], {'help': 'pretty-print JSON output',
+                              'action': 'store_true'}]]),
     ('restore', 'Restore from stdin or a JSON file', [
         [['-b', '--base64'], {'help': 'Restore from Base64 encode values',
                               'action': 'store_true'}],
@@ -213,7 +214,11 @@ def kv_backup(consul, args):
         else:
             records = [(k, f, base64.b64encode(v) if v else v) for k,f,v in records]
     try:
-        handle.write(json.dumps(records) + '\n')
+        if args.pretty:
+            handle.write(json.dumps(records, sort_keys=True, indent=2,
+                                    separators=(',', ': ')) + '\n')
+        else:
+            handle.write(json.dumps(records) + '\n')
     except exceptions.ConnectionError:
         connection_error()
 
