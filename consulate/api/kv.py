@@ -7,6 +7,7 @@ from consulate import utils
 
 
 class KV(base.Endpoint):
+
     """The :py:class:`consul.api.KV` class implements a :py:class:`dict` like
     interface for working with the Key/Value service. Simply use items on the
     :py:class:`consulate.Session` like you would with a :py:class:`dict` to
@@ -89,18 +90,23 @@ class KV(base.Endpoint):
         :raises: KeyError
 
         """
-        self._set_item(item, value)
+        response = self._set_item(item, value)
+        if not response.body:
+            raise KeyError(
+                'Error setting "{0}" ({1})'.format(item, response.status_code))
 
-    def acquire_lock(self, item, session):
+    def acquire_lock(self, item, session, value=None):
         """Use Consul for locking by specifying the item/key to lock with
         and a session value for removing the lock.
 
         :param str item: The item in the Consul KV database
         :param str session: The session value for the lock
+        :param mixed value: The value to set
         :return: bool
 
         """
-        return self._put_response_body([item], {'acquire': session})
+        response = self._set_item(item, value, params={'acquire': session})
+        return response.body
 
     def delete(self, item, recurse=False):
         """Delete an item from the Key/Value service
@@ -235,15 +241,18 @@ class KV(base.Endpoint):
         return [(item['Key'], item['Flags'], item['Value'])
                 for item in self._get_all_items()]
 
-    def release_lock(self, item, session):
+    def release_lock(self, item, session, value=None):
         """Release an existing lock from the Consul KV database.
 
         :param str item: The item in the Consul KV database
         :param str session: The session value for the lock
+        :param mixed value: The value to set
         :return: bool
 
         """
-        return self._put_response_body([item], {'release': session})
+
+        response = self._set_item(item, value, params={'release': session})
+        return response.body
 
     def set(self, item, value):
         """Set a value in the Key/Value service, using the CAS mechanism
@@ -264,9 +273,13 @@ class KV(base.Endpoint):
         :param str item: The key to set
         :param mixed value: The value to set
         :param replace: If True existing value will be overwritten:
+        :raises: KeyError
 
         """
-        self._set_item(item, value, flags, replace)
+        response = self._set_item(item, value, flags, replace)
+        if not response:
+            raise KeyError(
+                'Error setting "{0}" ({1})'.format(item, response.status_code))
 
     def values(self):
         """Return a list of all of the values in the Key/Value service
@@ -360,7 +373,7 @@ class KV(base.Endpoint):
             return value
         return value
 
-    def _set_item(self, item, value, flags=None, replace=True):
+    def _set_item(self, item, value, flags=None, replace=True, params=None):
         """Internal method for setting a key/value pair with flags in the
         Key/Value service
 
@@ -368,7 +381,8 @@ class KV(base.Endpoint):
         :param mixed value: The value to set
         :param int flags: User defined flags to set
         :param bool replace: Overwrite existing values
-        :raises: KeyError
+        :param dict params: Use provided parameters for query, default cas: index
+        :rtype: response
 
         """
         value = self._prepare_value(value)
@@ -379,11 +393,17 @@ class KV(base.Endpoint):
         if index is None:
             return True
 
-        query_params = {'cas': index}
+        if params and isinstance(params, dict):
+            query_params = params
+        else:
+            query_params = {'cas': index}
+
         if flags is not None:
             query_params['flags'] = flags
+
         response = self._adapter.put(self._build_uri([item], query_params),
                                      value)
         if not response.status_code == 200 or not response.body:
-            raise KeyError(
-                'Error setting "{0}" ({1})'.format(item, response.status_code))
+            return response
+
+        return response

@@ -136,7 +136,6 @@ class TestACL(BaseTestCase):
         value = self.consul.acl.info(key)
         self.assertEqual(value['Rules'], ACL_RULES)
 
-
     # Re-enable when Consul supports a 404 for an invalid ACL id
     # @generate_key
     # def test_destroy_not_found(self, key):
@@ -357,8 +356,26 @@ class TestKVLocking(BaseTestCase):
         session_id = self.consul.session.create(key,
                                                 behavior='delete',
                                                 ttl='60s')
-        self.assertTrue(self.consul.kv.acquire_lock(lock_key, session_id))
-        self.assertTrue(self.consul.kv.release_lock(lock_key, session_id))
+        self.assertTrue(
+            self.consul.kv.acquire_lock(lock_key, session_id))
+        self.assertTrue(
+            self.consul.kv.release_lock(lock_key, session_id))
+        self.consul.session.destroy(session_id)
+
+    @generate_key
+    def test_acquire_and_release_lock_with_value(self, key):
+        lock_key = str(uuid.uuid4())[0:8]
+        true_value = True
+        session_id = self.consul.session.create(key,
+                                                behavior='delete',
+                                                ttl='60s')
+        self.assertTrue(
+            self.consul.kv.acquire_lock(lock_key, session_id, true_value))
+        self.assertTrue(
+            self.consul.kv.release_lock(lock_key, session_id, true_value))
+
+        self.assertTrue(self.consul.kv[lock_key])
+
         self.consul.session.destroy(session_id)
 
     @generate_key
@@ -368,9 +385,12 @@ class TestKVLocking(BaseTestCase):
         sid2 = self.consul.session.create(key + '2',
                                           behavior='delete',
                                           ttl='60s')
-        self.assertTrue(self.consul.kv.acquire_lock(lock_key, sid))
-        self.assertFalse(self.consul.kv.acquire_lock(lock_key, sid2))
-        self.assertTrue(self.consul.kv.release_lock(lock_key, sid))
+        self.assertTrue(
+            self.consul.kv.acquire_lock(lock_key, sid))
+        self.assertFalse(
+            self.consul.kv.acquire_lock(lock_key, sid2))
+        self.assertTrue(
+            self.consul.kv.release_lock(lock_key, sid))
         self.consul.session.destroy(sid)
         self.consul.session.destroy(sid2)
 
