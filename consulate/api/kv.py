@@ -91,16 +91,24 @@ class KV(base.Endpoint):
         """
         self._set_item(item, value)
 
-    def acquire_lock(self, item, session):
+    def acquire_lock(self, item, session, value=None, cas=None, flags=None):
         """Use Consul for locking by specifying the item/key to lock with
         and a session value for removing the lock.
 
         :param str item: The item in the Consul KV database
         :param str session: The session value for the lock
+        :param mixed value: An optional value to set for the lock
+        :param int cas: Optional Check-And-Set index value
+        :param int flags: User defined flags to set
         :return: bool
 
         """
-        return self._put_response_body([item], {'acquire': session})
+        query_params = {'acquire': session}
+        if cas is not None:
+            query_params['cas'] = cas
+        if flags is not None:
+            query_params['flags'] = flags
+        return self._put_response_body([item], query_params, value)
 
     def delete(self, item, recurse=False):
         """Delete an item from the Key/Value service
@@ -117,6 +125,8 @@ class KV(base.Endpoint):
         decoded if possible.
 
         :param str item: The item key
+        :param mixed default: A default value to return if the get fails
+        :param bool raw: Return the raw value from Consul
         :rtype: mixed
         :raises: KeyError
 
@@ -360,7 +370,8 @@ class KV(base.Endpoint):
             return value
         return value
 
-    def _set_item(self, item, value, flags=None, replace=True):
+    def _set_item(self, item, value, flags=None, replace=True,
+                  query_params=None):
         """Internal method for setting a key/value pair with flags in the
         Key/Value service
 
@@ -378,8 +389,8 @@ class KV(base.Endpoint):
         index = self._get_modify_index(item, value, replace)
         if index is None:
             return True
-
-        query_params = {'cas': index}
+        query_params = query_params or {}
+        query_params.update({'cas': index})
         if flags is not None:
             query_params['flags'] = flags
         response = self._adapter.put(self._build_uri([item], query_params),

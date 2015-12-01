@@ -374,6 +374,20 @@ class TestKVLocking(BaseTestCase):
         self.consul.session.destroy(sid)
         self.consul.session.destroy(sid2)
 
+    @generate_key
+    def test_acquire_and_release_lock_with_value(self, key):
+        lock_key = str(uuid.uuid4())[0:8]
+        lock_value = str(uuid.uuid4())
+        sid = self.consul.session.create(key, behavior='delete', ttl='60s')
+        sid2 = self.consul.session.create(key + '2',
+                                          behavior='delete',
+                                          ttl='60s')
+        self.assertTrue(self.consul.kv.acquire_lock(lock_key, sid, lock_value))
+        self.assertEqual(self.consul.kv.get(lock_key), lock_value)
+        self.assertFalse(self.consul.kv.acquire_lock(lock_key, sid2))
+        self.assertTrue(self.consul.kv.release_lock(lock_key, sid))
+        self.consul.session.destroy(sid)
+        self.consul.session.destroy(sid2)
 
 class TestAgent(unittest.TestCase):
 
