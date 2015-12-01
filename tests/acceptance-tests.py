@@ -387,3 +387,17 @@ class TestAgent(unittest.TestCase):
                                            tags=['foo', 'bar'])
         self.assertIn('test-service', self.consul.agent.services()[0].keys())
         self.consul.agent.service.deregister('test-service')
+
+
+class TestCatalog(unittest.TestCase):
+
+    def setUp(self):
+        self.consul = consulate.Consul(token=CONSUL_CONFIG['acl_master_token'])
+
+    def test_catalog_registration(self):
+        self.consul.catalog.register('test-service', address='10.0.0.1')
+        self.assertIn('test-service',
+                      [n['Node'] for n in self.consul.catalog.nodes()])
+        self.consul.catalog.deregister('test-service')
+        self.assertNotIn('test-service',
+                         [n['Node'] for n in self.consul.catalog.nodes()])
