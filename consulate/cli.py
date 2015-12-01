@@ -29,7 +29,7 @@ def on_error(message, exit_code=2):
     :param int exit_code: The numeric exit code
 
     """
-    sys.stderr.write(message + "\n")
+    sys.stderr.write(message + '\n')
     sys.exit(exit_code)
 
 
@@ -210,9 +210,10 @@ def kv_backup(consul, args):
         if utils.PYTHON3:
             records = [(k, f, str(base64.b64encode(utils.maybe_encode(v)),
                                   'ascii'))
-                       for k,f,v in records]
+                       for k, f, v in records]
         else:
-            records = [(k, f, base64.b64encode(v) if v else v) for k,f,v in records]
+            records = [(k, f, base64.b64encode(v) if v else v)
+                       for k, f, v in records]
     try:
         if args.pretty:
             handle.write(json.dumps(records, sort_keys=True, indent=2,
@@ -401,54 +402,53 @@ def run_once(consul, args):
     :param argparser.namespace args: The cli args
 
     """
+    import time
+    import subprocess
+
+    error_msg, error_code = None, None
     try:
-        import time
-        import subprocess
+        consul.lock.prefix('')
+        with consul.lock.acquire(args.lock):
+            if args.interval:
+                now = int(time.time())
+                last_run = consul.kv.get("{0}_last_run".format(args.lock))
+                if str(last_run) not in ['null', 'None'] and \
+                        int(last_run) + int(args.interval) > now:
+                    sys.stdout.write(
+                        'Last run happened fewer than {0} seconds ago. '
+                        'Exiting\n'.format(args.interval))
+                    return
+                consul.kv["{0}_last_run".format(args.lock)] = now
 
-        session = consul.session.create()
-        if not consul.kv.acquire_lock(args.lock, session):
-            on_error('Cannot obtain the required lock. Exiting')
-        if args.interval:
-            now = int(time.time())
-            last_run = consul.kv.get("{0}_last_run".format(args.lock))
-            if str(last_run) not in ['null', 'None'] and \
-                    int(last_run) + int(args.interval) > now:
-                sys.stdout.write('Last run happened fewer than {0} '
-                                 'second ago. Exiting\n'.format(args.interval))
-                consul.kv.release_lock(args.lock, session)
-                consul.session.destroy(session)
-                return
-            consul.kv["{0}_last_run".format(args.lock)] = now
-        consul.kv.release_lock(args.lock, session)
-        consul.session.destroy(session)
+            # Should the subprocess return an error code, release the lock
+            try:
+                print(subprocess.check_output(args.command_to_run[0].strip(),
+                                              stderr=subprocess.STDOUT,
+                                              shell=True))
+            # If the subprocess fails
+            except subprocess.CalledProcessError as err:
+                error_code = 1
+                error_msg = ('"{0}" exited with return code "{1}" and '
+                             'output {2}'.format(args.command_to_run,
+                                                 err.returncode,
+                                                 err.output))
+            except OSError as err:
+                error_code = 1
+                error_msg = '"{0}" command does not exist'.format(
+                    args.command_to_run, err)
+            except Exception as err:
+                error_code = 1
+                error_msg = '"{0}" exited with error "{1}"'.format(
+                    args.command_to_run, err)
 
-        # Should the subprocess return an error code, release the lock
-        try:
-            print subprocess.check_output(args.command_to_run[0].strip(), stderr=subprocess.STDOUT, shell=True)
-        # If the subprocess fails
-        except subprocess.CalledProcessError as e:
-            on_error('"{0}" exited with return code "{1}" '
-                     'and output {2}'.format(args.command_to_run,
-                                             e.returncode,
-                                             e.output), 1)
-            consul.kv.release_lock(args.lock, session)
-            consul.session.destroy(session)
-
-        # If the command doesn't exist
-        except OSError as e:
-            on_error('"{0}" command does not exist\n'.format(args.command_to_run), 1)
-            consul.kv.release_lock(args.lock, session)
-            consul.session.destroy(session)
-
-        # Otherwise
-        except Exception as e:
-            on_error('"{0}" exited with error "{1}"'.format(args.command_to_run, e),
-                     1)
-            consul.kv.release_lock(args.lock, session)
-            consul.session.destroy(session)
+    except consulate.LockFailure:
+        on_error('Cannot obtain the required lock. Exiting')
 
     except exceptions.ConnectionError:
         connection_error()
+
+    if error_msg:
+        on_error(error_msg, error_code)
 
 
 def main():
