@@ -47,7 +47,7 @@ class ACL(base.Endpoint):
         response = self._adapter.put(self._build_uri(['create']), payload)
         if response.status_code == 403:
             raise exceptions.Forbidden(response.body)
-        return response.body.get('ID')
+        return response.body.get('ID') or None
 
     def clone(self, acl_id):
         """Clone an existing ACL returning the new ACL ID
@@ -109,6 +109,9 @@ class ACL(base.Endpoint):
         the ACL Id specified is not found.
 
         :param str acl_id: The ACL id
+        :param str name: The name of the ACL
+        :param str acl_type: The ACL type
+        :param str rules: The ACL rules document
         :rtype: bool
         :raises: consulate.exceptions.Forbidden
 
