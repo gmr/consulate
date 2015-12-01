@@ -38,11 +38,26 @@ def connection_error():
     on_error('Could not connect to consul', 1)
 
 
+ACL_PARSERS = [
+    ('backup', 'Backup to stdout or a JSON file', [
+        [['-f', '--file'], {'help': 'JSON file to write instead of stdout',
+                            'nargs': '?'}],
+        [['-p', '--pretty'], {'help': 'pretty-print JSON output',
+                              'action': 'store_true'}]]),
+    ('restore', 'Restore from stdin or a JSON file', [
+        [['-f', '--file'],
+         {'help': 'JSON file to read instead of stdin',
+          'nargs': '?'}],
+        [['-n', '--no-replace'],
+         {'help': 'Do not replace existing entries',
+          'action': 'store_true'}]])
+    ]
+
 KV_PARSERS = [
     ('backup', 'Backup to stdout or a JSON file', [
         [['-b', '--base64'], {'help': 'Base64 encode values',
                               'action': 'store_true'}],
-        [['-f', '--file'], {'help': 'JSON file to write instead of stdin',
+        [['-f', '--file'], {'help': 'JSON file to write instead of stdout',
                             'nargs': '?'}],
         [['-p', '--pretty'], {'help': 'pretty-print JSON output',
                               'action': 'store_true'}]]),
@@ -79,6 +94,23 @@ KV_PARSERS = [
         [['-r', '--recurse'],
          {'help': 'Delete all keys prefixed with the specified key',
           'action': 'store_true'}]])]
+
+
+def add_acl_args(parser):
+    """Add the acl command and arguments.
+
+    :param argparse.Subparser parser: parser
+
+    """
+    kv_parser = parser.add_parser('acl', help='ACL Utilities')
+
+    subparsers = kv_parser.add_subparsers(dest='action',
+                                          title='ACL Database Utilities')
+
+    for (name, help_text, arguments) in ACL_PARSERS:
+        parser = subparsers.add_parser(name, help=help_text)
+        for (args, kwargs) in arguments:
+            parser.add_argument(*args, **kwargs)
 
 
 def add_kv_args(parser):
@@ -190,11 +222,51 @@ def parse_cli_args():
     parser.add_argument('--token', default=None, help='ACL token')
 
     sparser = parser.add_subparsers(title='Commands', dest='command')
+    add_acl_args(sparser)
+    add_kv_args(sparser)
     add_register_args(sparser)
     add_deregister_args(sparser)
-    add_kv_args(sparser)
     add_run_once_args(sparser)
     return parser.parse_args()
+
+
+def acl_backup(consul, args):
+    """Dump the ACLs from Consul to JSON
+
+    :param consulate.api_old.Consul consul: The Consul instance
+    :param argparser.namespace args: The cli args
+
+    """
+    handle = open(args.file, 'w') if args.file else sys.stdout
+    acls = consul.acl.list()
+    try:
+        if args.pretty:
+            handle.write(json.dumps(acls, sort_keys=True, indent=2,
+                                    separators=(',', ': ')) + '\n')
+        else:
+            handle.write(json.dumps(acls, sort_keys=True) + '\n')
+    except exceptions.ConnectionError:
+        connection_error()
+
+
+def acl_restore(consul, args):
+    """Restore the Consul KV store
+
+    :param consulate.api_old.Consul consul: The Consul instance
+    :param argparser.namespace args: The cli args
+
+    """
+    handle = open(args.file, 'r') if args.file else sys.stdin
+    data = json.load(handle)
+    for row in data:
+        consul.acl.update(row['ID'], row['Name'], row['Type'], row['Rules'])
+    print('{0} ACLs written'.format(len(data)))
+
+
+ACL_ACTIONS = {
+    'backup': acl_backup,
+    'restore': acl_restore
+}
 
 
 def kv_backup(consul, args):
@@ -349,6 +421,7 @@ def kv_set(consul, args):
     except exceptions.ConnectionError:
         connection_error()
 
+
 # Mapping dict to simplify the code in main()
 KV_ACTIONS = {
     'backup': kv_backup,
@@ -473,11 +546,13 @@ def main():
     consul = consulate.Consul(api_host, port, args.dc,
                               args.token, args.api_scheme, adapter)
 
-    if args.command == 'register':
+    if args.command == 'acl':
+        ACL_ACTIONS[args.action](consul, args)
+    elif args.command == 'kv':
+        KV_ACTIONS[args.action](consul, args)
+    elif args.command == 'register':
         register(consul, args)
     elif args.command == 'deregister':
         deregister(consul, args)
-    elif args.command == 'kv':
-        KV_ACTIONS[args.action](consul, args)
     elif args.command == 'run_once':
         run_once(consul, args)

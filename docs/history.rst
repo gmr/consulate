@@ -9,6 +9,7 @@ Version History
   - Raise server-error exception when setting a key fails due to a server error (#67) - Fredric Newberg
   - Address Python 2.6 incompatibility with the consulate cli and null data (#62, #61) - Wayne Walker
   - New :class:`~consulate.api.lock.Lock` class for easier lock acquisition
+  - New CLI feature to backup and restore ACLs (#71)
 
  - 0.6.0 - released *2015-07-22*
   - Added --recurse and --trim to cli kv_get (#58) - Matt Walker
