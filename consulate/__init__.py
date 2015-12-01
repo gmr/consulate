@@ -75,6 +75,9 @@ class Consul(object):
         self._session = api.Session(base_uri, self._adapter, datacenter, token)
         self._status = api.Status(base_uri, self._adapter, datacenter, token)
 
+        self._lock = api.Lock(base_uri, self._adapter, self._session,
+                              datacenter, token)
+
     @property
     def acl(self):
         """Access the Consul
@@ -134,6 +137,26 @@ class Consul(object):
 
         """
         return self._kv
+
+    @property
+    def lock(self):
+        """Wrapper for easy :class:`~consulate.api.kv.KV` locks.
+
+        Example:
+
+        .. code:: python
+
+            import consulate
+
+            consul = consulate.Consul()
+            with consul.lock.acquire('my-key'):
+                print('Locked: {}'.format(consul.lock.key))
+                # Do stuff
+
+        :rtype: :class:`~consulate.api.lock.Lock`
+
+        """
+        return self._lock
 
     @property
     def session(self):

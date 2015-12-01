@@ -415,3 +415,15 @@ class TestCatalog(unittest.TestCase):
         self.consul.catalog.deregister('test-service')
         self.assertNotIn('test-service',
                          [n['Node'] for n in self.consul.catalog.nodes()])
+
+
+class TestLock(unittest.TestCase):
+
+    def setUp(self):
+        self.consul = consulate.Consul(token=CONSUL_CONFIG['acl_master_token'])
+
+    def test_lock_as_context_manager(self):
+        value = str(uuid.uuid4())
+        with self.consul.lock.acquire(value=value):
+            self.assertEqual(self.consul.kv.get(self.consul.lock.key),
+                             value)

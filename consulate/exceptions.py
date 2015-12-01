@@ -29,3 +29,11 @@ class NotFound(ConsulateException):
 class ServerError(ConsulateException):
     """An internal Consul server error occurred"""
     pass
+
+
+class LockFailure(ConsulateException):
+    """Raised by :class:`~consulate.api.lock.Lock` if the lock can not be
+    acquired.
+
+    """
+    pass
