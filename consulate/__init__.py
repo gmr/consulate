@@ -53,6 +53,7 @@ class Consul(object):
     :param str scheme: Specify the scheme (Default: http)
     :param class adapter: Specify to override the request adapter
         (Default: :py:class:`consulate.adapters.Request`)
+    :param bool/str verify: Specify how to verify TLS certificates
 
     """
 
@@ -62,10 +63,11 @@ class Consul(object):
                  datacenter=None,
                  token=None,
                  scheme=DEFAULT_SCHEME,
-                 adapter=None):
+                 adapter=None,
+                 verify=True):
         """Create a new instance of the Consul class"""
         base_uri = self._base_uri(scheme, host, port)
-        self._adapter = adapter() if adapter else adapters.Request()
+        self._adapter = adapter() if adapter else adapters.Request(verify=verify)
         self._acl = api.ACL(base_uri, self._adapter, datacenter, token)
         self._agent = api.Agent(base_uri, self._adapter, datacenter, token)
         self._catalog = api.Catalog(base_uri, self._adapter, datacenter, token)
