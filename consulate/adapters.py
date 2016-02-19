@@ -47,7 +47,7 @@ def prepare_data(fun):
 class Request(object):
     """The Request adapter class"""
 
-    def __init__(self, timeout=None, verify=True):
+    def __init__(self, timeout=None, verify=True, cert=None):
         """
         Create a new request adapter instance.
 
@@ -56,6 +56,7 @@ class Request(object):
         """
         self.session = requests.Session()
         self.session.verify = verify
+        self.session.cert = cert
         self.timeout = timeout
 
     def delete(self, uri):
