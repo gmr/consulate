@@ -55,6 +55,8 @@ ACL_PARSERS = [
 
 KV_PARSERS = [
     ('backup', 'Backup to stdout or a JSON file', [
+        [['key'], {'help': 'The key to use as target to backup a specific key or folder.', 
+                   'nargs':'?'}],
         [['-b', '--base64'], {'help': 'Base64 encode values',
                               'action': 'store_true'}],
         [['-f', '--file'], {'help': 'JSON file to write instead of stdout',
@@ -62,6 +64,10 @@ KV_PARSERS = [
         [['-p', '--pretty'], {'help': 'pretty-print JSON output',
                               'action': 'store_true'}]]),
     ('restore', 'Restore from stdin or a JSON file', [
+        [['key'], {'help': 'The key as target to restore to a specific key or folder.',
+                   'nargs':'?'}],
+        [['-p', '--prune'], {'help':'Remove entries from consul tree that are not in restore file.',
+                              'action': 'store_true'}],
         [['-b', '--base64'], {'help': 'Restore from Base64 encode values',
                               'action': 'store_true'}],
         [['-f', '--file'],
@@ -71,6 +77,8 @@ KV_PARSERS = [
          {'help': 'Do not replace existing entries',
           'action': 'store_true'}]]),
     ('ls', 'List all of the keys', [
+        [['key'], {'help': 'The key to use as target to list contents of specific key or folder',
+                   'nargs':'?'}],
         [['-l', '--long'],
          {'help': 'Long format',
           'action': 'store_true'}]]),
@@ -277,7 +285,13 @@ def kv_backup(consul, args):
 
     """
     handle = open(args.file, 'w') if args.file else sys.stdout
-    records = consul.kv.records()
+    if args.key:
+        args.key = args.key.strip('/')
+        prefixlen = len(args.key.split('/'))
+        records = [('/'.join(k.split('/')[prefixlen:]), f, v)
+                   for k, f, v in consul.kv.records(args.key)]
+    else:
+        records = consul.kv.records()
     if args.base64:
         if utils.PYTHON3:
             records = [(k, f, str(base64.b64encode(utils.maybe_encode(v)),
@@ -341,7 +355,12 @@ def kv_ls(consul, args):
 
     """
     try:
-        for key in consul.kv.keys():
+        if args.key:
+            args.key = args.key.lstrip('/')
+            keylist = sorted(consul.kv.find(args.key))
+        else:
+            keylist = consul.kv.keys()
+        for key in keylist:
             if args.long:
                 keylen = 0
                 if consul.kv[key]:
@@ -375,6 +394,12 @@ def kv_restore(consul, args):
     :param argparser.namespace args: The cli args
 
     """
+    if args.prune:
+        if args.key:
+            args.key = args.key.strip('/')
+            keylist = consul.kv.find(args.key)
+        else:
+            keylist = consul.kv.find('')
     handle = open(args.file, 'r') if args.file else sys.stdin
     data = json.load(handle)
     for row in data:
@@ -390,10 +415,28 @@ def kv_restore(consul, args):
         # Here's an awesome thing to make things work
         if not utils.PYTHON3 and isinstance(row[2], unicode):
             row[2] = row[2].encode('utf-8')
+        if args.key:
+            if row[0] == "":
+                rowkey = args.key
+            else:
+                rowkey = args.key + '/' + row[0]
+        else:
+            rowkey = row[0]
+        if args.prune:
+            if rowkey in keylist:
+                del keylist[rowkey]
         try:
-            consul.kv.set_record(row[0], row[1], row[2], not args.no_replace)
+            consul.kv.set_record(rowkey, row[1], row[2], not args.no_replace)
         except exceptions.ConnectionError:
             connection_error()
+    if args.prune:
+        for key in keylist:
+            print "Pruning " + key
+            try:
+                consul.kv.delete(key)
+            except exceptions.ConnectionError:
+                connection_error()
+            
 
 
 def kv_rm(consul, args):
