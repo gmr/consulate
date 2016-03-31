@@ -225,7 +225,7 @@ class KV(base.Endpoint):
         """
         return sorted([row['Key'] for row in self._get_all_items()])
 
-    def records(self):
+    def records(self, key=None):
         """Return a list of tuples for all of the records in the Key/Value
         service
 
@@ -242,8 +242,12 @@ class KV(base.Endpoint):
         :rtype: list of (Key, Flags, Value)
 
         """
-        return [(item['Key'], item['Flags'], item['Value'])
-                for item in self._get_all_items()]
+        if key:
+            return [(item['Key'], item['Flags'], item['Value'])
+                    for item in self._get_list([key], {'recurse': None})]
+        else:
+            return [(item['Key'], item['Flags'], item['Value'])
+                    for item in self._get_all_items()]
 
     def release_lock(self, item, session):
         """Release an existing lock from the Consul KV database.
