@@ -7,7 +7,7 @@ python:
     - 3.3
     - 3.4
 before_install:
-    - curl -L -o /tmp/0.5.2_linux_amd64.zip https://dl.bintray.com/mitchellh/consul/0.5.2_linux_amd64.zip
+    - curl -L -o /tmp/0.5.2_linux_amd64.zip https://releases.hashicorp.com/consul/0.5.2/consul_0.5.2_linux_amd64.zip
     - unzip /tmp/0.5.2_linux_amd64.zip
     - ./consul agent -config-file consul-test.json > /tmp/consul.log &
     - pip install codecov
