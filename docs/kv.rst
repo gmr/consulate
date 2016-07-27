@@ -3,7 +3,7 @@ KV
 The :py:class:`KV <consulate.api.kv.KV>` class provides both high and low level access
 to the Consul Key/Value service. To use the :py:class:`KV <consulate.api.kv.KV>` class,
 access the :py:meth:`consulate.Consul.kv` attribute of the
-:py:class:`Session <consulate.Consul>` class.
+:py:class:`Consul <consulate.Consul>` class.
 
 For high-level operation, the :py:class:`KV <consulate.api.kv.KV>` class behaves
 like a standard Python :py:class:`dict`. You can get, set, and delete items in
@@ -25,7 +25,7 @@ part of the class it is demonstrating.
 
         import consulate
 
-        session = consulate.Session()
+        session = consulate.Consul()
 
         # Set the key named release_flag to True
         session.kv['release_flag'] = True
