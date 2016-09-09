@@ -29,8 +29,8 @@ class ACL(base.Endpoint):
         the create endpoint.
 
         ``rules`` is a HCL string defining the rule policy. See
-        `https://consul.io/docs/internals/acl.html`_ for more information on
-        defining rules.
+        `Internals on <https://www.consul.io/docs/internals/acl.html>`_ ACL
+        for more information on defining rules.
 
         The call to create will return the ID of the new ACL.
 
