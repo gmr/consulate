@@ -11,3 +11,4 @@ tests/cover
 cover
 docs/_build
 MANIFEST
+venv
