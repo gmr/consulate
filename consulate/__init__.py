@@ -55,7 +55,7 @@ class Consul(object):
         (Default: :py:class:`consulate.adapters.Request`)
     :param bool/str verify: Specify how to verify TLS certificates
     :param tuple cert: Specify client TLS certificate and key files
-
+    
     """
 
     def __init__(self,
@@ -65,7 +65,7 @@ class Consul(object):
                  token=None,
                  scheme=DEFAULT_SCHEME,
                  adapter=None,
-                 verify=True,
+                 verify=False,
                  cert=None):
         """Create a new instance of the Consul class"""
         base_uri = self._base_uri(scheme, host, port)
