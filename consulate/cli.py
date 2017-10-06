@@ -431,7 +431,7 @@ def kv_restore(consul, args):
             connection_error()
     if args.prune:
         for key in keylist:
-            print "Pruning " + key
+            print("Pruning {0}".format(key))
             try:
                 consul.kv.delete(key)
             except exceptions.ConnectionError:
