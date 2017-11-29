@@ -51,7 +51,7 @@ part of the class it is demonstrating.
             print('{0}: {1}'.format(key, value))
 
         # Iterate over all keys in the kv store
-        for value in session.kv.values:
+        for value in session.kv.values():
             print(value)
 
         # Find all keys that start with "fl"
