@@ -1,7 +1,6 @@
 language: python
 sudo: false
 python:
-    - 2.6
     - 2.7
     - pypy
     - 3.3
@@ -12,7 +11,6 @@ before_install:
     - ./consul agent -config-file consul-test.json > /tmp/consul.log &
     - pip install codecov
 install:
-    - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install --use-mirrors argparse unittest2; fi
     - pip install -r dev-requirements.txt
 script: nosetests --with-coverage --cover-package=consulate --cover-branches
 after_success:
