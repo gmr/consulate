@@ -63,6 +63,8 @@ class ACL(base.Endpoint):
         #     raise exceptions.Forbidden(response.body)
         if response.status_code == 404:
             raise exceptions.NotFound(response.body)
+        elif response.status_code == 403:
+            raise exceptions.Forbidden(response.body)
         return response.body.get('ID')
 
     def destroy(self, acl_id):
@@ -90,8 +92,9 @@ class ACL(base.Endpoint):
         :raises: consulate.exceptions.NotFound
 
         """
+
         result = self._get(['info', acl_id], raise_on_404=True)
-        if result is None:
+        if not result:
             raise exceptions.NotFound()
         return result
 

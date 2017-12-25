@@ -74,8 +74,8 @@ class TestACL(BaseTestCase):
         self.assertTrue(self.consul.acl.destroy(acl_id))
 
     @generate_key
-    def test_clone_not_found(self, key):
-        self.assertRaises(consulate.NotFound, self.consul.acl.clone, key)
+    def test_clone_forbidden(self, key):
+        self.assertRaises(consulate.Forbidden, self.consul.acl.clone, key)
 
     @generate_key
     def test_info_not_found(self, key):
