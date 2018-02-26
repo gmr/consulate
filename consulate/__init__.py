@@ -87,7 +87,7 @@ class Consul(object):
     @property
     def acl(self):
         """Access the Consul
-        `ACL <https://www.consul.io/docs/agent/http.html#acl>`_ API
+        `ACL <https://www.consul.io/docs/agent/http/acl.html>`_ API
 
         :rtype: :py:class:`consulate.api.acl.ACL`
 
@@ -97,7 +97,7 @@ class Consul(object):
     @property
     def agent(self):
         """Access the Consul
-        `Agent <https://www.consul.io/docs/agent/http.html#agent>`_ API
+        `Agent <https://www.consul.io/docs/agent/http/agent.html>`_ API
 
         :rtype: :py:class:`consulate.api.agent.Agent`
 
@@ -107,7 +107,7 @@ class Consul(object):
     @property
     def catalog(self):
         """Access the Consul
-        `Catalog <https://www.consul.io/docs/agent/http.html#catalog>`_ API
+        `Catalog <https://www.consul.io/docs/agent/http/catalog.html>`_ API
 
         :rtype: :py:class:`consulate.api.catalog.Catalog`
 
@@ -117,7 +117,7 @@ class Consul(object):
     @property
     def event(self):
         """Access the Consul
-        `Events <https://www.consul.io/docs/agent/http.html#events>`_ API
+        `Events <https://www.consul.io/docs/agent/http/event.html>`_ API
 
         :rtype: :py:class:`consulate.api.event.Event`
 
@@ -127,7 +127,7 @@ class Consul(object):
     @property
     def health(self):
         """Access the Consul
-        `Health <https://www.consul.io/docs/agent/http.html#health>`_ API
+        `Health <https://www.consul.io/docs/agent/http/health.html>`_ API
 
         :rtype: :py:class:`consulate.api.health.Health`
 
@@ -137,7 +137,7 @@ class Consul(object):
     @property
     def kv(self):
         """Access the Consul
-        `KV <https://www.consul.io/docs/agent/http.html#kv>`_ API
+        `KV <https://www.consul.io/docs/agent/http/kv.html>`_ API
 
         :rtype: :py:class:`consulate.api.kv.KV`
 
@@ -147,7 +147,7 @@ class Consul(object):
     @property
     def lock(self):
         """Wrapper for easy :class:`~consulate.api.kv.KV` locks.
-
+        `Semaphore <https://www.consul.io/docs/guides/semaphore.html>` _Guide
         Example:
 
         .. code:: python
@@ -167,7 +167,7 @@ class Consul(object):
     @property
     def session(self):
         """Access the Consul
-        `Session <https://www.consul.io/docs/agent/http.html#session>`_ API
+        `Session <https://www.consul.io/docs/agent/http/session.html>`_ API
 
         :rtype: :py:class:`consulate.api.session.Session`
 
@@ -177,7 +177,7 @@ class Consul(object):
     @property
     def status(self):
         """Access the Consul
-        `Status <https://www.consul.io/docs/agent/http.html#status>`_ API
+        `Status <https://www.consul.io/docs/agent/http/status.html>`_ API
 
         :rtype: :py:class:`consulate.api.status.Status`
 
