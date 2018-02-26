@@ -1,0 +1,8 @@
+-r installation.txt
+-r optional.txt
+coverage==3.7.1
+httmock==1.2.2
+mock==1.0.1
+nose==1.3.4
+sphinx==1.3
+tornado>=3.0.0,<=5
