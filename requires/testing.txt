@@ -1,6 +1,5 @@
 -r installation.txt
 -r optional.txt
-bandoleers
 coverage
 flake8
 httmock

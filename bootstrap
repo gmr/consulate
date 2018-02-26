@@ -74,12 +74,6 @@ docker-compose ${COMPOSE_ARGS} down --volumes --remove-orphans
 docker-compose ${COMPOSE_ARGS} pull
 docker-compose ${COMPOSE_ARGS} up -d
 
-# Wait for Consul
-CONSUL_PORT=$(get_exposed_port consul 8500)
-report_start $(get_container consul)
-wait-for -s 2 "http://${DOCKER_IP}:${CONSUL_PORT}/v1/status/leader"
-report_done
-
 cat > build/test-environment<<EOF
 export ASYNC_TEST_TIMEOUT=20
 export DOCKER_COMPOSE_PREFIX=${DOCKER_COMPOSE_PREFIX}

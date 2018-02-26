@@ -21,7 +21,6 @@ stages:
 install:
 - pip install awscli
 - pip install -r requires/testing.txt
-- pip uninstall -y consulate
 - python setup.py develop
 
 before_script:
