@@ -308,3 +308,12 @@ class Agent(base.Endpoint):
 
         """
         return self._get_list(['services'])
+
+    def self(self):
+        """ This endpoint is used to return the configuration and member
+        information of the local agent under the Config key.
+
+        :rtype: list
+
+        """
+        return self._get_list(['self'])
