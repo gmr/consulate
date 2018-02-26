@@ -11,7 +11,7 @@ the Key/Value service just as you would with a normal dictionary.
 
 If you need to have access to the full record associated with an item, there are
 lower level methods such as :py:meth:`KV.set_record <consulate.api.kv.KV.set_record>`
-and :py:meth:`KV.set_record <consulate.api.kv.KV.get_record>`. These two methods
+and :py:meth:`KV.get_record <consulate.api.kv.KV.get_record>`. These two methods
 provide access to the other fields associated with the item in Consul, including
 the ``flag`` and various index related fields.
 
