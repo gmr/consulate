@@ -1,0 +1,90 @@
+#!/bin/bash
+#
+# NAME
+#    bootstrap -- initialize/update docker environment
+#
+# SYNOPSIS
+#    bootstrap
+#    bootstrap shellinit
+#
+# DESCRIPTION
+#    Execute this script without parameters to build the local docker
+#    environment.  Once bootstrapped, dependent services are running
+#    via docker-compose and the environment variables are written to
+#    *build/test-environment* for future use.
+#
+#    Running this script with the _shellinit_ command line parameter
+#    causes it to simply interrogate the running docker environment,
+#    update *build/test-environment*, and print the environment to
+#    the standard output stream in a shell executable manner.  This
+#    makes the following pattern for setting environment variables
+#    in the current shell work.
+#
+#        prompt% $(./bootstrap shellinit)
+#
+# vim: set ts=2 sts=2 sw=2 et:
+set -e
+
+get_container() {
+  echo $(echo "${DOCKER_COMPOSE_PREFIX}" | tr -d -- '-.')_$1_1
+}
+
+get_ipaddr() {
+  docker inspect --format '{{ .NetworkSettings.IPAddress }}' $1
+}
+
+get_exposed_port() {
+  docker-compose ${COMPOSE_ARGS} port $1 $2 | cut -d: -f2
+}
+
+report_start() {
+  printf "Waiting for $1 ... "
+}
+
+report_done() {
+  printf "${COLOR_GREEN}done${COLOR_RESET}\n"
+}
+
+# Ensure Docker is Running
+if test -e /var/run/docker.sock
+then
+  DOCKER_IP=127.0.0.1
+else
+  echo "Docker environment not detected."
+  exit 1
+fi
+
+# Activate the virtual environment
+if test -e env/bin/activate
+then
+  . ./env/bin/activate
+fi
+
+mkdir -p build
+
+# Common constants
+COLOR_RESET='\033[0m'
+COLOR_GREEN='\033[0;32m'
+PREFIX=${PWD##*/}
+DOCKER_COMPOSE_PREFIX=${PREFIX:-${DOCKER_COMPOSE_PREFIX}}
+COMPOSE_ARGS="-p ${DOCKER_COMPOSE_PREFIX}"
+
+# Stop any running instances and clean up after them, then pull images
+docker-compose ${COMPOSE_ARGS} down --volumes --remove-orphans
+docker-compose ${COMPOSE_ARGS} pull
+docker-compose ${COMPOSE_ARGS} up -d
+
+# Wait for Consul
+CONSUL_PORT=$(get_exposed_port consul 8500)
+report_start $(get_container consul)
+wait-for -s 2 "http://${DOCKER_IP}:${CONSUL_PORT}/v1/status/leader"
+report_done
+
+cat > build/test-environment<<EOF
+export ASYNC_TEST_TIMEOUT=20
+export DOCKER_COMPOSE_PREFIX=${DOCKER_COMPOSE_PREFIX}
+export CONSUL_HOST=${DOCKER_IP}
+export CONSUL_PORT=$(get_exposed_port consul 8500)
+EOF
+
+printf "\nBootstrap complete\n\nDon't forget to \". build/test-environment\"\n"

@@ -1,4 +1,8 @@
-sudo: false
+sudo: required
+
+services:
+  - docker
+
 language: python
 
 env:
@@ -14,15 +18,14 @@ stages:
 - name: deploy
   if: tag IS present
 
-before_install:
-- curl -L -o /tmp/1.0.6_linux_amd64.zip https://releases.hashicorp.com/consul/1.0.6/consul_1.0.6_linux_amd64.zip
-- unzip /tmp/1.0.6_linux_amd64.zip
-- ./consul agent -config-file consul-test.json > /tmp/consul.log &
-
 install:
 - pip install awscli
 - pip install -r requires/testing.txt
 - python setup.py develop
+
+before_script:
+- ./bootstrap
+- source build/test-environment
 
 script: nosetests
 
@@ -43,6 +46,7 @@ jobs:
      python: 3.6
      install:
      - pip install awscli coverage codecov
+     before_script: true
      script:
      - mkdir coverage
      - aws s3 cp --recursive s3://com-gavinroy-travis/consulate/$TRAVIS_BUILD_NUMBER/
@@ -58,6 +62,7 @@ jobs:
      python: 3.6
      services: []
      install: true
+     before_script: true
      script: true
      after_success: true
      deploy:
