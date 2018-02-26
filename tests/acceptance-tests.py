@@ -5,10 +5,8 @@ These tests require that consul is running on localhost
 """
 import functools
 import json
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import os
+import unittest
 import uuid
 
 import consulate
@@ -22,11 +20,12 @@ key "foo/" {
   policy = "write"
 }
 """
-CONSUL_CONFIG = json.load(open('consul-test.json', 'r'))
+
+with open('testing/consul.json', 'r') as handle:
+    CONSUL_CONFIG = json.load(handle)
 
 
 def generate_key(func):
-
     @functools.wraps(func)
     def _decorator(self, *args, **kwargs):
         key = str(uuid.uuid4())[0:8]
@@ -36,10 +35,12 @@ def generate_key(func):
     return _decorator
 
 
-class BaseTestCase(unittest.TestCase):
-
+class TestCase(unittest.TestCase):
     def setUp(self):
-        self.consul = consulate.Consul(token=CONSUL_CONFIG['acl_master_token'])
+        self.consul = consulate.Consul(
+            host=os.environ['CONSUL_HOST'],
+            port=os.environ['CONSUL_PORT'],
+            token=CONSUL_CONFIG['acl_master_token'])
         self.used_keys = list()
 
     def tearDown(self):
@@ -50,15 +51,16 @@ class BaseTestCase(unittest.TestCase):
                 pass
 
 
-class ForbiddenTestCase(unittest.TestCase):
-
+class ForbiddenTestCase(TestCase):
     def setUp(self):
-        self.consul = consulate.Consul()
+        self.consul = consulate.Consul(
+            host=os.environ['CONSUL_HOST'],
+            port=os.environ['CONSUL_PORT'],
+            token=str(uuid.uuid4()))
         self.used_keys = list()
 
 
-class TestACL(BaseTestCase):
-
+class TestACL(TestCase):
     def setUp(self):
         super(TestACL, self).setUp()
         self.acl_list = list()
@@ -136,7 +138,6 @@ class TestACL(BaseTestCase):
         value = self.consul.acl.info(key)
         self.assertEqual(value['Rules'], ACL_RULES)
 
-
     # Re-enable when Consul supports a 404 for an invalid ACL id
     # @generate_key
     # def test_destroy_not_found(self, key):
@@ -144,7 +145,6 @@ class TestACL(BaseTestCase):
 
 
 class TestACLErrors(ForbiddenTestCase):
-
     @generate_key
     def test_create_is_forbidden(self, key):
         self.assertRaises(consulate.Forbidden, self.consul.acl.create, key)
@@ -167,11 +167,7 @@ class TestACLErrors(ForbiddenTestCase):
                           'value')
 
 
-class TestEvent(BaseTestCase):
-
-    def setUp(self):
-        super(TestEvent, self).setUp()
-
+class TestEvent(TestCase):
     def test_fire(self):
         event_name = 'test-event-%s' % str(uuid.uuid4())[0:8]
         response = self.consul.event.fire(event_name)
@@ -186,8 +182,7 @@ class TestEvent(BaseTestCase):
             assert False, 'Unexpected return type'
 
 
-class TestKVGetWithNoKey(BaseTestCase):
-
+class TestKVGetWithNoKey(TestCase):
     @generate_key
     def test_get_is_none(self, key):
         self.assertIsNone(self.consul.kv.get(key))
@@ -197,8 +192,7 @@ class TestKVGetWithNoKey(BaseTestCase):
         self.assertRaises(KeyError, self.consul.kv.__getitem__, key)
 
 
-class TestKVSet(BaseTestCase):
-
+class TestKVSet(TestCase):
     @generate_key
     def test_set_item_del_item(self, key):
         self.consul.kv[key] = 'foo'
@@ -304,10 +298,9 @@ class TestKVSet(BaseTestCase):
         self.assertIn(expectation, self.consul.kv.records())
 
 
-class TestSession(unittest.TestCase):
-
+class TestSession(TestCase):
     def setUp(self):
-        self.consul = consulate.Consul(token=CONSUL_CONFIG['acl_master_token'])
+        super(TestSession, self).setUp()
         self.sessions = list()
 
     def tearDown(self):
@@ -316,47 +309,41 @@ class TestSession(unittest.TestCase):
 
     def test_session_create(self):
         name = str(uuid.uuid4())[0:8]
-        session_id = self.consul.session.create(name,
-                                                behavior='delete',
-                                                ttl='60s')
+        session_id = self.consul.session.create(
+            name, behavior='delete', ttl='60s')
         self.sessions.append(session_id)
         self.assertIsNotNone(session_id)
 
     def test_session_destroy(self):
         name = str(uuid.uuid4())[0:8]
-        session_id = self.consul.session.create(name,
-                                                behavior='delete',
-                                                ttl='60s')
+        session_id = self.consul.session.create(
+            name, behavior='delete', ttl='60s')
         self.consul.session.destroy(session_id)
-        self.assertNotIn(session_id, [s.get('ID')
-                                      for s in self.consul.session.list()])
+        self.assertNotIn(session_id,
+                         [s.get('ID') for s in self.consul.session.list()])
 
     def test_session_info(self):
         name = str(uuid.uuid4())[0:8]
-        session_id = self.consul.session.create(name,
-                                                behavior='delete',
-                                                ttl='60s')
+        session_id = self.consul.session.create(
+            name, behavior='delete', ttl='60s')
         result = self.consul.session.info(session_id)
         self.assertEqual(session_id, result.get('ID'))
         self.consul.session.destroy(session_id)
 
     def test_session_renew(self):
         name = str(uuid.uuid4())[0:8]
-        session_id = self.consul.session.create(name,
-                                                behavior='delete',
-                                                ttl='60s')
+        session_id = self.consul.session.create(
+            name, behavior='delete', ttl='60s')
         self.sessions.append(session_id)
         self.assertTrue(self.consul.session.renew(session_id))
 
 
-class TestKVLocking(BaseTestCase):
-
+class TestKVLocking(TestCase):
     @generate_key
     def test_acquire_and_release_lock(self, key):
         lock_key = str(uuid.uuid4())[0:8]
-        session_id = self.consul.session.create(key,
-                                                behavior='delete',
-                                                ttl='60s')
+        session_id = self.consul.session.create(
+            key, behavior='delete', ttl='60s')
         self.assertTrue(self.consul.kv.acquire_lock(lock_key, session_id))
         self.assertTrue(self.consul.kv.release_lock(lock_key, session_id))
         self.consul.session.destroy(session_id)
@@ -365,9 +352,8 @@ class TestKVLocking(BaseTestCase):
     def test_acquire_and_release_lock(self, key):
         lock_key = str(uuid.uuid4())[0:8]
         sid = self.consul.session.create(key, behavior='delete', ttl='60s')
-        sid2 = self.consul.session.create(key + '2',
-                                          behavior='delete',
-                                          ttl='60s')
+        sid2 = self.consul.session.create(
+            key + '2', behavior='delete', ttl='60s')
         self.assertTrue(self.consul.kv.acquire_lock(lock_key, sid))
         self.assertFalse(self.consul.kv.acquire_lock(lock_key, sid2))
         self.assertTrue(self.consul.kv.release_lock(lock_key, sid))
@@ -379,9 +365,8 @@ class TestKVLocking(BaseTestCase):
         lock_key = str(uuid.uuid4())[0:8]
         lock_value = str(uuid.uuid4())
         sid = self.consul.session.create(key, behavior='delete', ttl='60s')
-        sid2 = self.consul.session.create(key + '2',
-                                          behavior='delete',
-                                          ttl='60s')
+        sid2 = self.consul.session.create(
+            key + '2', behavior='delete', ttl='60s')
         self.assertTrue(self.consul.kv.acquire_lock(lock_key, sid, lock_value))
         self.assertEqual(self.consul.kv.get(lock_key), lock_value)
         self.assertFalse(self.consul.kv.acquire_lock(lock_key, sid2))
@@ -389,25 +374,16 @@ class TestKVLocking(BaseTestCase):
         self.consul.session.destroy(sid)
         self.consul.session.destroy(sid2)
 
-class TestAgent(unittest.TestCase):
 
-    def setUp(self):
-        self.consul = consulate.Consul(token=CONSUL_CONFIG['acl_master_token'])
-
+class TestAgent(TestCase):
     def test_service_registration(self):
-        self.consul.agent.service.register('test-service',
-                                           address='10.0.0.1',
-                                           port=5672,
-                                           tags=['foo', 'bar'])
+        self.consul.agent.service.register(
+            'test-service', address='10.0.0.1', port=5672, tags=['foo', 'bar'])
         self.assertIn('test-service', self.consul.agent.services()[0].keys())
         self.consul.agent.service.deregister('test-service')
 
 
-class TestCatalog(unittest.TestCase):
-
-    def setUp(self):
-        self.consul = consulate.Consul(token=CONSUL_CONFIG['acl_master_token'])
-
+class TestCatalog(TestCase):
     def test_catalog_registration(self):
         self.consul.catalog.register('test-service', address='10.0.0.1')
         self.assertIn('test-service',
@@ -417,13 +393,8 @@ class TestCatalog(unittest.TestCase):
                          [n['Node'] for n in self.consul.catalog.nodes()])
 
 
-class TestLock(unittest.TestCase):
-
-    def setUp(self):
-        self.consul = consulate.Consul(token=CONSUL_CONFIG['acl_master_token'])
-
+class TestLock(TestCase):
     def test_lock_as_context_manager(self):
         value = str(uuid.uuid4())
         with self.consul.lock.acquire(value=value):
-            self.assertEqual(self.consul.kv.get(self.consul.lock.key),
-                             value)
+            self.assertEqual(self.consul.kv.get(self.consul.lock.key), value)

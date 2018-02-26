@@ -1,9 +1,5 @@
 import httmock
-import mock
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 try:
     from urllib import parse  # Python 3
 except ImportError:  # pragma: no cover
@@ -66,18 +62,18 @@ ALL_ITEMS = [{
 
 @httmock.all_requests
 def kv_all_records_content(_url_unused, request):
-    return httmock.response(200, ALL_DATA, {
-        'X-Consul-Index': 4,
-        'X-Consul-Knownleader': 'true',
-        'X-Consul-Lastcontact': 0,
-        'Date': 'Fri, 19 Dec 2014 20:44:28 GMT',
-        'Content-Length': len(ALL_DATA),
-        'Content-Type': 'application/json'
-    }, None, 0, request)
+    return httmock.response(
+        200, ALL_DATA, {
+            'X-Consul-Index': 4,
+            'X-Consul-Knownleader': 'true',
+            'X-Consul-Lastcontact': 0,
+            'Date': 'Fri, 19 Dec 2014 20:44:28 GMT',
+            'Content-Length': len(ALL_DATA),
+            'Content-Type': 'application/json'
+        }, None, 0, request)
 
 
 class KVTests(unittest.TestCase):
-
     def setUp(self):
         self.adapter = adapters.Request()
         self.base_uri = '{0}://localhost:8500/{1}'.format(SCHEME, VERSION)
@@ -86,18 +82,18 @@ class KVTests(unittest.TestCase):
         self.kv = api.KV(self.base_uri, self.adapter, self.dc, self.token)
 
     def test_contains_evaluates_true(self):
-
         @httmock.all_requests
         def response_content(_url_unused, request):
             return httmock.response(200, None, {}, None, 0, request)
+
         with httmock.HTTMock(response_content):
             self.assertIn('foo', self.kv)
 
     def test_contains_evaluates_false(self):
-
         @httmock.all_requests
         def response_content(_url_unused, request):
             return httmock.response(404, None, {}, None, 0, request)
+
         with httmock.HTTMock(response_content):
             self.assertNotIn('foo', self.kv)
 
