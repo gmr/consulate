@@ -42,6 +42,7 @@ jobs:
    - python: pypy3
    - stage: upload coverage
      if: repo IS gmr/consulate
+     sudo: false
      services: []
      python: 3.6
      install:
@@ -58,6 +59,7 @@ jobs:
      - coverage report
      after_success: codecov
    - stage: deploy
+     sudo: false
      if: repo IS gmr/consulate
      python: 3.6
      services: []
