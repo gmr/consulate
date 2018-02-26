@@ -15,8 +15,8 @@ from consulate.api import base
 with open('testing/consul.json', 'r') as handle:
     CONSUL_CONFIG = json.load(handle)
 
-SCHEME = consulate.DEFAULT_SCHEME
-VERSION = consulate.VERSION
+SCHEME = 'http'
+VERSION = 'v1'
 
 
 class ConsulTests(unittest.TestCase):

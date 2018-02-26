@@ -6,12 +6,11 @@ except ImportError:  # pragma: no cover
     import urlparse as parse  # Python 2
 import uuid
 
-import consulate
 from consulate import adapters
 from consulate import api
 
-SCHEME = consulate.DEFAULT_SCHEME
-VERSION = consulate.VERSION
+SCHEME = 'http'
+VERSION = 'v1'
 
 ALL_DATA = (b'[{"CreateIndex":643,"ModifyIndex":643,"LockIndex":0,"Key":"bar",'
             b'"Flags":0,"Value":"YmF6"},{"CreateIndex":669,"ModifyIndex":669,"'
