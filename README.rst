@@ -4,12 +4,12 @@ Consulate: A Consul Client Library
 Consulate is a Python client library and set of application for the Consul
 service discovery and configuration system.
 
-|Version| |Downloads| |Status| |Coverage| |License|
+|Version| |Status| |Coverage|
 
 Installation
 ------------
 
-Consulate is available via via `pypi <https://pypi.python.org/pypi/consulate>`_
+Consulate is available via via `pypi <https://pypi.org/project/consulate/>`_
 and can be installed with easy_install or pip:
 
 .. code:: bash
@@ -28,9 +28,6 @@ Command Line Utilities
 Consulate comes with two command line utilities that make working with Consul
 easier from a management perspective. The ``consulate`` application provides
 a cli wrapper for common tasks performed.
-
-The ``passport`` application has been moved to a stand-alone application and
-is available at https://github.com/gmr/passport.
 
 consulate
 ^^^^^^^^^
@@ -202,9 +199,3 @@ For more examples, check out the Consulate documentation.
 
 .. |Coverage| image:: https://img.shields.io/codecov/c/github/gmr/consulate.svg?
    :target: https://codecov.io/github/gmr/consulate?branch=master
-
-.. |Downloads| image:: https://img.shields.io/pypi/dm/consulate.svg?
-   :target: https://pypi.python.org/pypi/consulate
-
-.. |License| image:: https://img.shields.io/pypi/l/consulate.svg?
-   :target: https://consulate.readthedocs.org
