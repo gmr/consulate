@@ -2,8 +2,12 @@
 Consul ACL Endpoint Access
 
 """
+import logging
+
 from consulate.api import base
 from consulate import exceptions
+
+LOGGER = logging.getLogger(__name__)
 
 
 class ACL(base.Endpoint):
@@ -11,6 +15,32 @@ class ACL(base.Endpoint):
     tokens.
 
     """
+    def bootstrap(self):
+        """This endpoint does a special one-time bootstrap of the ACL system,
+        making the first management token if the acl_master_token is not
+        specified in the Consul server configuration, and if the cluster has
+        not been bootstrapped previously.
+
+        This is available in Consul 0.9.1  and later, and requires all Consul
+        servers to be upgraded in order to operate.
+
+        You can detect if something has interfered with the ACL bootstrapping
+        by the response of this method. If you get a string response with the
+        ``ID``, the bootstrap was a success. If the method raises a
+        :exc:`~consulate.exceptions.Forbidden` exception, the cluster has
+        already been bootstrapped, at which point you should consider the
+        cluster in a potentially compromised state.
+
+        .. versionadded: 1.0.0
+
+        :rtype: str
+        :raises: :exc:`~consulate.exceptions.Forbidden`
+
+        """
+        response = self._adapter.put(self._build_uri(['bootstrap']))
+        if response.status_code == 403:
+            raise exceptions.Forbidden(response.body)
+        return response.body.get('ID')
 
     def create(self, name, acl_type='client', rules=None):
         """The create endpoint is used to make a new token. A token has a name,
@@ -55,15 +85,10 @@ class ACL(base.Endpoint):
         :param str acl_id: The ACL id
         :rtype: bool
         :raises: consulate.exceptions.Forbidden
-        :raises: consulate.exceptions.NotFound
 
         """
         response = self._adapter.put(self._build_uri(['clone', acl_id]))
-        # if response.status_code == 403:
-        #     raise exceptions.Forbidden(response.body)
-        if response.status_code == 404:
-            raise exceptions.NotFound(response.body)
-        elif response.status_code == 403:
+        if response.status_code == 403:
             raise exceptions.Forbidden(response.body)
         return response.body.get('ID')
 
@@ -73,14 +98,11 @@ class ACL(base.Endpoint):
         :param str acl_id: The ACL id
         :rtype: bool
         :raises: consulate.exceptions.Forbidden
-        :raises: consulate.exceptions.NotFound
 
         """
         response = self._adapter.put(self._build_uri(['destroy', acl_id]))
         if response.status_code == 403:
             raise exceptions.Forbidden(response.body)
-        # elif response.status_code == 404:
-        #     raise exceptions.NotFound(response.body)
         return response.status_code == 200
 
     def info(self, acl_id):
@@ -92,8 +114,7 @@ class ACL(base.Endpoint):
         :raises: consulate.exceptions.NotFound
 
         """
-
-        result = self._get(['info', acl_id], raise_on_404=True)
+        result = self._get(['info', acl_id])
         if not result:
             raise exceptions.NotFound()
         return result
@@ -106,6 +127,22 @@ class ACL(base.Endpoint):
 
         """
         return self._get(['list'])
+
+    def replication(self):
+        """Return the status of the ACL replication process in the datacenter.
+
+        This is intended to be used by operators, or by automation checking the
+        health of ACL replication.
+
+        .. versionadded: 1.0.0
+
+        :rtype: dict
+        :raises: consulate.exceptions.Forbidden
+
+        """
+        result = self._get(['replication'])
+        LOGGER.info('Result: %r', result)
+        return result
 
     def update(self, acl_id, name, acl_type='client', rules=None):
         """Update an existing ACL, updating its values or add a new ACL if
