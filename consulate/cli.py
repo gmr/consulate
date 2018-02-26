@@ -295,7 +295,7 @@ def kv_backup(consul, args):
     if args.base64:
         if utils.PYTHON3:
             records = [(k, f, str(base64.b64encode(utils.maybe_encode(v)),
-                                  'ascii'))
+                                  'ascii') if v else v)
                        for k, f, v in records]
         else:
             records = [(k, f, base64.b64encode(v) if v else v)
