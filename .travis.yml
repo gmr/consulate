@@ -1,18 +1,16 @@
 language: python
 sudo: false
 python:
-    - 2.6
     - 2.7
     - pypy
     - 3.3
     - 3.4
 before_install:
-    - curl -L -o /tmp/0.5.2_linux_amd64.zip https://dl.bintray.com/mitchellh/consul/0.5.2_linux_amd64.zip
-    - unzip /tmp/0.5.2_linux_amd64.zip
+    - curl -L -o /tmp/1.0.2_linux_amd64.zip https://releases.hashicorp.com/consul/1.0.2/consul_1.0.2_linux_amd64.zip?_ga=2.175144422.533311668.1514167042-454230918.1511333239
+    - unzip /tmp/1.0.2_linux_amd64.zip
     - ./consul agent -config-file consul-test.json > /tmp/consul.log &
     - pip install codecov
 install:
-    - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install --use-mirrors argparse unittest2; fi
     - pip install -r dev-requirements.txt
 script: nosetests --with-coverage --cover-package=consulate --cover-branches
 after_success:

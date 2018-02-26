@@ -126,7 +126,7 @@ class Agent(base.Endpoint):
             :param str check_id: The check id
 
             """
-            return self._get_no_response_body(['deregister', check_id])
+            return self._put_no_response_body(['deregister', check_id])
 
         def ttl_pass(self, check_id):
             """This endpoint is used with a check that is of the TTL type.
@@ -136,7 +136,7 @@ class Agent(base.Endpoint):
             :param str check_id: The check id
 
             """
-            return self._get_no_response_body(['pass', check_id])
+            return self._put_no_response_body(['pass', check_id])
 
         def ttl_warn(self, check_id):
             """This endpoint is used with a check that is of the TTL type.
@@ -146,7 +146,7 @@ class Agent(base.Endpoint):
             :param str check_id: The check id
 
             """
-            return self._get_no_response_body(['warn', check_id])
+            return self._put_no_response_body(['warn', check_id])
 
         def ttl_fail(self, check_id):
             """This endpoint is used with a check that is of the TTL type.
@@ -156,7 +156,7 @@ class Agent(base.Endpoint):
             :param str check_id: The check id
 
             """
-            return self._get_no_response_body(['fail', check_id])
+            return self._put_no_response_body(['fail', check_id])
 
     class Service(base.Endpoint):
         """One of the main goals of service discovery is to provide a catalog
@@ -243,7 +243,7 @@ class Agent(base.Endpoint):
             :rtype: bool
 
             """
-            return self._get_no_response_body(['deregister', service_id])
+            return self._put_no_response_body(['deregister', service_id])
 
     def checks(self):
         """return the all the checks that are registered with the local agent.
@@ -267,7 +267,7 @@ class Agent(base.Endpoint):
         node into the left state allows its old entries to be removed.
 
         """
-        return self._get_no_response_body(['force-leave', node])
+        return self._put_no_response_body(['force-leave', node])
 
     def join(self, address, wan=False):
         """This endpoint is hit with a GET and is used to instruct the agent
@@ -281,7 +281,7 @@ class Agent(base.Endpoint):
 
         """
         query_params = {'wan': 1} if wan else None
-        return self._get_no_response_body(['join', address], query_params)
+        return self._put_no_response_body(['join', address], query_params)
 
     def members(self):
         """Returns the members the agent sees in the cluster gossip pool.
