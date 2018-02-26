@@ -1,6 +1,7 @@
 Version History
 ===============
- - 0.7.0
+ - 1.0.0
+  - Removed the deprecated (since 0.3) `consulate.Session` handle
   - Fixed run_once wrong args + subprocess parsing (#65) - Anthony Scalisi
   - Fixed :meth:`~consulate.Consul.catalog.register` and :meth:`~consulate.Consul.catalog.deregister` (#59)
   - Add support for ``flags``, ``cas``, and ``value`` in :meth:`Consulate.kv.acquire_lock` (#63)
