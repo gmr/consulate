@@ -1,27 +1,71 @@
-language: python
 sudo: false
-python:
-    - 2.7
-    - pypy
-    - 3.3
-    - 3.4
+language: python
+
+env:
+  global:
+  - PATH=$HOME/.local/bin:$PATH
+  - AWS_DEFAULT_REGION=us-east-1
+  - secure: "GxBrm8hKFLazshbB3c+rQUQYHAim/rm8KtBXz6uNWRvsccAK6otc5Wcz01kj679d9C9L3I/G6/wCxfgglQp3YMGKlLT+jHQpOMdDauEdeKvaUuPh3hDQBPSAUhIpycgxz9AghdWqOQGkpQQqNW9UZRC42SW2eIyWFIlQf6W31Vc="
+  - secure: "YdDXZGAOp1WZenhfZnHhL9cOeUQbvZZOr8FWWJoJz3EdTbf6jE2UuK4HU6CgoYDpfFlc7geah2xARr/2rkN716Rz4ZzeHBtNXfwqqQRWRLkB8J73Nowmm+6J+skv6meJyCHtcHalpv7pAH5QPn3zMK2EAogdcDJmd5GSVBjwPoo="
+
+stages:
+- test
+- name: upload coverage
+- name: deploy
+  if: tag IS present
+
 before_install:
-    - curl -L -o /tmp/1.0.2_linux_amd64.zip https://releases.hashicorp.com/consul/1.0.2/consul_1.0.2_linux_amd64.zip?_ga=2.175144422.533311668.1514167042-454230918.1511333239
-    - unzip /tmp/1.0.2_linux_amd64.zip
-    - ./consul agent -config-file consul-test.json > /tmp/consul.log &
-    - pip install codecov
+- curl -L -o /tmp/1.0.6_linux_amd64.zip https://releases.hashicorp.com/consul/1.0.6/consul_1.0.6_linux_amd64.zip
+- unzip /tmp/1.0.6_linux_amd64.zip
+- ./consul agent -config-file consul-test.json > /tmp/consul.log &
+
 install:
-    - pip install -r dev-requirements.txt
-script: nosetests --with-coverage --cover-package=consulate --cover-branches
+- pip install awscli
+- pip install -r requires/testing.txt
+- python setup.py develop
+
+script: nosetests
+
 after_success:
-  - codecov
-deploy:
-  distributions: sdist bdist_wheel
-  provider: pypi
-  user: crad
-  on:
-    python: 2.7
-    tags: true
-    all_branches: true
-  password:
-    secure: "W3mHi2tzX34KcN82tdVPZwS0RHBGkI2Cy/df18ehsVKoOzWzQvaQKh2Jh1LIBOvdZCyih+KltmMNT8ounqUd+ql6kBFd0kotQk3C3x5R5KlpbhQ4BNKp++grs+iycPwK6qnJISypt2d3ykJNgqUgfBI0p+7XVpMkBY0GIXGNcvk="
+ - aws s3 cp .coverage "s3://com-gavinroy-travis/consulate/$TRAVIS_BUILD_NUMBER/.coverage.${TRAVIS_PYTHON_VERSION}"
+
+jobs:
+  include:
+   - python: 2.7
+   - python: 3.4
+   - python: 3.5
+   - python: 3.6
+   - python: pypy
+   - python: pypy3
+   - stage: upload coverage
+     if: repo IS gmr/consulate
+     services: []
+     python: 3.6
+     install:
+     - pip install awscli coverage codecov
+     script:
+     - mkdir coverage
+     - aws s3 cp --recursive s3://com-gavinroy-travis/consulate/$TRAVIS_BUILD_NUMBER/
+       coverage
+     - cd coverage
+     - coverage combine
+     - cd ..
+     - mv coverage/.coverage .
+     - coverage report
+     after_success: codecov
+   - stage: deploy
+     if: repo IS gmr/consulate
+     python: 3.6
+     services: []
+     install: true
+     script: true
+     after_success: true
+     deploy:
+       distributions: sdist bdist_wheel
+       provider: pypi
+       user: crad
+       on:
+         tags: true
+         all_branches: true
+       password:
+         secure: "W3mHi2tzX34KcN82tdVPZwS0RHBGkI2Cy/df18ehsVKoOzWzQvaQKh2Jh1LIBOvdZCyih+KltmMNT8ounqUd+ql6kBFd0kotQk3C3x5R5KlpbhQ4BNKp++grs+iycPwK6qnJISypt2d3ykJNgqUgfBI0p+7XVpMkBY0GIXGNcvk="
