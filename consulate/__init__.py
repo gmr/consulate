@@ -55,6 +55,7 @@ class Consul(object):
         (Default: :py:class:`consulate.adapters.Request`)
     :param bool/str verify: Specify how to verify TLS certificates
     :param tuple cert: Specify client TLS certificate and key files
+    :param float timeout: Timeout in seconds for API requests (Default: None)
 
     """
 
@@ -66,10 +67,11 @@ class Consul(object):
                  scheme=DEFAULT_SCHEME,
                  adapter=None,
                  verify=True,
-                 cert=None):
+                 cert=None,
+                 timeout=None):
         """Create a new instance of the Consul class"""
         base_uri = self._base_uri(scheme, host, port)
-        self._adapter = adapter() if adapter else adapters.Request(verify=verify, cert=cert)
+        self._adapter = adapter() if adapter else adapters.Request(timeout=timeout, verify=verify, cert=cert)
         self._acl = api.ACL(base_uri, self._adapter, datacenter, token)
         self._agent = api.Agent(base_uri, self._adapter, datacenter, token)
         self._catalog = api.Catalog(base_uri, self._adapter, datacenter, token)
