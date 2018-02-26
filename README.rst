@@ -184,7 +184,7 @@ the scope of the full Consulate API.
 
 .. code:: python
 
-    consul = consulate.Session()
+    consul = consulate.Consul()
 
     # Get the health of a individual node
     health = consul.health.node('my-node')
