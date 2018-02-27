@@ -20,16 +20,13 @@ key "foo/" {
 
 
 class TestCase(base.TestCase):
-    def setUp(self):
-        super(TestCase, self).setUp()
-        self.acl_list = list()
 
-    def tearDown(self):
-        for acl_id in self.acl_list:
-            self.consul.acl.destroy(acl_id)
+    @staticmethod
+    def uuidv4():
+        return str(uuid.uuid4())
 
     def test_bootstrap_success(self):
-        expectation = str(uuid.uuid4())
+        expectation = self.uuidv4()
 
         @httmock.all_requests
         def response_content(_url_unused, request):
@@ -46,97 +43,75 @@ class TestCase(base.TestCase):
             self.consul.acl.bootstrap()
 
     def test_clone_bad_acl_id(self):
-        acl_id = str(uuid.uuid4())
         with self.assertRaises(consulate.Forbidden):
-            self.forbidden_consul.acl.clone(acl_id)
+            self.consul.acl.clone(self.uuidv4())
 
-    @base.generate_key
-    def test_clone_forbidden(self, acl_id):
+    def test_clone_forbidden(self):
         with self.assertRaises(consulate.Forbidden):
-            self.forbidden_consul.acl.clone(acl_id)
+            self.forbidden_consul.acl.clone(self.uuidv4())
 
-    @base.generate_key
-    def test_create_and_destroy(self, acl_id):
-        acl_id = self.consul.acl.create(acl_id)
-        self.acl_list.append(acl_id)
+    def test_create_and_destroy(self):
+        acl_id = self.consul.acl.create(self.uuidv4())
         self.assertTrue(self.consul.acl.destroy(acl_id))
 
-    @base.generate_key
-    def test_create_with_rules(self, acl_id):
-        acl_id = self.consul.acl.create(acl_id, rules=ACL_RULES)
-        self.acl_list.append(acl_id)
+    def test_create_with_rules(self):
+        acl_id = self.consul.acl.create(self.uuidv4(), rules=ACL_RULES)
         value = self.consul.acl.info(acl_id)
         self.assertEqual(value['Rules'], ACL_RULES)
 
-    @base.generate_key
-    def test_create_and_info(self, acl_id):
-        acl_id = self.consul.acl.create(acl_id)
-        self.acl_list.append(acl_id)
+    def test_create_and_info(self):
+        acl_id = self.consul.acl.create(self.uuidv4())
         self.assertIsNotNone(acl_id)
         data = self.consul.acl.info(acl_id)
         self.assertIsNotNone(data)
         self.assertEqual(acl_id, data.get('ID'))
 
-    @base.generate_key
-    def test_create_and_list(self, acl_id):
-        acl_id = self.consul.acl.create(acl_id)
-        self.acl_list.append(acl_id)
+    def test_create_and_list(self):
+        acl_id = self.consul.acl.create(self.uuidv4())
         data = self.consul.acl.list()
         self.assertIn(acl_id, [r.get('ID') for r in data])
 
-    @base.generate_key
-    def test_create_and_clone(self, acl_id):
-        acl_id = self.consul.acl.create(acl_id)
-        self.acl_list.append(acl_id)
+    def test_create_and_clone(self):
+        acl_id = self.consul.acl.create(self.uuidv4())
         clone_id = self.consul.acl.clone(acl_id)
-        self.acl_list.append(clone_id)
         data = self.consul.acl.list()
         self.assertIn(clone_id, [r.get('ID') for r in data])
 
-    @base.generate_key
-    def test_create_and_update(self, acl_id):
-        acl_id = self.consul.acl.create(acl_id)
-        self.acl_list.append(acl_id)
+    def test_create_and_update(self):
+        acl_id = self.consul.acl.create(self.uuidv4())
         self.consul.acl.update(acl_id, 'Foo')
         data = self.consul.acl.list()
         self.assertIn('Foo', [r.get('Name') for r in data])
         self.assertIn(acl_id, [r.get('ID') for r in data])
 
-    @base.generate_key
-    def test_create_forbidden(self, acl_id):
+    def test_create_forbidden(self):
         with self.assertRaises(consulate.Forbidden):
-            self.forbidden_consul.acl.create(acl_id)
+            self.forbidden_consul.acl.create(self.uuidv4())
 
-    @base.generate_key
-    def test_destroy_forbidden(self, acl_id):
+    def test_destroy_forbidden(self):
         with self.assertRaises(consulate.Forbidden):
-            self.forbidden_consul.acl.destroy(acl_id)
+            self.forbidden_consul.acl.destroy(self.uuidv4())
 
     def test_info_acl_id_not_found(self):
-        acl_id = str(uuid.uuid4())
         with self.assertRaises(consulate.NotFound):
-            self.forbidden_consul.acl.info(acl_id)
+            self.forbidden_consul.acl.info(self.uuidv4())
 
     def test_replication(self):
         result = self.forbidden_consul.acl.replication()
         self.assertFalse(result['Enabled'])
         self.assertFalse(result['Running'])
 
-    @base.generate_key
-    def test_update_not_found_adds_new_key(self, acl_id):
-        self.assertTrue(self.consul.acl.update(acl_id, 'Foo2'))
+    def test_update_not_found_adds_new_key(self):
+        acl_id = self.consul.acl.update(self.uuidv4(), 'Foo2')
         data = self.consul.acl.list()
         self.assertIn('Foo2', [r.get('Name') for r in data])
         self.assertIn(acl_id, [r.get('ID') for r in data])
 
-    @base.generate_key
-    def test_update_with_rules(self, acl_id):
-        self.consul.acl.update(acl_id, name='test', rules=ACL_RULES)
-        self.acl_list.append(acl_id)
+    def test_update_with_rules(self):
+        acl_id = self.consul.acl.update(self.uuidv4(), name='test', rules=ACL_RULES)
         value = self.consul.acl.info(acl_id)
         self.assertEqual(value['Rules'], ACL_RULES)
 
-    @base.generate_key
-    def test_update_forbidden(self, acl_id):
+    def test_update_forbidden(self):
         with self.assertRaises(consulate.Forbidden):
-            self.forbidden_consul.acl.update(acl_id, name='test')
+            self.forbidden_consul.acl.update(self.uuidv4(), name='test')

@@ -4,6 +4,7 @@ Consul ACL Endpoint Access
 """
 import logging
 
+from consulate.models import acl
 from consulate.api import base
 from consulate import exceptions
 
@@ -37,10 +38,7 @@ class ACL(base.Endpoint):
         :raises: :exc:`~consulate.exceptions.Forbidden`
 
         """
-        response = self._adapter.put(self._build_uri(['bootstrap']))
-        if response.status_code == 403:
-            raise exceptions.Forbidden(response.body)
-        return response.body.get('ID')
+        return self._put_response_body(['bootstrap'])['ID']
 
     def create(self, name, acl_type='client', rules=None):
         """The create endpoint is used to make a new token. A token has a name,
@@ -71,13 +69,9 @@ class ACL(base.Endpoint):
         :raises: consulate.exceptions.Forbidden
 
         """
-        payload = {'Name': name, 'Type': acl_type}
-        if rules:
-            payload['Rules'] = rules
-        response = self._adapter.put(self._build_uri(['create']), payload)
-        if response.status_code == 403:
-            raise exceptions.Forbidden(response.body)
-        return response.body.get('ID') or None
+        return self._put_response_body(
+            ['create'], {}, dict(acl.ACL(
+                name=name, type=acl_type, rules=rules)))['ID']
 
     def clone(self, acl_id):
         """Clone an existing ACL returning the new ACL ID
@@ -87,10 +81,7 @@ class ACL(base.Endpoint):
         :raises: consulate.exceptions.Forbidden
 
         """
-        response = self._adapter.put(self._build_uri(['clone', acl_id]))
-        if response.status_code == 403:
-            raise exceptions.Forbidden(response.body)
-        return response.body.get('ID')
+        return self._put_response_body(['clone', acl_id])['ID']
 
     def destroy(self, acl_id):
         """Delete the specified ACL
@@ -114,15 +105,15 @@ class ACL(base.Endpoint):
         :raises: consulate.exceptions.NotFound
 
         """
-        result = self._get(['info', acl_id])
-        if not result:
-            raise exceptions.NotFound()
-        return result
+        response = self._get(['info', acl_id], raise_on_404=True)
+        if not response:
+            raise exceptions.NotFound('ACL not found')
+        return response
 
     def list(self):
         """Return a list of all ACLs
 
-        :rtype: list
+        :rtype: list([dict])
         :raises: consulate.exceptions.Forbidden
 
         """
@@ -140,26 +131,22 @@ class ACL(base.Endpoint):
         :raises: consulate.exceptions.Forbidden
 
         """
-        result = self._get(['replication'])
-        LOGGER.info('Result: %r', result)
-        return result
+        return self._get(['replication'])
 
     def update(self, acl_id, name, acl_type='client', rules=None):
         """Update an existing ACL, updating its values or add a new ACL if
-        the ACL Id specified is not found.
+        the ACL ID specified is not found.
+
+        The call will return the ID of the ACL.
 
         :param str acl_id: The ACL id
         :param str name: The name of the ACL
         :param str acl_type: The ACL type
         :param str rules: The ACL rules document
-        :rtype: bool
+        :rtype: str
         :raises: consulate.exceptions.Forbidden
 
         """
-        payload = {'ID': acl_id, 'Name': name, 'Type': acl_type}
-        if rules:
-            payload['Rules'] = rules
-        response = self._adapter.put(self._build_uri(['update']), payload)
-        if response.status_code == 403:
-            raise exceptions.Forbidden(response.body)
-        return response.status_code == 200
+        return self._put_response_body(
+            ['update'], {}, dict(acl.ACL(
+                id=acl_id, name=name, type=acl_type, rules=rules)))['ID']
