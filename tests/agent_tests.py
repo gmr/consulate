@@ -5,6 +5,7 @@ Tests for Consulate.agent
 import uuid
 
 import consulate
+from consulate import utils
 
 from . import base
 
@@ -55,7 +56,7 @@ class TestCase(base.TestCase):
 
     def test_monitor(self):
         for line in self.consul.agent.monitor():
-            self.assertIsInstance(line, str)
+            self.assertTrue(utils.is_string(line))
             break
 
     def test_monitor_forbidden(self):
