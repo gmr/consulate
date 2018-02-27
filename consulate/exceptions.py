@@ -8,6 +8,14 @@ class ConsulateException(Exception):
     """Base Consul exception"""
 
 
+class RequestError(ConsulateException):
+    """There was an error making the request to the consul server"""
+
+
+class ClientError(ConsulateException):
+    """There was an error in the request that was made to consul"""
+
+
 class ServerError(ConsulateException):
     """An internal Consul server error occurred"""
 
