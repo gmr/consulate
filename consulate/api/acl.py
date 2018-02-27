@@ -4,7 +4,7 @@ Consul ACL Endpoint Access
 """
 import logging
 
-from consulate.models import acl
+from consulate.models import acl as model
 from consulate.api import base
 from consulate import exceptions
 
@@ -70,7 +70,7 @@ class ACL(base.Endpoint):
 
         """
         return self._put_response_body(
-            ['create'], {}, dict(acl.ACL(
+            ['create'], {}, dict(model.ACL(
                 name=name, type=acl_type, rules=rules)))['ID']
 
     def clone(self, acl_id):
@@ -148,5 +148,5 @@ class ACL(base.Endpoint):
 
         """
         return self._put_response_body(
-            ['update'], {}, dict(acl.ACL(
+            ['update'], {}, dict(model.ACL(
                 id=acl_id, name=name, type=acl_type, rules=rules)))['ID']
