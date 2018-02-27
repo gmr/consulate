@@ -11,7 +11,7 @@ setuptools.setup(
     extras_require={'unixsocket': ['requests-unixsocket>=0.1.4,<=1.0.0']},
     license='BSD',
     package_data={'': ['LICENSE', 'README.rst']},
-    packages=['consulate', 'consulate.api'],
+    packages=['consulate', 'consulate.api', 'consulate.models'],
     entry_points=dict(console_scripts=['consulate=consulate.cli:main']),
     classifiers=[
         'Development Status :: 5 - Production/Stable',
