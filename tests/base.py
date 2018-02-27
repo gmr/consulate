@@ -33,8 +33,13 @@ class TestCase(unittest.TestCase):
         self.used_keys = list()
 
     def tearDown(self):
-        for key in self.used_keys:
-            try:
-                self.consul.kv.delete(key)
-            except KeyError:
-                pass
+        for key in self.consul.kv.keys():
+            self.consul.kv.delete(key)
+
+        checks = self.consul.agent.checks()
+        for name in checks:
+            self.consul.agent.check.deregister(checks[name]['CheckID'])
+
+        services = self.consul.agent.services()
+        for name in services:
+            self.consul.agent.service.deregister(services[name]['ID'])
