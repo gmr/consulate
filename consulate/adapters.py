@@ -146,8 +146,7 @@ class Request(object):
         try:
             return api.Response(
                 response.status_code, response.content, response.headers)
-        except (requests.exceptions.ConnectionError,
-                OSError, socket.error) as err:
+        except (requests.exceptions.HTTPError, OSError, socket.error) as err:
             raise exceptions.RequestError(str(err))
 
 
