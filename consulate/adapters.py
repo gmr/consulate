@@ -70,8 +70,7 @@ class Request(object):
 
         """
         LOGGER.debug("DELETE %s", uri)
-        return self._process_response(
-            self.session.delete(uri, timeout=self.timeout))
+        return api.Response(self.session.delete(uri, timeout=self.timeout))
 
     def get(self, uri, timeout=None):
         """Perform a HTTP get
@@ -84,9 +83,9 @@ class Request(object):
         """
         LOGGER.debug("GET %s", uri)
         try:
-            return self._process_response(
-                self.session.get(uri, timeout=timeout or self.timeout))
-        except (requests.exceptions.ConnectionError,
+            return api.Response(self.session.get(
+                uri, timeout=timeout or self.timeout))
+        except (requests.exceptions.RequestException,
                 OSError, socket.error) as err:
             raise exceptions.RequestError(str(err))
 
@@ -100,15 +99,12 @@ class Request(object):
         LOGGER.debug("GET Stream from %s", uri)
         try:
             response = self.session.get(uri, stream=True)
-        except (requests.exceptions.ConnectionError,
+        except (requests.exceptions.RequestException,
                 OSError, socket.error) as err:
             raise exceptions.RequestError(str(err))
-        if response.encoding is None:
-            response.encoding = 'utf-8'
         if utils.response_ok(response):
-            for line in response.iter_lines():
-                if line:
-                    yield line.decode('utf-8')
+            for line in response.iter_lines():  # pragma: no cover
+                yield line.decode('utf-8')
 
     @prepare_data
     def put(self, uri, data=None, timeout=None):
@@ -127,31 +123,16 @@ class Request(object):
             if utils.is_string(data) else CONTENT_JSON
         }
         try:
-            return self._process_response(
+            return api.Response(
                 self.session.put(
                     uri, data=data, headers=headers,
                     timeout=timeout or self.timeout))
-        except (requests.exceptions.ConnectionError,
+        except (requests.exceptions.RequestException,
                 OSError, socket.error) as err:
             raise exceptions.RequestError(str(err))
 
-    @staticmethod
-    def _process_response(response):
-        """Build an api.Response object based upon the requests response
-        object.
 
-        :param requests.response response: The requests response
-        :rtype: consulate.api.Response
-
-        """
-        try:
-            return api.Response(
-                response.status_code, response.content, response.headers)
-        except (requests.exceptions.HTTPError, OSError, socket.error) as err:
-            raise exceptions.RequestError(str(err))
-
-
-class UnixSocketRequest(Request):
+class UnixSocketRequest(Request):  # pragma: no cover
     """Use to communicate with Consul over a Unix socket"""
 
     def __init__(self, timeout=None):

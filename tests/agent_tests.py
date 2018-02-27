@@ -4,6 +4,8 @@ Tests for Consulate.agent
 """
 import uuid
 
+import httmock
+
 import consulate
 from consulate import utils
 from consulate.models import agent
@@ -56,9 +58,17 @@ class TestCase(base.TestCase):
             self.forbidden_consul.agent.metrics()
 
     def test_monitor(self):
-        for line in self.consul.agent.monitor():
+        for offset, line in enumerate(self.consul.agent.monitor()):
             self.assertTrue(utils.is_string(line))
-            break
+            self.consul.agent.metrics()
+            if offset > 1:
+                break
+
+    def test_monitor_request_exception(self):
+        with httmock.HTTMock(base.raise_oserror):
+            with self.assertRaises(consulate.RequestError):
+                for _line in self.consul.agent.monitor():
+                    break
 
     def test_monitor_forbidden(self):
         with self.assertRaises(consulate.Forbidden):

@@ -5,8 +5,10 @@ Tests for Consulate.acl
 import json
 import uuid
 
-import consulate
 import httmock
+
+import consulate
+from consulate import exceptions
 
 from . import base
 
@@ -24,6 +26,16 @@ class TestCase(base.TestCase):
     @staticmethod
     def uuidv4():
         return str(uuid.uuid4())
+
+    def test_bootstrap_request_exception(self):
+
+        @httmock.all_requests
+        def response_content(_url_unused, _request):
+            raise OSError
+
+        with httmock.HTTMock(response_content):
+            with self.assertRaises(exceptions.RequestError):
+                self.consul.acl.bootstrap()
 
     def test_bootstrap_success(self):
         expectation = self.uuidv4()
@@ -95,6 +107,11 @@ class TestCase(base.TestCase):
     def test_info_acl_id_not_found(self):
         with self.assertRaises(consulate.NotFound):
             self.forbidden_consul.acl.info(self.uuidv4())
+
+    def test_list_request_exception(self):
+        with httmock.HTTMock(base.raise_oserror):
+            with self.assertRaises(exceptions.RequestError):
+                self.consul.acl.list()
 
     def test_replication(self):
         result = self.forbidden_consul.acl.replication()

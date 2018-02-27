@@ -5,11 +5,13 @@ Consulate: A client library for Consul
 from consulate.client import Consul
 
 from consulate.exceptions import (ConsulateException,
+                                  ClientError,
                                   ServerError,
                                   ACLDisabled,
                                   Forbidden,
                                   NotFound,
-                                  LockFailure)
+                                  LockFailure,
+                                  RequestError)
 
 import logging
 from logging import NullHandler
@@ -24,9 +26,11 @@ __all__ = [
     __version__,
     Consul,
     ConsulateException,
+    ClientError,
     ServerError,
     ACLDisabled,
     Forbidden,
     NotFound,
-    LockFailure
+    LockFailure,
+    RequestError
 ]

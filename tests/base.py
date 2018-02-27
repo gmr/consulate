@@ -4,6 +4,8 @@ import os
 import unittest
 import uuid
 
+import httmock
+
 import consulate
 from consulate import exceptions
 
@@ -19,6 +21,11 @@ def generate_key(func):
         func(self, key)
 
     return _decorator
+
+
+@httmock.all_requests
+def raise_oserror(_url_unused, _request):
+    raise OSError
 
 
 class TestCase(unittest.TestCase):

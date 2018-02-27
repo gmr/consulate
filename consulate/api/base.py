@@ -6,7 +6,7 @@ import base64
 import json
 try:
     from urllib.parse import urlencode  # Python 3
-except ImportError:  # pragma: no cover
+except ImportError:
     from urllib import urlencode  # Python 2
 
 from consulate import utils
@@ -106,7 +106,7 @@ class Endpoint(object):
 
     def _put_response_body(self, url_parts, query=None, payload=None):
         response = self._adapter.put(
-            self._build_uri(url_parts, query), payload)
+            self._build_uri(url_parts, query), data=payload)
         if utils.response_ok(response):
             return response.body
 
@@ -123,17 +123,15 @@ class Response(object):
     body = None
     headers = None
 
-    def __init__(self, status_code, body, headers):
+    def __init__(self, response):
         """Create a new instance of the Response class.
 
-        :param int status_code: HTTP Status code
-        :param str body: The response body
-        :param dict headers: Response headers
+        :param requests.response response: The requests response
 
         """
-        self.status_code = status_code
-        self.body = self._demarshal(body)
-        self.headers = headers
+        self.status_code = response.status_code
+        self.body = self._demarshal(response.content)
+        self.headers = response.headers
 
     def _demarshal(self, body):
         """Demarshal the request payload.
