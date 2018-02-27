@@ -1,16 +1,27 @@
 Version History
 ===============
  - 1.0.0
-  - Removed the deprecated (since 0.3) `consulate.Session` handle
-  - Fixed run_once wrong args + subprocess parsing (#65) - Anthony Scalisi
-  - Fixed :meth:`~consulate.Consul.catalog.register` and :meth:`~consulate.Consul.catalog.deregister` (#59)
-  - Add support for ``flags``, ``cas``, and ``value`` in :meth:`Consulate.kv.acquire_lock` (#63)
-  - Add ``--pretty`` option to kv backup (#69) - Brian Clark
-  - Don't try to b64decode null values on kv restore (#68, #70) - Brian Clark
-  - Raise server-error exception when setting a key fails due to a server error (#67) - Fredric Newberg
-  - Address Python 2.6 incompatibility with the consulate cli and null data (#62, #61) - Wayne Walker
-  - New :class:`~consulate.api.lock.Lock` class for easier lock acquisition
-  - New CLI feature to backup and restore ACLs (#71)
+  - Breaking Changes
+    - Removed support for Python 2.6 which has been EOLed since 2013
+    - Removed the deprecated (since 0.3) `consulate.Session` handle
+    - Changed :meth:`~consulate.Consul.agent.checks` to return a :data:`dict` instead of a :data:`list`.
+    - Changed :meth:`~consulate.Consul.agent.services` to return a :data:`dict` instead of a :data:`list`.
+    - Renamed the ``check`` argument to :meth:`~consulate.Consul.agent.service.register` to ``script``.
+    - Renamed the ``httpcheck`` argument to :meth:`~consulate.Consul.agent.service.register` to ``http``.
+  - Other Changes:
+    - Added :meth:`~consulate.Consul.agent.maintenance`, :meth:`~consulate.Consul.agent.metrics`,
+      :meth:`~consulate.Consul.agent.monitor`, :meth:`~consulate.Consul.agent.reload`,
+      :meth:`~consulate.Consul.agent.self`, and :meth:`~consulate.Consul.agent.token`
+    - Added :meth:`~consulate.Consul.acl.bootstrap` and  :meth:`~consulate.Consul.acl.replication`
+    - Fixed run_once wrong args + subprocess parsing (#65) - Anthony Scalisi
+    - Fixed :meth:`~consulate.Consul.catalog.register` and :meth:`~consulate.Consul.catalog.deregister` (#59)
+    - Add support for ``flags``, ``cas``, and ``value`` in :meth:`Consulate.kv.acquire_lock` (#63)
+    - Add ``--pretty`` option to kv backup (#69) - Brian Clark
+    - Don't try to b64decode null values on kv restore (#68, #70) - Brian Clark
+    - Raise server-error exception when setting a key fails due to a server error (#67) - Fredric Newberg
+    - Address Python 2.6 incompatibility with the consulate cli and null data (#62, #61) - Wayne Walker
+    - Added :class:`~consulate.api.lock.Lock` class for easier lock acquisition
+    - New CLI feature to backup and restore ACLs (#71)
 
  - 0.6.0 - released *2015-07-22*
   - Added --recurse and --trim to cli kv_get (#58) - Matt Walker

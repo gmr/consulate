@@ -4,6 +4,42 @@ Consul Agent Endpoint Access
 """
 from consulate.api import base
 
+_TOKENS = [
+    'acl_token',
+    'acl_agent_token',
+    'acl_agent_master_token',
+    'acl_replication_token'
+]
+
+
+def _validate_check(script, http, interval, ttl):
+    """Validate the check arguments passed into check or service creation.
+
+    :param script: The optional script to run in the check
+    :type script: str or None
+    :param http: The optional HTTP endpoint to use in the check
+    :type http: str or None
+    :param interval: The optional check interval to specify
+    :type interval: int or None
+    :param ttl: The optional TTL interval for the check
+    :type ttl: int or None
+    :raises: ValueError
+
+    """
+    if script is not None and http is not None:
+        raise ValueError('Can not specify script and http in the same check')
+    if (script is not None or http is not None) and ttl is not None:
+        raise ValueError('Can not specify a script or http check and ttl')
+    elif (script or http) and interval is None:
+        raise ValueError(
+            'An interval is required for check scripts and '
+            'http checks.')
+    elif interval is not None and \
+            (not isinstance(interval, int) or interval < 1):
+        raise ValueError('interval must be a positive integer')
+    elif ttl is not None and (not isinstance(ttl, int) or ttl < 1):
+        raise ValueError('ttl must be a positive integer')
+
 
 class Agent(base.Endpoint):
     """The Consul agent is the core process of Consul. The agent maintains
@@ -24,7 +60,8 @@ class Agent(base.Endpoint):
         """
         super(Agent, self).__init__(uri, adapter, datacenter, token)
         self.check = Agent.Check(self._base_uri, adapter, datacenter, token)
-        self.service = Agent.Service(self._base_uri, adapter, datacenter, token)
+        self.service = Agent.Service(
+            self._base_uri, adapter, datacenter, token)
 
     class Check(base.Endpoint):
         """One of the primary roles of the agent is the management of system
@@ -94,21 +131,7 @@ class Agent(base.Endpoint):
             :raises: ValueError
 
             """
-            # Validate the parameters
-            if script and not interval:
-                raise ValueError('Must specify interval when using script')
-            elif script and ttl:
-                raise ValueError('Can not specify script and ttl together')
-
-            if http and not interval:
-                raise ValueError('Must specify interval when using http')
-            elif http and ttl:
-                raise ValueError('Can not specify http and ttl together')
-
-            if http and script:
-                raise ValueError('Can not specify script and http together')
-
-            # Register the check
+            _validate_check(script, http, interval, ttl)
             return self._put_no_response_body(['register'], None, {
                 'ID': check_id,
                 'Name': name,
@@ -124,39 +147,49 @@ class Agent(base.Endpoint):
             of deregistering the check with the Catalog.
 
             :param str check_id: The check id
+            :rtype: bool
 
             """
             return self._put_no_response_body(['deregister', check_id])
 
-        def ttl_pass(self, check_id):
+        def ttl_pass(self, check_id, note=None):
             """This endpoint is used with a check that is of the TTL type.
             When this endpoint is accessed, the status of the check is set to
             "passing", and the TTL clock is reset.
 
             :param str check_id: The check id
+            :param str note: Note to include with the check pass
+            :rtype: bool
 
             """
-            return self._put_no_response_body(['pass', check_id])
+            return self._put_no_response_body(
+                ['pass', check_id], {'note': note} if note else None)
 
-        def ttl_warn(self, check_id):
+        def ttl_warn(self, check_id, note=None):
             """This endpoint is used with a check that is of the TTL type.
             When this endpoint is accessed, the status of the check is set
             to "warning", and the TTL clock is reset.
 
             :param str check_id: The check id
+            :param str note: Note to include with the check warning
+            :rtype: bool
 
             """
-            return self._put_no_response_body(['warn', check_id])
+            return self._put_no_response_body(
+                ['warn', check_id], {'note': note} if note else None)
 
-        def ttl_fail(self, check_id):
+        def ttl_fail(self, check_id, note=None):
             """This endpoint is used with a check that is of the TTL type.
             When this endpoint is accessed, the status of the check is set
             to "critical", and the TTL clock is reset.
 
             :param str check_id: The check id
+            :param str note: Note to include with the check failure
+            :rtype: bool
 
             """
-            return self._put_no_response_body(['fail', check_id])
+            return self._put_no_response_body(
+                ['fail', check_id], {'note': note} if note else None)
 
     class Service(base.Endpoint):
         """One of the main goals of service discovery is to provide a catalog
@@ -168,17 +201,16 @@ class Agent(base.Endpoint):
         the HTTP interface.
 
         """
-        CHECK_EXCEPTION = 'check must be a tuple of script, interval, and ttl'
-
         def register(self, name,
                      service_id=None,
                      address=None,
                      port=None,
                      tags=None,
-                     check=None,
+                     script=None,
                      interval=None,
                      ttl=None,
-                     httpcheck=None):
+                     http=None,
+                     enable_tag_override=None):
             """Add a new service to the local agent.
 
             :param str name: The name of the service
@@ -186,33 +218,29 @@ class Agent(base.Endpoint):
             :param str address: The service IP address
             :param int port: The service port
             :param list tags: A list of tags for the service
-            :param str check: The path to the check script to run
-            :param str interval: The check execution interval
-            :param str ttl: The TTL for external script check pings
-            :param str httpcheck: An URL to check every interval
+            :param str script: Optional script to execute to check service
+            :param int interval: The check execution interval
+            :param int ttl: The TTL for external script check pings
+            :param str http: An URL to check every interval
+            :param bool enable_tag_override: Toggle the tag override feature
             :rtype: bool
             :raises: ValueError
 
             """
             # Validate the parameters
-            if port and not isinstance(port, int):
+            if port is not None and not isinstance(port, int):
                 raise ValueError('port must be an integer')
-            elif tags and not isinstance(tags, list):
+            elif tags is not None and not isinstance(tags, list):
                 raise ValueError('tags must be a list of strings')
-            elif (check or httpcheck) and ttl:
-                raise ValueError('Can not specify both a check and ttl')
 
-            if (check or httpcheck) and not interval:
-                raise ValueError('An interval is required for check scripts and http checks.')
+            _validate_check(script, http, interval, ttl)
 
             check_spec = None
-            if check:
-                check_spec = {'script': check,
-                              'interval': interval}
-            elif httpcheck:
-                check_spec = {'HTTP': httpcheck,
-                              'interval': interval}
-            elif ttl:
+            if script is not None:
+                check_spec = {'script': script, 'interval': interval}
+            elif http is not None:
+                check_spec = {'HTTP': http, 'interval': interval}
+            elif ttl is not None:
                 check_spec = {'TTL': ttl}
 
             # Build the payload to send to consul
@@ -221,7 +249,8 @@ class Agent(base.Endpoint):
                 'name': name,
                 'port': port,
                 'address': address,
-                'tags': tags
+                'tags': tags,
+                'EnableTagOverride': enable_tag_override
             }
 
             if check_spec:
@@ -246,7 +275,7 @@ class Agent(base.Endpoint):
             return self._put_no_response_body(['deregister', service_id])
 
     def checks(self):
-        """return the all the checks that are registered with the local agent.
+        """Return the all the checks that are registered with the local agent.
         These checks were either provided through configuration files, or
         added dynamically using the HTTP API. It is important to note that
         the checks known by the agent may be different than those reported
@@ -254,10 +283,10 @@ class Agent(base.Endpoint):
         is no leader elected. The agent performs active anti-entropy, so in
         most situations everything will be in sync within a few seconds.
 
-        :rtype: list
+        :rtype: dict
 
         """
-        return self._get_list(['checks'])
+        return self._get(['checks'])
 
     def force_leave(self, node):
         """Instructs the agent to force a node into the left state. If a node
@@ -283,6 +312,21 @@ class Agent(base.Endpoint):
         query_params = {'wan': 1} if wan else None
         return self._put_no_response_body(['join', address], query_params)
 
+    def maintenance(self, enable=True, reason=None):
+        """Places the agent into or removes the agent from "maintenance mode".
+
+        .. versionadded:: 1.0.0
+
+        :param bool enable: Enable or disable maintenance. Default: `True`
+        :param str reason: The reason for the maintenance
+        :rtype: bool
+
+        """
+        query_params = {'enable': enable}
+        if reason:
+            query_params['reason'] = reason
+        return self._put_no_response_body(['maintenance'], query_params)
+
     def members(self):
         """Returns the members the agent sees in the cluster gossip pool.
         Due to the nature of gossip, this is eventually consistent and the
@@ -294,6 +338,38 @@ class Agent(base.Endpoint):
         """
         return self._get_list(['members'])
 
+    def metrics(self):
+        """Returns agent's metrics for the most recent finished interval
+
+        .. versionadded:: 1.0.0
+
+        :rtype: dict
+
+        """
+        return self._get(['metrics'])
+
+    def monitor(self):
+        """Iterator over logs from the local agent.
+
+        .. versionadded:: 1.0.0
+
+        :rtype: iterator
+
+        """
+        for line in self._get_stream(['monitor']):
+            yield line
+
+    def reload(self):
+        """This endpoint instructs the agent to reload its configuration.
+        Any errors encountered during this process are returned.
+
+        .. versionadded:: 1.0.0
+
+        :rtype: list
+
+        """
+        return self._put_response_body(['reload']) or None
+
     def services(self):
         """return the all the services that are registered with the local
         agent. These services were either provided through configuration
@@ -304,16 +380,43 @@ class Agent(base.Endpoint):
         anti-entropy, so in most situations everything will be in sync
         within a few seconds.
 
-        :rtype: list
+        :rtype: dict
 
         """
-        return self._get_list(['services'])
+        return self._get(['services'])
 
     def self(self):
         """ This endpoint is used to return the configuration and member
         information of the local agent under the Config key.
 
-        :rtype: list
+        :rtype: dict
 
         """
-        return self._get_list(['self'])
+        return self._get(['self'])
+
+    def token(self, name, value):
+        """Update the ACL tokens currently in use by the agent. It can be used
+        to introduce ACL tokens to the agent for the first time, or to update
+        tokens that were initially loaded from the agent's configuration.
+        Tokens are not persisted, so will need to be updated again if the agent
+        is restarted.
+
+        Valid names:
+
+          - ``acl_token``
+          - ``acl_agent_token``
+          - ``acl_agent_master_token``
+          - ``acl_replication_token``
+
+        .. versionadded:: 1.0.0
+
+        :param str name: One of the valid token names.
+        :param str value: The new token value
+        :rtype: bool
+        :raises: ValueError
+
+        """
+        if name not in _TOKENS:
+            raise ValueError('Invalid token name: {}'.format(name))
+        return self._put_no_response_body(
+            ['token', name], {}, {'Token': value})

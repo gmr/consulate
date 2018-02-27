@@ -44,7 +44,7 @@ def response_ok(response, raise_on_404=True):
     if response.status_code == 200:
         return True
     elif response.status_code == 400:
-        raise exceptions.RequestError(
+        raise exceptions.ClientError(
             response.body.decode('utf-8')
             if hasattr(response, 'body') else str(response.status_code))
     elif response.status_code == 401:
