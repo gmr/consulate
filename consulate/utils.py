@@ -8,6 +8,8 @@ try:
 except ImportError:
     from urllib import quote
 
+from consulate import exceptions
+
 PYTHON3 = True if sys.version_info > (3, 0, 0) else False
 
 
@@ -36,3 +38,29 @@ def maybe_encode(value):
         return value.encode('utf-8')
     except AttributeError:
         return value
+
+
+def response_ok(response, raise_on_404=True):
+    if response.status_code == 200:
+        return True
+    elif response.status_code == 400:
+        raise exceptions.RequestError(
+            response.body.decode('utf-8')
+            if hasattr(response, 'body') else str(response.status_code))
+    elif response.status_code == 401:
+        raise exceptions.ACLDisabled(
+            response.body.decode('utf-8')
+            if hasattr(response, 'body') else str(response.status_code))
+    elif response.status_code == 403:
+        raise exceptions.Forbidden(
+            response.body.decode('utf-8')
+            if hasattr(response, 'body') else str(response.status_code))
+    elif response.status_code == 404 and raise_on_404:
+        raise exceptions.NotFound(
+            response.body.decode('utf-8')
+            if hasattr(response, 'body') else str(response.status_code))
+    elif response.status_code == 500:
+        raise exceptions.ServerError(
+            response.body.decode('utf-8')
+            if hasattr(response, 'body') else str(response.status_code))
+    return False
