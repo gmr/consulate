@@ -4,15 +4,17 @@ Version History
   - Breaking Changes
     - Removed support for Python 2.6 which has been EOLed since 2013
     - Removed the deprecated (since 0.3) `consulate.Session` handle
+    - Changed :meth:`~consulate.Consul.agent.check.register` to match the new API in Consul
     - Changed :meth:`~consulate.Consul.agent.checks` to return a :data:`dict` instead of a :data:`list`.
     - Changed :meth:`~consulate.Consul.agent.services` to return a :data:`dict` instead of a :data:`list`.
-    - Renamed the ``check`` argument to :meth:`~consulate.Consul.agent.service.register` to ``script``.
-    - Renamed the ``httpcheck`` argument to :meth:`~consulate.Consul.agent.service.register` to ``http``.
+    - Changed :meth:`~consulate.Consul.agent.service.register` to match the new API in Consul and checks are now passed
+        in as :class:`consulate.models.agent.Check` instances.
   - Other Changes:
     - Added :meth:`~consulate.Consul.agent.maintenance`, :meth:`~consulate.Consul.agent.metrics`,
       :meth:`~consulate.Consul.agent.monitor`, :meth:`~consulate.Consul.agent.reload`,
       :meth:`~consulate.Consul.agent.self`, and :meth:`~consulate.Consul.agent.token`
     - Added :meth:`~consulate.Consul.acl.bootstrap` and  :meth:`~consulate.Consul.acl.replication`
+    - Added :meth:`~consulate.Consul.agent.service.maintenance` (#107) - `Dj <https://github.com/Beahmer89>_`
     - Fixed run_once wrong args + subprocess parsing (#65) - Anthony Scalisi
     - Fixed :meth:`~consulate.Consul.catalog.register` and :meth:`~consulate.Consul.catalog.deregister` (#59)
     - Add support for ``flags``, ``cas``, and ``value`` in :meth:`Consulate.kv.acquire_lock` (#63)

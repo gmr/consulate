@@ -3,6 +3,7 @@ Consul Agent Endpoint Access
 
 """
 from consulate.api import base
+from consulate.models import agent as models
 
 _TOKENS = [
     'acl_token',
@@ -10,35 +11,6 @@ _TOKENS = [
     'acl_agent_master_token',
     'acl_replication_token'
 ]
-
-
-def _validate_check(script, http, interval, ttl):
-    """Validate the check arguments passed into check or service creation.
-
-    :param script: The optional script to run in the check
-    :type script: str or None
-    :param http: The optional HTTP endpoint to use in the check
-    :type http: str or None
-    :param interval: The optional check interval to specify
-    :type interval: int or None
-    :param ttl: The optional TTL interval for the check
-    :type ttl: int or None
-    :raises: ValueError
-
-    """
-    if script is not None and http is not None:
-        raise ValueError('Can not specify script and http in the same check')
-    if (script is not None or http is not None) and ttl is not None:
-        raise ValueError('Can not specify a script or http check and ttl')
-    elif (script or http) and interval is None:
-        raise ValueError(
-            'An interval is required for check scripts and '
-            'http checks.')
-    elif interval is not None and \
-            (not isinstance(interval, int) or interval < 1):
-        raise ValueError('interval must be a positive integer')
-    elif ttl is not None and (not isinstance(ttl, int) or ttl < 1):
-        raise ValueError('ttl must be a positive integer')
 
 
 class Agent(base.Endpoint):
@@ -92,55 +64,74 @@ class Agent(base.Endpoint):
 
         """
 
-        def register(self, name,
-                     script=None,
+        def register(self,
+                     name,
                      check_id=None,
                      interval=None,
-                     ttl=None,
                      notes=None,
-                     http=None):
+                     deregister_critical_service_after=None,
+                     args=None,
+                     docker_container_id=None,
+                     grpc=None,
+                     grpc_use_tls=None,
+                     http=None,
+                     http_method=None,
+                     header=None,
+                     timeout=None,
+                     tls_skip_verify=None,
+                     tcp=None,
+                     ttl=None,
+                     service_id=None,
+                     status=None):
             """Add a new check to the local agent. Checks are either a script
             or TTL type. The agent is responsible for managing the status of
             the check and keeping the Catalog in sync.
 
-            The ``name`` field is mandatory, as is either ``script`` and
-            ``interval``, ``http`` and ``interval`` or ``ttl``.
-            Only one of ``script`` and ``interval``, ``http`` and  ``interval``
-            or ``ttl`` should be provided.  If an ``check_id`` is not
-            provided, it is set to ``name``. You cannot have  duplicate
-            ``check_id`` entries per agent, so it may be necessary to provide
-            a ``check_id``. The ``notes`` field is not used by Consul, and is
-            meant to be  human readable.
+            :param str name:
+            :param str check_id:
+            :param str interval:
+            :param str notes:
+            :param str deregister_critical_service_after:
+            :param str args:
+            :param str docker_container_id:
+            :param str grpc:
+            :param str grpc_use_tls:
+            :param str http:
+            :param str http_method:
+            :param str header:
+            :param str timeout:
+            :param str tls_skip_verify:
+            :param str tcp:
+            :param str ttl:
+            :param str service_id:
+            :param str status:
 
-            If a ``script`` is provided, the check type is a script, and Consul
-            will evaluate the script every ``interval`` to update the status.
-            If a ``http`` URL is provided, Consul will poll the URL every
-            ``interval`` to update the status - only 2xx results are considered
-            healthy.
-            If a ``ttl`` type is used, then the ``ttl`` update APIs must be
-            used to periodically update the state of the check.
-
-            :param str name: The check name
-            :param str http: The URL to poll for health checks
-            :param str script: The path to the script to run
-            :param str check_id: The optional check id
-            :param int interval: The interval to run the check
-            :param int ttl: The ttl to specify for the check
-            :param str notes: Administrative notes.
             :rtype: bool
             :raises: ValueError
 
             """
-            _validate_check(script, http, interval, ttl)
-            return self._put_no_response_body(['register'], None, {
-                'ID': check_id,
-                'Name': name,
-                'Notes': notes,
-                'Script': script,
-                'HTTP': http,
-                'Interval': interval,
-                'TTL': ttl
-            })
+            return self._put_no_response_body(
+                ['register'], None, dict(
+                    models.Check(
+                        name=name,
+                        id=check_id,
+                        interval=interval,
+                        notes=notes,
+                        deregister_critical_service_after=
+                        deregister_critical_service_after,
+                        args=args,
+                        docker_container_id=docker_container_id,
+                        grpc=grpc,
+                        grpc_use_tls=grpc_use_tls,
+                        http=http,
+                        method=http_method,
+                        header=header,
+                        timeout=timeout,
+                        tls_skip_verify=tls_skip_verify,
+                        tcp=tcp,
+                        ttl=ttl,
+                        service_id=service_id,
+                        status=status)))
 
         def deregister(self, check_id):
             """Remove a check from the local agent. The agent will take care
@@ -201,15 +192,14 @@ class Agent(base.Endpoint):
         the HTTP interface.
 
         """
-        def register(self, name,
+        def register(self,
+                     name,
                      service_id=None,
                      address=None,
                      port=None,
                      tags=None,
-                     script=None,
-                     interval=None,
-                     ttl=None,
-                     http=None,
+                     check=None,
+                     checks=None,
                      enable_tag_override=None):
             """Add a new service to the local agent.
 
@@ -218,50 +208,21 @@ class Agent(base.Endpoint):
             :param str address: The service IP address
             :param int port: The service port
             :param list tags: A list of tags for the service
-            :param str script: Optional script to execute to check service
-            :param int interval: The check execution interval
-            :param int ttl: The TTL for external script check pings
-            :param str http: An URL to check every interval
+            :param check: An optional check definition for the service
+            :type check: :class:`consulate.models.agent.Check`
+            :param checks: A list of check definitions for the service
+            :type checks: list([:class:`consulate.models.agent.Check`])
             :param bool enable_tag_override: Toggle the tag override feature
             :rtype: bool
             :raises: ValueError
 
             """
-            # Validate the parameters
-            if port is not None and not isinstance(port, int):
-                raise ValueError('port must be an integer')
-            elif tags is not None and not isinstance(tags, list):
-                raise ValueError('tags must be a list of strings')
-
-            _validate_check(script, http, interval, ttl)
-
-            check_spec = None
-            if script is not None:
-                check_spec = {'script': script, 'interval': interval}
-            elif http is not None:
-                check_spec = {'HTTP': http, 'interval': interval}
-            elif ttl is not None:
-                check_spec = {'TTL': ttl}
-
-            # Build the payload to send to consul
-            payload = {
-                'id': service_id,
-                'name': name,
-                'port': port,
-                'address': address,
-                'tags': tags,
-                'EnableTagOverride': enable_tag_override
-            }
-
-            if check_spec:
-                payload['check'] = check_spec
-
-            for key in list(payload.keys()):
-                if payload[key] is None:
-                    del payload[key]
-
-            # Register the service
-            return self._put_no_response_body(['register'], None, payload)
+            return self._put_no_response_body(
+                ['register'], None,
+                dict(models.Service(
+                    name=name, id=service_id, address=address, port=port,
+                    tags=tags, check=check, checks=checks,
+                    enable_tag_override=enable_tag_override)))
 
         def deregister(self, service_id):
             """Deregister the service from the local agent. The agent will
