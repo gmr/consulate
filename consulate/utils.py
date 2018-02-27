@@ -1,7 +1,9 @@
+# coding=utf-8
 """
 Misc utility functions and constants
 
 """
+import re
 import sys
 try:
     from urllib.parse import quote
@@ -10,6 +12,7 @@ except ImportError:
 
 from consulate import exceptions
 
+DURATION_PATTERN = re.compile(r'^(?:(?:-|)(?:\d+|\d+\.\d+)(?:µs|ms|s|m|h))+$')
 PYTHON3 = True if sys.version_info > (3, 0, 0) else False
 
 
@@ -41,12 +44,27 @@ def maybe_encode(value):
 
 
 def _response_error(response):
+    """Return the decoded response error or status code if no content exists.
+
+    :param requests.response response: The HTTP response
+    :rtype: str
+
+    """
     return (response.body.decode('utf-8')
             if hasattr(response, 'body') and response.body
             else str(response.status_code))
 
 
 def response_ok(response, raise_on_404=False):
+    """Evaluate the HTTP response and raise the appropriate exception if
+    required.
+
+    :param requests.response response: The HTTP response
+    :param bool raise_on_404: Raise an exception on 404 error
+    :rtype: bool
+    :raises: consulate.exceptions.ConsulateException
+
+    """
     if response.status_code == 200:
         return True
     elif response.status_code == 400:
@@ -60,3 +78,14 @@ def response_ok(response, raise_on_404=False):
     elif response.status_code == 500:
         raise exceptions.ServerError(_response_error(response))
     return False
+
+
+def validate_go_interval(value):
+    """Validate the value passed in returning :data:`True` if it is a Go
+    Duration value.
+
+    :param str value: The string to check
+    :rtype: bool
+
+    """
+    return DURATION_PATTERN.match(value) is not None
