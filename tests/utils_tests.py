@@ -30,3 +30,16 @@ class ValidateGoDurationTestCase(unittest.TestCase):
         for value in {'100', '1 year', '5M', '30S'}:
             print('Testing {}'.format(value))
             self.assertFalse(utils.validate_go_interval(value))
+
+
+class ValidateURLTestCase(unittest.TestCase):
+
+    def test_valid_values(self):
+        for value in {'https://foo', 'http://localhost/bar'}:
+            print('Testing {}'.format(value))
+            self.assertTrue(utils.validate_url(value))
+
+    def test_invalid_values(self):
+        for value in {'localhost', 'a'}:
+            print('Testing {}'.format(value))
+            self.assertFalse(utils.validate_url(value))

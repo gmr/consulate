@@ -5,10 +5,16 @@ Misc utility functions and constants
 """
 import re
 import sys
-try:
+try:  # pylint: disable=import-error
     from urllib.parse import quote
 except ImportError:
     from urllib import quote
+
+try:  # pylint: disable=import-error
+    from urllib import parse as _urlparse
+except ImportError:
+    import urlparse as _urlparse
+
 
 from consulate import exceptions
 
@@ -80,12 +86,26 @@ def response_ok(response, raise_on_404=False):
     return False
 
 
-def validate_go_interval(value):
+def validate_go_interval(value, _model=None):
     """Validate the value passed in returning :data:`True` if it is a Go
     Duration value.
 
     :param str value: The string to check
+    :param consulate.models.base.Model _model: Optional model passed in
     :rtype: bool
 
     """
     return DURATION_PATTERN.match(value) is not None
+
+
+def validate_url(value, _model=None):
+    """Validate that the value passed in is a URL, returning :data:`True` if
+    it is.
+
+    :param str value: The string to check
+    :param consulate.models.base.Model _model: Optional model passed in
+    :rtype: bool
+
+    """
+    parsed = _urlparse.urlparse(value)
+    return parsed.scheme and parsed.netloc
