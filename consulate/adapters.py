@@ -4,15 +4,16 @@ HTTP Client Library Adapters
 """
 import json
 import logging
+import socket
 
 import requests
+import requests.exceptions
 try:
     import requests_unixsocket
 except ImportError:  # pragma: no cover
     requests_unixsocket = None
 
-from consulate import api
-from consulate import utils
+from consulate import api, exceptions, utils
 
 LOGGER = logging.getLogger(__name__)
 
@@ -71,23 +72,51 @@ class Request(object):
         return self._process_response(
             self.session.delete(uri, timeout=self.timeout))
 
-    def get(self, uri):
+    def get(self, uri, timeout=None):
         """Perform a HTTP get
 
         :param src uri: The URL to send the DELETE to
+        :param timeout: How long to wait on the response
+        :type timeout: int or float or None
         :rtype: consulate.api.Response
 
         """
         LOGGER.debug("GET %s", uri)
-        return self._process_response(
-            self.session.get(uri, timeout=self.timeout))
+        try:
+            return self._process_response(
+                self.session.get(uri, timeout=timeout or self.timeout))
+        except (requests.exceptions.ConnectionError,
+                OSError, socket.error) as err:
+            raise exceptions.RequestError(str(err))
+
+    def get_stream(self, uri):
+        """Perform a HTTP get that returns the response as a stream.
+
+        :param src uri: The URL to send the DELETE to
+        :rtype: iterator
+
+        """
+        LOGGER.debug("GET Stream from %s", uri)
+        try:
+            response = self.session.get(uri, stream=True)
+        except (requests.exceptions.ConnectionError,
+                OSError, socket.error) as err:
+            raise exceptions.RequestError(str(err))
+        if response.encoding is None:
+            response.encoding = 'utf-8'
+        if utils.response_ok(response):
+            for line in response.iter_lines():
+                if line:
+                    yield line.decode('utf-8')
 
     @prepare_data
-    def put(self, uri, data=None):
+    def put(self, uri, data=None, timeout=None):
         """Perform a HTTP put
 
         :param src uri: The URL to send the DELETE to
         :param str data: The PUT data
+        :param timeout: How long to wait on the response
+        :type timeout: int or float or None
         :rtype: consulate.api.Response
 
         """
@@ -96,9 +125,14 @@ class Request(object):
             'Content-Type': CONTENT_FORM
             if utils.is_string(data) else CONTENT_JSON
         }
-        return self._process_response(
-            self.session.put(
-                uri, data=data, headers=headers, timeout=self.timeout))
+        try:
+            return self._process_response(
+                self.session.put(
+                    uri, data=data, headers=headers,
+                    timeout=timeout or self.timeout))
+        except (requests.exceptions.ConnectionError,
+                OSError, socket.error) as err:
+            raise exceptions.RequestError(str(err))
 
     @staticmethod
     def _process_response(response):
@@ -109,8 +143,12 @@ class Request(object):
         :rtype: consulate.api.Response
 
         """
-        return api.Response(
-            response.status_code, response.content, response.headers)
+        try:
+            return api.Response(
+                response.status_code, response.content, response.headers)
+        except (requests.exceptions.ConnectionError,
+                OSError, socket.error) as err:
+            raise exceptions.RequestError(str(err))
 
 
 class UnixSocketRequest(Request):

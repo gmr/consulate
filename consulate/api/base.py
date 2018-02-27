@@ -51,22 +51,22 @@ class Endpoint(object):
                                         urlencode(query_params))
         return '{0}/{1}'.format(self._base_uri, path)
 
-    def _get(self, params, query_params=None, raise_on_404=False):
+    def _get(self, params, query_params=None, raise_on_404=False,
+             timeout=None):
         """Perform a GET request
 
         :param list params: List of path parts
         :param dict query_params: Build query parameters
+        :param timeout: How long to wait on the request for
+        :type timeout: int or float or None
 
         """
-        response = self._adapter.get(self._build_uri(params, query_params))
-        if response.status_code == 200:
+        response = self._adapter.get(
+            self._build_uri(params, query_params), timeout=timeout)
+        if not response:
+            print(response)
+        if utils.response_ok(response, raise_on_404):
             return response.body
-        elif response.status_code == 401:
-            raise exceptions.ACLDisabled(response.body)
-        elif response.status_code == 403:
-            raise exceptions.Forbidden(response.body)
-        elif response.status_code == 404 and raise_on_404:
-            raise exceptions.NotFound(response.body)
         return []
 
     def _get_list(self, params, query_params=None):
@@ -81,20 +81,36 @@ class Endpoint(object):
             return [result]
         return result
 
+    def _get_stream(self, params, query_params=None):
+        """Return a list queried from Consul
+
+        :param list params: List of path parts
+        :param dict query_params: Build query parameters
+        :rtype: iterator
+
+        """
+        for line in self._adapter.get_stream(
+                self._build_uri(params, query_params)):
+            yield line
+
     def _get_no_response_body(self, url_parts, query=None):
-        return self._adapter.get(self._build_uri(url_parts,
-                                                 query)).status_code == 200
+        return utils.response_ok(
+            self._adapter.get(self._build_uri(url_parts, query)))
 
     def _get_response_body(self, url_parts, query=None):
-        return self._adapter.get(self._build_uri(url_parts, query)).body
+        response = self._adapter.get(self._build_uri(url_parts, query))
+        if utils.response_ok(response):
+            return response.body
 
     def _put_no_response_body(self, url_parts, query=None, payload=None):
-        return self._adapter.put(self._build_uri(url_parts, query),
-                                 payload).status_code == 200
+        return utils.response_ok(
+            self._adapter.put(self._build_uri(url_parts, query), payload))
 
     def _put_response_body(self, url_parts, query=None, payload=None):
-        return self._adapter.put(self._build_uri(url_parts, query),
-                                 payload).body
+        response = self._adapter.put(
+            self._build_uri(url_parts, query), payload)
+        if utils.response_ok(response):
+            return response.body
 
 
 class Response(object):
