@@ -4,5 +4,6 @@
   "bootstrap": true,
   "data_dir": "/tmp/consul",
   "datacenter": "test",
-  "server": true
+  "server": true,
+  "enable_script_checks": true
 }
