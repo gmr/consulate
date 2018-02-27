@@ -40,27 +40,23 @@ def maybe_encode(value):
         return value
 
 
-def response_ok(response, raise_on_404=True):
+def _response_error(response):
+    return (response.body.decode('utf-8')
+            if hasattr(response, 'body') and response.body
+            else str(response.status_code))
+
+
+def response_ok(response, raise_on_404=False):
     if response.status_code == 200:
         return True
     elif response.status_code == 400:
-        raise exceptions.ClientError(
-            response.body.decode('utf-8')
-            if hasattr(response, 'body') else str(response.status_code))
+        raise exceptions.ClientError(_response_error(response))
     elif response.status_code == 401:
-        raise exceptions.ACLDisabled(
-            response.body.decode('utf-8')
-            if hasattr(response, 'body') else str(response.status_code))
+        raise exceptions.ACLDisabled(_response_error(response))
     elif response.status_code == 403:
-        raise exceptions.Forbidden(
-            response.body.decode('utf-8')
-            if hasattr(response, 'body') else str(response.status_code))
+        raise exceptions.Forbidden(_response_error(response))
     elif response.status_code == 404 and raise_on_404:
-        raise exceptions.NotFound(
-            response.body.decode('utf-8')
-            if hasattr(response, 'body') else str(response.status_code))
+        raise exceptions.NotFound(_response_error(response))
     elif response.status_code == 500:
-        raise exceptions.ServerError(
-            response.body.decode('utf-8')
-            if hasattr(response, 'body') else str(response.status_code))
+        raise exceptions.ServerError(_response_error(response))
     return False
