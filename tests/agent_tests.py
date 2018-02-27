@@ -88,6 +88,22 @@ class TestCase(base.TestCase):
         self.assertIn('test-service', self.consul.agent.services())
         self.consul.agent.service.deregister('test-service')
 
+    def test_service_maintenance(self):
+        self.consul.agent.service.register(
+            'test-service', address='10.0.0.1', port=5672, tags=['foo', 'bar'])
+        self.assertIn('test-service', self.consul.agent.services())
+        reason = 'Down for Acceptance'
+        self.consul.agent.service.maintenance('test-service', reason=reason)
+        node_in_maintenance = self.consul.catalog.nodes()[0]['Node']
+        health_check = self.consul.health.node(node_in_maintenance)
+        self.assertEqual(len(health_check), 2)
+        self.assertIn(reason, [check['Notes'] for check in health_check])
+        self.consul.agent.service.maintenance('test-service', enable=False)
+        health_check = self.consul.health.node(node_in_maintenance)
+        self.assertEqual(len(health_check), 1)
+        self.assertNotEqual(reason, health_check[0]['Notes'])
+        self.consul.agent.service.deregister('test-service')
+
     def test_token(self):
         self.assertTrue(
             self.consul.agent.token('acl_replication_token', 'foo'))
