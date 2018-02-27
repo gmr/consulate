@@ -58,12 +58,11 @@ class Endpoint(object):
         :param dict query_params: Build query parameters
         :param timeout: How long to wait on the request for
         :type timeout: int or float or None
+        :rtype: dict or list or None
 
         """
         response = self._adapter.get(
             self._build_uri(params, query_params), timeout=timeout)
-        if not response:
-            print(response)
         if utils.response_ok(response, raise_on_404):
             return response.body
         return []
