@@ -274,6 +274,21 @@ class Agent(base.Endpoint):
             """
             return self._put_no_response_body(['deregister', service_id])
 
+        def maintenance(self, service_id, enable=True, reason=None):
+            """Place given service into "maintenance mode".
+
+            :param str service_id: The id for the service
+            :param bool enable: Enable maintenance mode
+            :param str reason: Reason for putting node in maintenance
+            :rtype: bool
+
+            """
+            query_params = {'enable': enable}
+            if reason:
+                query_params['reason'] = reason
+            return self._put_no_response_body(['maintenance', service_id],
+                                              query_params)
+
     def checks(self):
         """Return the all the checks that are registered with the local agent.
         These checks were either provided through configuration files, or
