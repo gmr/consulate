@@ -55,8 +55,9 @@ ACL_PARSERS = [
 
 KV_PARSERS = [
     ('backup', 'Backup to stdout or a JSON file', [
-        [['key'], {'help': 'The key to use as target to backup a specific key or folder.', 
-                   'nargs':'?'}],
+        [['key'], {'help': 'The key to use as target to backup a '
+                           'specific key or folder.',
+                   'nargs': '?'}],
         [['-b', '--base64'], {'help': 'Base64 encode values',
                               'action': 'store_true'}],
         [['-f', '--file'], {'help': 'JSON file to write instead of stdout',
@@ -64,10 +65,12 @@ KV_PARSERS = [
         [['-p', '--pretty'], {'help': 'pretty-print JSON output',
                               'action': 'store_true'}]]),
     ('restore', 'Restore from stdin or a JSON file', [
-        [['key'], {'help': 'The key as target to restore to a specific key or folder.',
-                   'nargs':'?'}],
-        [['-p', '--prune'], {'help':'Remove entries from consul tree that are not in restore file.',
-                              'action': 'store_true'}],
+        [['key'], {'help': 'The key as target to restore to a specific key '
+                           'or folder.',
+                   'nargs': '?'}],
+        [['-p', '--prune'], {'help': 'Remove entries from consul tree that '
+                                     'are not in restore file.',
+                             'action': 'store_true'}],
         [['-b', '--base64'], {'help': 'Restore from Base64 encode values',
                               'action': 'store_true'}],
         [['-f', '--file'],
@@ -77,8 +80,9 @@ KV_PARSERS = [
          {'help': 'Do not replace existing entries',
           'action': 'store_true'}]]),
     ('ls', 'List all of the keys', [
-        [['key'], {'help': 'The key to use as target to list contents of specific key or folder',
-                   'nargs':'?'}],
+        [['key'], {'help': 'The key to use as target to list contents of '
+                           'specific key or folder',
+                   'nargs': '?'}],
         [['-l', '--long'],
          {'help': 'Long format',
           'action': 'store_true'}]]),
@@ -165,11 +169,11 @@ def add_register_args(parser):
     check.add_argument('path', default=None,
                        help='Path to the script invoked by Consul')
     httpcheck = rsparsers.add_parser('httpcheck',
-                                 help='Define an HTTP-based check')
+                                     help='Define an HTTP-based check')
     httpcheck.add_argument('interval', default=10, type=int,
-                       help='How often to run the check script')
+                           help='How often to run the check script')
     httpcheck.add_argument('url', default=None,
-                       help='HTTP URL to be polled by Consul')
+                           help='HTTP URL to be polled by Consul')
     rsparsers.add_parser('no-check', help='Do not enable service monitoring')
     ttl = rsparsers.add_parser('ttl', help='Define a duration based TTL check')
     ttl.add_argument('duration', type=int, default=10,
@@ -436,7 +440,6 @@ def kv_restore(consul, args):
                 consul.kv.delete(key)
             except exceptions.ConnectionError:
                 connection_error()
-            
 
 
 def kv_rm(consul, args):

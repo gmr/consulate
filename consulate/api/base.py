@@ -9,7 +9,6 @@ try:
 except ImportError:  # pragma: no cover
     from urllib import urlencode  # Python 2
 
-from consulate import exceptions
 from consulate import utils
 
 

@@ -7,7 +7,7 @@ import logging
 import uuid
 
 from consulate.api import base
-from consulate import utils, exceptions
+from consulate import exceptions
 
 LOGGER = logging.getLogger(__name__)
 

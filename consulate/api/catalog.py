@@ -94,7 +94,8 @@ class Catalog(base.Endpoint):
 
         return self._put_response_body(['register'], None, payload)
 
-    def deregister(self, node, datacenter=None, check_id=None, service_id=None):
+    def deregister(self, node, datacenter=None,
+                   check_id=None, service_id=None):
         """Directly remove entries in the catalog. It is usually recommended
         to use the agent local endpoints, as they are simpler and perform
         anti-entropy.
