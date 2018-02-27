@@ -38,9 +38,9 @@ class Model(collections.Iterable):
 
     def __init__(self, **kwargs):
         super(Model, self).__init__()
-        [setattr(self, key, value) for key, value in kwargs.items()]
-        [self._set_default(k) for k in self.__attributes__.keys()
-         if k not in kwargs.keys()]
+        [setattr(self, name, value) for name, value in kwargs.items()]
+        [self._set_default(name) for name in self.__attributes__.keys()
+         if name not in kwargs.keys()]
 
     def __iter__(self):
         """Iterate through the model's key, value pairs.
@@ -68,6 +68,21 @@ class Model(collections.Iterable):
             raise AttributeError('Invalid attribute "{}"'.format(name))
         value = self._validate_value(name, value)
         super(Model, self).__setattr__(name, value)
+
+    def __getattribute__(self, name):
+        """Return the attribute from the model if it is set, otherwise
+        returning the default if one is set.
+
+        :param str name: The attribute name
+        :rtype: mixed
+
+        """
+        try:
+            return super(Model, self).__getattribute__(name)
+        except AttributeError:
+            if name in self.__attributes__:
+                return self.__attributes__[name].get('default', None)
+            raise
 
     def _maybe_cast_value(self, name):
         """Return the attribute value, possibly cast to a different type if
@@ -123,28 +138,29 @@ class Model(collections.Iterable):
         :raises: ValueError
 
         """
-        if value is None and self._required_attr(name):
-            raise ValueError('Attribute "{}" is required'.format(name))
+        if value is None:
+            if self._required_attr(name):
+                raise ValueError('Attribute "{}" is required'.format(name))
+            return
 
-        if value is not None:
-            if not isinstance(value, self.__attributes__[name].get('type')):
-                cast_from = self.__attributes__[name].get('cast_from')
-                if cast_from and isinstance(value, cast_from):
-                    value = self.__attributes__[name]['type'](value)
-                else:
-                    raise TypeError(
-                        'Attribute "{}" must be of type {} not {}'.format(
-                            name, self.__attributes__[name]['type'].__name__,
-                            value.__class__.__name__))
+        if not isinstance(value, self.__attributes__[name].get('type')):
+            cast_from = self.__attributes__[name].get('cast_from')
+            if cast_from and isinstance(value, cast_from):
+                value = self.__attributes__[name]['type'](value)
+            else:
+                raise TypeError(
+                    'Attribute "{}" must be of type {} not {}'.format(
+                        name, self.__attributes__[name]['type'].__name__,
+                        value.__class__.__name__))
 
-            if self.__attributes__[name].get('enum') \
-                    and value not in self.__attributes__[name]['enum']:
-                raise ValueError(
-                    'Attribute "{}" value {!r} not valid'.format(name, value))
+        if self.__attributes__[name].get('enum') \
+                and value not in self.__attributes__[name]['enum']:
+            raise ValueError(
+                'Attribute "{}" value {!r} not valid'.format(name, value))
 
         validator = self.__attributes__[name].get('validator')
         if callable(validator):
-            if not validator(value):
+            if not validator(value, self):
                 raise ValueError(
                     'Attribute "{}" value {!r} did not validate'.format(
                         name, value))
