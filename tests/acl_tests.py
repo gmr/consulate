@@ -19,9 +19,9 @@ key "foo/" {
 """
 
 
-class TestACL(base.TestCase):
+class TestCase(base.TestCase):
     def setUp(self):
-        super(TestACL, self).setUp()
+        super(TestCase, self).setUp()
         self.acl_list = list()
 
     def tearDown(self):
