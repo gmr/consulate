@@ -78,7 +78,7 @@ class TestCase(base.TestCase):
         self.assertIn(clone_id, [r.get('ID') for r in data])
 
     def test_create_and_update(self):
-        acl_id = self.consul.acl.create(self.uuidv4())
+        acl_id = str(self.consul.acl.create(self.uuidv4()))
         self.consul.acl.update(acl_id, 'Foo')
         data = self.consul.acl.list()
         self.assertIn('Foo', [r.get('Name') for r in data])
