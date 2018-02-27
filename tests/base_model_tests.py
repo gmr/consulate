@@ -21,7 +21,7 @@ class TestModel(base.Model):
             'type': int,
             'default': 0,
             'required': True,
-            'validator': lambda v: v >= 0,
+            'validator': lambda v, _m: v >= 0,
         },
         'name': {
             'key': 'Name',
