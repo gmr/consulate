@@ -5,6 +5,7 @@ import unittest
 import uuid
 
 import consulate
+from consulate import exceptions
 
 with open('testing/consul.json', 'r') as handle:
     CONSUL_CONFIG = json.load(handle)
@@ -43,3 +44,12 @@ class TestCase(unittest.TestCase):
         services = self.consul.agent.services()
         for name in services:
             self.consul.agent.service.deregister(services[name]['ID'])
+
+        for acl in self.consul.acl.list():
+            if acl['ID'] == CONSUL_CONFIG['acl_master_token']:
+                continue
+            try:
+                uuid.UUID(acl['ID'])
+                self.consul.acl.destroy(acl['ID'])
+            except (ValueError, exceptions.ConsulateException):
+                pass
