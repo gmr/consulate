@@ -210,6 +210,18 @@ def add_deregister_args(parser):
     registerp.add_argument('service_id', help='The service registration id')
 
 
+def add_services_args(parser):
+    """Add the services command and arguments.
+
+    :param argparse.Subparser parser: parser
+
+    """
+    # Service registration
+    registerp = parser.add_parser('services',
+                                  help='List services for this node')
+
+    registerp.add_argument('-i', '--indent', type=int, default=None, help='The indent level for output')
+
 def parse_cli_args():
     """Create the argument parser and add the arguments"""
     parser = argparse.ArgumentParser(description='CLI utilities for Consul',
@@ -239,6 +251,7 @@ def parse_cli_args():
     add_register_args(sparser)
     add_deregister_args(sparser)
     add_run_once_args(sparser)
+    add_services_args(sparser)
     return parser.parse_args()
 
 
@@ -570,6 +583,21 @@ def run_once(consul, args):
         on_error(error_msg, error_code)
 
 
+def services(consul, args):
+    """Dump the list of services registered with Consul
+
+    :param consulate.api.Consul consul: The Consul instance
+    :param argparser.namespace args: The cli args
+
+    """
+
+    svcs = consul.agent.services()
+    print(json.dumps(svcs,
+                     sort_keys=True,
+                     indent=args.indent,
+                     separators=(',', ': ')) + '\n')
+
+
 def main():
     """Entrypoint for the consulate cli application"""
     args = parse_cli_args()
@@ -600,5 +628,7 @@ def main():
         register(consul, args)
     elif args.command == 'deregister':
         deregister(consul, args)
+    elif args.command == 'services':
+        services(consul, args)
     elif args.command == 'run_once':
         run_once(consul, args)
