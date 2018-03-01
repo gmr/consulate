@@ -12,7 +12,7 @@ of being accepted.*
 
 Consulate test suite has a couple of requirements:
 
- * Dependencies from [requirements/testing.txt](requirements/testing.txt) are installed
+ * Dependencies from [requires/testing.txt](requires/testing.txt) are installed
  * Local Docker and [docker-compose](https://docs.docker.com/compose/)
 
 ## Installing Dependencies
@@ -28,8 +28,8 @@ source env/bin/activate
 To install the dependencies needed to run Consulate tests, use
 
 ```bash
-pip install -r requirements/testing.txt
-```    
+pip install -r requires/testing.txt
+```
 
 ## Starting the test dependency
 
@@ -38,7 +38,7 @@ Prior to running tests, ensure that Consul is running via Docker using:
 ```bash
 ./bootstrap
 ```
-    
+
 This script uses [docker-compose](https://docs.docker.com/compose/) to launch a Consul server container that is
 pre-configured for the tests. In addition, it configures `build/test-environment` that is loaded
 by the tests with configuration information for connecting to Consul.
@@ -56,5 +56,5 @@ with ``pep8`` style prior to issuing your pull request. In addition, run
 ``flake8`` to look for any style errors prior to submitting your PR.
 
 Both are included when the test requirements are installed. If you are fixing
-formatting for existing code, please separate code-reformatting commits from 
+formatting for existing code, please separate code-reformatting commits from
 functionality changes.

@@ -53,11 +53,12 @@ setting, and deleting keys from the KV database.
       --token TOKEN         ACL token
 
     Commands:
-      {register,deregister,kv,run_once}
+      {register,deregister,kv,run_once,services}
         register            Register a service for this node
         deregister          Deregister a service for this node
         kv                  Key/Value Database Utilities
         run_once            Lock command
+        services            List services for this node
 
     If the CONSUL_RPC_ADDR environment variable is set, it will be parsed and used
     for default values when connecting.
@@ -121,6 +122,17 @@ Locking Operations Help:
     optional arguments:
       -h, --help            show this help message and exit
       -i, --interval        hold the lock for INTERVAL seconds
+
+Service listing Help:
+
+.. code:: bash
+
+    usage: consulate services [-h] [-i INDENT]
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -i INDENT, --indent INDENT
+                            The indent level for output
 
 API Usage Examples
 ------------------
