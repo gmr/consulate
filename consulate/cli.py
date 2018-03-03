@@ -244,6 +244,9 @@ def parse_cli_args():
                         default=None,
                         help='The datacenter to specify for the connection')
     parser.add_argument('--token', default=None, help='ACL token')
+    parser.add_argument('--version', action='version',
+                        version=consulate.__version__,
+                        help='Current consulate version')
 
     sparser = parser.add_subparsers(title='Commands', dest='command')
     add_acl_args(sparser)
