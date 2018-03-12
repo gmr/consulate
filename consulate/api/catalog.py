@@ -19,7 +19,8 @@ class Catalog(base.Endpoint):
     def register(self, node, address,
                  datacenter=None,
                  service=None,
-                 check=None):
+                 check=None,
+                 node_meta=None):
         """A a low level mechanism for directly registering or updating
         entries in the catalog. It is usually recommended to use the agent
         local endpoints, as they are simpler and perform anti-entropy.
@@ -76,11 +77,20 @@ class Catalog(base.Endpoint):
                 'ServiceID': 'redis1'
             }
 
+        Example node_meta dict:
+
+        .. code:: python
+
+            'NodeMeta': {
+                'somekey': 'somevalue'
+            }
+
         :param str node: The node name
         :param str address: The node address
         :param str datacenter: The optional node datacenter
         :param dict service: An optional node service
         :param dict check: An optional node check
+        :param dict node_meta: Optional node metadata
         :rtype: bool
 
         """
@@ -91,6 +101,8 @@ class Catalog(base.Endpoint):
             payload['Service'] = service
         if check:
             payload['Check'] = check
+        if node_meta:
+            payload['NodeMeta'] = node_meta
 
         return self._put_response_body(['register'], None, payload)
 
@@ -141,13 +153,15 @@ class Catalog(base.Endpoint):
         """
         return self._get(['node', node_id])
 
-    def nodes(self):
+    def nodes(self, node_meta=None):
         """Return all of the nodes for the current datacenter.
 
+        :param str node_meta: Desired node metadata
         :rtype: list
 
         """
-        return self._get_list(['nodes'])
+        query_params = {'node-meta': node_meta} if node_meta else {}
+        return self._get_list(['nodes'], query_params)
 
     def service(self, service_id):
         """Return the service details for the given service

@@ -14,14 +14,16 @@ class Health(base.Endpoint):
 
     """
 
-    def checks(self, service_id):
+    def checks(self, service_id, node_meta=None):
         """Return checks for the given service.
 
         :param str service_id: The service ID
+        :param str node_meta: Filter checks using node metadata
         :rtype: list
 
         """
-        return self._get_list(['checks', service_id])
+        query_params = {'node-meta': node_meta} if node_meta else {}
+        return self._get_list(['checks', service_id], query_params)
 
     def node(self, node_id):
         """Return the health info for a given node.
@@ -32,10 +34,11 @@ class Health(base.Endpoint):
         """
         return self._get_list(['node', node_id])
 
-    def service(self, service_id, tag=None, passing=None):
+    def service(self, service_id, tag=None, passing=None, node_meta=None):
         """Returns the nodes and health info of a service
 
         :param str service_id: The service ID
+        :param str node_meta: Filter services using node metadata
         :rtype: list
 
         """
@@ -45,6 +48,8 @@ class Health(base.Endpoint):
             query_params['tag'] = tag
         if passing:
             query_params['passing'] = ''
+        if node_meta:
+            query_params['node-meta'] = node_meta
 
         return self._get_list(['service', service_id],
                               query_params=query_params)
