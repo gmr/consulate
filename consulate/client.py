@@ -54,6 +54,7 @@ class Consul(object):
         self._catalog = api.Catalog(base_uri, self._adapter, datacenter, token)
         self._event = api.Event(base_uri, self._adapter, datacenter, token)
         self._health = api.Health(base_uri, self._adapter, datacenter, token)
+        self._coordinate = api.Coordinate(base_uri, self._adapter, datacenter, token)
         self._kv = api.KV(base_uri, self._adapter, datacenter, token)
         self._session = api.Session(base_uri, self._adapter, datacenter, token)
         self._status = api.Status(base_uri, self._adapter, datacenter, token)
@@ -109,6 +110,16 @@ class Consul(object):
 
         """
         return self._health
+
+    @property
+    def coordinate(self):
+        """Access the Consul
+        `Coordinate <https://www.consul.io/api/coordinate.html#read-lan-coordinates-for-a-node>`_ API
+
+        :rtype: :py:class:`consulate.api.coordinate.Coordinate`
+
+        """
+        return self._coordinate
 
     @property
     def kv(self):

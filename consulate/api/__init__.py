@@ -7,6 +7,7 @@ from consulate.api.agent import Agent
 from consulate.api.catalog import Catalog
 from consulate.api.event import Event
 from consulate.api.health import Health
+from consulate.api.coordinate import Coordinate
 from consulate.api.kv import KV
 from consulate.api.lock import Lock
 from consulate.api.session import Session

@@ -25,11 +25,12 @@ class ConsulTests(unittest.TestCase):
     @mock.patch('consulate.api.Catalog')
     @mock.patch('consulate.api.KV')
     @mock.patch('consulate.api.Health')
+    @mock.patch('consulate.api.Coordinate')
     @mock.patch('consulate.api.ACL')
     @mock.patch('consulate.api.Event')
     @mock.patch('consulate.api.Session')
     @mock.patch('consulate.api.Status')
-    def setUp(self, status, session, event, acl, health, kv, catalog, agent,
+    def setUp(self, status, session, event, acl, health, coordinate, kv, catalog, agent,
               adapter):
         self.host = '127.0.0.1'
         self.port = 8500
@@ -43,6 +44,7 @@ class ConsulTests(unittest.TestCase):
         self.event = event
         self.kv = kv
         self.health = health
+        self.coordinate = coordinate
         self.session = session
         self.status = status
 
@@ -93,6 +95,11 @@ class ConsulTests(unittest.TestCase):
             self.health.called_once_with(self.base_uri, self.adapter, self.dc,
                                          self.token))
 
+    def test_coordinate_initialization(self):
+        self.assertTrue(
+            self.coordinate.called_once_with(self.base_uri, self.adapter, self.dc,
+                                         self.token))
+
     def test_session_initialization(self):
         self.assertTrue(
             self.session.called_once_with(self.base_uri, self.adapter, self.dc,
@@ -117,6 +124,9 @@ class ConsulTests(unittest.TestCase):
 
     def test_health_property(self):
         self.assertEqual(self.consul.health, self.consul._health)
+
+    def test_coordinate_property(self):
+        self.assertEqual(self.consul.coordinate, self.consul._coordinate)
 
     def test_kv_property(self):
         self.assertEqual(self.consul.kv, self.consul._kv)
