@@ -194,7 +194,7 @@ class Check(base.Model):
 class Service(base.Model):
     """Model for making Check API requests to Consul."""
 
-    __slots__ = ['id', 'name', 'tags', 'address', 'port', 'check',
+    __slots__ = ['id', 'name', 'tags', 'meta', 'address', 'port', 'check',
                  'checks', 'enable_tag_override']
 
     __attributes__ = {
@@ -211,6 +211,13 @@ class Service(base.Model):
             'key': 'Tags',
             'type': list,
             'validator': lambda t, _m: all([isinstance(v, str) for v in t])
+        },
+        'meta': {
+            'key': 'Meta',
+            'type': dict,
+            'validator': lambda h, _m: all(
+                [(isinstance(k, str) and isinstance(v, str))
+                 for k, v in h.items()]),
         },
         'address': {
             'key': 'Address',

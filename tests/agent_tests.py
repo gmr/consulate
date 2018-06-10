@@ -95,13 +95,13 @@ class TestCase(base.TestCase):
 
     def test_service_registration(self):
         self.consul.agent.service.register(
-            'test-service', address='10.0.0.1', port=5672, tags=['foo', 'bar'])
+            'test-service', address='10.0.0.1', port=5672, tags=['foo', 'bar'], meta={'foo' : 'bar' })
         self.assertIn('test-service', self.consul.agent.services())
         self.consul.agent.service.deregister('test-service')
 
     def test_service_maintenance(self):
         self.consul.agent.service.register(
-            'test-service', address='10.0.0.1', port=5672, tags=['foo', 'bar'])
+            'test-service', address='10.0.0.1', port=5672, tags=['foo', 'bar'], meta={'foo' : 'bar' } )
         self.assertIn('test-service', self.consul.agent.services())
         reason = 'Down for Acceptance'
         self.consul.agent.service.maintenance('test-service', reason=reason)

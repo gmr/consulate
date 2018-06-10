@@ -198,6 +198,7 @@ class Agent(base.Endpoint):
                      address=None,
                      port=None,
                      tags=None,
+                     meta=None,
                      check=None,
                      checks=None,
                      enable_tag_override=None):
@@ -208,6 +209,7 @@ class Agent(base.Endpoint):
             :param str address: The service IP address
             :param int port: The service port
             :param list tags: A list of tags for the service
+            :param list meta: A list of KV pairs for the service
             :param check: An optional check definition for the service
             :type check: :class:`consulate.models.agent.Check`
             :param checks: A list of check definitions for the service
@@ -221,7 +223,7 @@ class Agent(base.Endpoint):
                 ['register'], None,
                 dict(models.Service(
                     name=name, id=service_id, address=address, port=port,
-                    tags=tags, check=check, checks=checks,
+                    tags=tags, meta=meta, check=check, checks=checks,
                     enable_tag_override=enable_tag_override)))
 
         def deregister(self, service_id):
