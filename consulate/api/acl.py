@@ -23,7 +23,7 @@ class ACL(base.Endpoint):
         return self._get(["token", "self"])
 
     def list_policies(self):
-        """ List all policies available in cluster
+        """ List all ACL policies available in cluster
         """
         return self._get(["policies"])
 
@@ -65,6 +65,23 @@ class ACL(base.Endpoint):
         """
 
         return self._delete(["policy", id])
+
+    def list_roles(self):
+        """ List all ACL roles available in cluster
+        """
+        return self._get(["roles"])
+
+    def create_role(self, name, description=None, policies=None, service_identities=None):
+        """ Create an ACL role from a list of policies and or service service_identities.
+        :param str name: The name of the ACL role. Must be unique alphanumeral and dashes and underscores.
+        :param str description: The description of the ACL role.
+        :param PolicyLinks policies: An array of PolicyLink.
+        :param ServiceIdentities service_identities: An array of ServiceIdentity.
+        """
+        return self._put_response_body(["role"], {}, dict(
+            model.ACLPolicy(name=name, description=description,
+                            policies=policies, service_identities=service_identities)
+        ))
 
     # NOTE: Everything below here is deprecated post consul-1.4.0.
 

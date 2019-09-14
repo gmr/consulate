@@ -6,8 +6,7 @@ from consulate.models import base
 
 
 class ACLPolicy(base.Model):
-    """Defins the model used fur an ACL policy.
-    """
+    """Defines the model used fur an ACL policy."""
     __slots__ = ['datacenters', 'description', 'id', 'name', 'rules']
 
     __attributes__ = {
@@ -32,6 +31,31 @@ class ACLPolicy(base.Model):
         'rules': {
             'key': 'Rules',
             'type': str,
+        }
+    }
+
+
+class ACLRole(base.Model):
+    """Defines the model used fur an ACL role."""
+    __slots__ = ['description', 'name', 'policies', 'service_identities']
+
+    __attributes__ = {
+        'description': {
+            'key': 'Description',
+            'type': str,
+        },
+        'name': {
+            'key': 'Name',
+            'type': str,
+            'required': True,
+        },
+        'policies': {
+            'key': 'Policies',
+            'type': list,
+        },
+        "service_identities": {
+            'key': 'ServiceIdentities',
+            'type': list,
         }
     }
 
