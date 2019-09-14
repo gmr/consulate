@@ -48,6 +48,13 @@ class ACL(base.Endpoint):
 
         return self._get(["policy", id])
 
+    def delete_policy(self, id):
+        """ Delete an existing policy with the given ID.
+        :param str id: The ID of the policy.
+        """
+
+        return self._delete(["policy", id])
+
     # NOTE: Everything below here is deprecated post consul-1.4.0.
 
     def bootstrap(self):
