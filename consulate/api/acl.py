@@ -16,6 +16,40 @@ class ACL(base.Endpoint):
     tokens.
 
     """
+
+    def read_self_token(self):
+        """ Retrieve the currently used token.
+        """
+        return self._get(["token", "self"])
+
+    def list_policies(self):
+        """ List all policies available in cluster
+        """
+        return self._get(["policies"])
+
+    def create_policy(self, name, datacenters=None, description=None, rules=None):
+        """ Create policy with name given and rules.
+
+        :param str name: name of the policy
+        :param list() datacenters: A list of datacenters to filter the policy for. Default is an empty list for all datacenters.
+        :param str description: Human readable description of the policy.
+        :param str rules: A json serializable string for the ACL rules to define for the policy.
+        """
+
+        return self._put_response_body(["policy"], {}, dict(
+            model.ACLPolicy(name=name, datacenters=datacenters,
+                            description=description, rules=rules)
+        ))
+
+    def read_policy(self, id):
+        """ Read an existing policy with the given ID.
+        :param str id: The ID of the policy.
+        """
+
+        return self._get(["policy", id])
+
+    # NOTE: Everything below here is deprecated post consul-1.4.0.
+
     def bootstrap(self):
         """This endpoint does a special one-time bootstrap of the ACL system,
         making the first management token if the acl_master_token is not
