@@ -27,6 +27,12 @@ class ACL(base.Endpoint):
         """
         return self._get(["policies"])
 
+    def read_policy(self, id):
+        """ Read an existing policy with the given ID.
+        :param str id: The ID of the policy.
+        """
+        return self._get(["policy", id])
+
     def create_policy(self, name, datacenters=None, description=None, rules=None):
         """ Create policy with name given and rules.
 
@@ -35,18 +41,23 @@ class ACL(base.Endpoint):
         :param str description: Human readable description of the policy.
         :param str rules: A json serializable string for the ACL rules to define for the policy.
         """
-
         return self._put_response_body(["policy"], {}, dict(
             model.ACLPolicy(name=name, datacenters=datacenters,
                             description=description, rules=rules)
         ))
 
-    def read_policy(self, id):
-        """ Read an existing policy with the given ID.
-        :param str id: The ID of the policy.
+    def update_policy(self, id, datacenters=None, description=None, name=None, rules=None):
+        """ Update policy with id given.
+        :param str id: A UUID for the policy to update.
+        :param list() datacenters: A list of datacenters to filter the policy for. Default is an empty list for all datacenters.
+        :param str description: Human readable description of the policy.
+        :param str name: name of the policy
+        :param str rules: A json serializable string for the ACL rules to define for the policy.
         """
-
-        return self._get(["policy", id])
+        return self._put_response_body(["policy", id], {}, dict(
+            model.ACLPolicy(name=name, datacenters=datacenters,
+                            description=description, rules=rules)
+        ))
 
     def delete_policy(self, id):
         """ Delete an existing policy with the given ID.
