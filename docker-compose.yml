@@ -1,7 +1,7 @@
 %YAML 1.2
 ---
 consul:
-  image: consul:1.0.6
+  image: consul:1.6.0
   ports:
     - 8500
   volumes:

@@ -33,7 +33,7 @@ class TestCase(unittest.TestCase):
         self.consul = consulate.Consul(
             host=os.environ['CONSUL_HOST'],
             port=os.environ['CONSUL_PORT'],
-            token=CONSUL_CONFIG['acl_master_token'])
+            token=CONSUL_CONFIG['acl']['tokens']['master'])
         self.forbidden_consul = consulate.Consul(
             host=os.environ['CONSUL_HOST'],
             port=os.environ['CONSUL_PORT'],
@@ -53,7 +53,7 @@ class TestCase(unittest.TestCase):
             self.consul.agent.service.deregister(services[name]['ID'])
 
         for acl in self.consul.acl.list():
-            if acl['ID'] == CONSUL_CONFIG['acl_master_token']:
+            if acl['ID'] == CONSUL_CONFIG['acl']['tokens']['master']:
                 continue
             try:
                 uuid.UUID(acl['ID'])
