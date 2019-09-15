@@ -18,41 +18,51 @@ class ACL(base.Endpoint):
     """
 
     def read_self_token(self):
-        """ Retrieve the currently used token.
+        """Retrieve the currently used token.
+        :param rtype: dict
+
         """
         return self._get(["token", "self"])
 
     def list_policies(self):
-        """ List all ACL policies available in cluster
+        """List all ACL policies available in cluster.
+        :param rtype: list
+
         """
         return self._get(["policies"])
 
     def read_policy(self, id):
-        """ Read an existing policy with the given ID.
+        """Read an existing policy with the given ID.
         :param str id: The ID of the policy.
+        :param rtype: dict
+
         """
         return self._get(["policy", id])
 
     def create_policy(self, name, datacenters=None, description=None, rules=None):
-        """ Create policy with name given and rules.
+        """Create policy with name given and rules.
 
         :param str name: name of the policy
         :param list() datacenters: A list of datacenters to filter the policy for. Default is an empty list for all datacenters.
         :param str description: Human readable description of the policy.
         :param str rules: A json serializable string for the ACL rules to define for the policy.
+        :param rtype: dict
+
         """
         return self._put_response_body(["policy"], {}, dict(
             model.ACLPolicy(name=name, datacenters=datacenters,
                             description=description, rules=rules)
         ))
 
-    def update_policy(self, id, datacenters=None, description=None, name=None, rules=None):
-        """ Update policy with id given.
+    def update_policy(self, id, name, datacenters=None, description=None, rules=None):
+        """Update policy with id given.
         :param str id: A UUID for the policy to update.
+        :param str name: name of the policy
         :param list() datacenters: A list of datacenters to filter the policy for. Default is an empty list for all datacenters.
         :param str description: Human readable description of the policy.
-        :param str name: name of the policy
         :param str rules: A json serializable string for the ACL rules to define for the policy.
+        :param rtype: dict
+
         """
         return self._put_response_body(["policy", id], {}, dict(
             model.ACLPolicy(name=name, datacenters=datacenters,
@@ -60,23 +70,29 @@ class ACL(base.Endpoint):
         ))
 
     def delete_policy(self, id):
-        """ Delete an existing policy with the given ID.
+        """Delete an existing policy with the given ID.
         :param str id: The ID of the policy.
+        :param rtype: dict
+
         """
 
         return self._delete(["policy", id])
 
     def list_roles(self):
-        """ List all ACL roles available in cluster
+        """List all ACL roles available in cluster
+        :param rtype: list
+
         """
         return self._get(["roles"])
 
     def create_role(self, name, description=None, policies=None, service_identities=None):
-        """ Create an ACL role from a list of policies and or service service_identities.
+        """Create an ACL role from a list of policies and or service service_identities.
         :param str name: The name of the ACL role. Must be unique alphanumeral and dashes and underscores.
         :param str description: The description of the ACL role.
         :param PolicyLinks policies: An array of PolicyLink.
         :param ServiceIdentities service_identities: An array of ServiceIdentity.
+        :param rtype: dict
+
         """
         return self._put_response_body(["role"], {}, dict(
             model.ACLPolicy(name=name, description=description,
