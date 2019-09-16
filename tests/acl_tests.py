@@ -30,13 +30,11 @@ key "foo/" {
 
 
 class TestCase(base.TestCase):
-
     @staticmethod
     def uuidv4():
         return str(uuid.uuid4())
 
     def test_bootstrap_request_exception(self):
-
         @httmock.all_requests
         def response_content(_url_unused, _request):
             raise OSError
@@ -50,8 +48,8 @@ class TestCase(base.TestCase):
 
         @httmock.all_requests
         def response_content(_url_unused, request):
-            return httmock.response(
-                200, json.dumps({'ID': expectation}), {}, None, 0, request)
+            return httmock.response(200, json.dumps({'ID': expectation}), {},
+                                    None, 0, request)
 
         with httmock.HTTMock(response_content):
             result = self.consul.acl.bootstrap()
@@ -133,8 +131,9 @@ class TestCase(base.TestCase):
         self.assertIn(acl_id, [r.get('ID') for r in data])
 
     def test_update_with_rules(self):
-        acl_id = self.consul.acl.update(
-            self.uuidv4(), name='test', rules=ACL_OLD_RULES)
+        acl_id = self.consul.acl.update(self.uuidv4(),
+                                        name='test',
+                                        rules=ACL_OLD_RULES)
         value = self.consul.acl.info(acl_id)
         self.assertEqual(value['Rules'], ACL_OLD_RULES)
 
@@ -145,19 +144,19 @@ class TestCase(base.TestCase):
     # NOTE: Everything above here is deprecated post consul-1.4.0
 
     def test_create_policy(self):
-        result = self.consul.acl.create_policy(
-            "unittest_create_policy", rules=ACL_NEW_RULES)
+        result = self.consul.acl.create_policy("unittest_create_policy",
+                                               rules=ACL_NEW_RULES)
         self.assertEqual(result['Rules'], ACL_NEW_RULES)
 
     def test_create_and_read_policy(self):
-        value = self.consul.acl.create_policy(
-            "unittest_read_policy", rules=ACL_NEW_RULES)
+        value = self.consul.acl.create_policy("unittest_read_policy",
+                                              rules=ACL_NEW_RULES)
         result = self.consul.acl.read_policy(value["ID"])
         self.assertEqual(result['Rules'], ACL_NEW_RULES)
 
     def test_create_and_delete_policy(self):
-        value = self.consul.acl.create_policy(
-            "unittest_delete_policy", rules=ACL_NEW_RULES)
+        value = self.consul.acl.create_policy("unittest_delete_policy",
+                                              rules=ACL_NEW_RULES)
         result = self.consul.acl.delete_policy(value["ID"])
         self.assertTrue(result)
 
