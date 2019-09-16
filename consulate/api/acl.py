@@ -237,6 +237,45 @@ class ACL(base.Endpoint):
                                roles=roles,
                                service_identities=service_identities)))
 
+    def update_token(self,
+                     accessor_id,
+                     description=None,
+                     expiration_time=None,
+                     expiration_ttl=None,
+                     local=False,
+                     policies=None,
+                     roles=None,
+                     secret_id=None,
+                     service_identities=None):
+        """Create a token from the roles, policies, and service identities
+        provided.
+
+        :param str accessor_id: A UUID for accessing the token.
+        :param str description: A human-readable description of the token.
+        :param str expiration_time: The amount of time till the token expires.
+        :param str expiration_ttl: Sets expiration_time to creation time +
+        expiration_ttl value.
+        :param bool local: Whether the token is only locally available in the
+        current datacenter or to all datacenters defined.
+        :param PolicyLinks policies: A PolicyLink array.
+        :param RoleLinks roles: A RoleLink array.
+        :param str secret_id: A UUID for making requests to consul.
+        :param ServiceIdentities service_identities: A ServiceIdentity array.
+        :param rtype: dict
+
+        """
+        return self._put_response_body(
+            ["token", accessor_id], {},
+            dict(
+                model.ACLToken(accessor_id=accessor_id,
+                               description=description,
+                               expiration_time=expiration_time,
+                               expiration_ttl=expiration_ttl,
+                               local=local,
+                               policies=policies,
+                               roles=roles,
+                               service_identities=service_identities)))
+
     def delete_token(self, accessor_id):
         """Delete an existing token with the given AcccessorID.
 
