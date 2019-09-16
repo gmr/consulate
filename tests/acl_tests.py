@@ -206,7 +206,7 @@ class TestCase(base.TestCase):
     def test_create_token(self):
         secret_id = self.uuidv4()
         accessor_id = self.uuidv4()
-        result = self.consul.acl.create_create_token(
+        result = self.consul.acl.create_token(
             accessor_id=accessor_id,
             secret_id=secret_id,
             roles=ROLELINKS_SAMPLE,
@@ -214,3 +214,27 @@ class TestCase(base.TestCase):
             service_identities=SERVICE_IDENTITIES_SAMPLE)
         self.assertEqual(result['AccessorID'], accessor_id)
         self.assertEqual(result['SecretID'], secret_id)
+
+    def test_create_and_read_token(self):
+        secret_id = self.uuidv4()
+        accessor_id = self.uuidv4()
+        value = self.consul.acl.create_token(
+            accessor_id=accessor_id,
+            secret_id=secret_id,
+            roles=ROLELINKS_SAMPLE,
+            policies=POLICYLINKS_SAMPLE,
+            service_identities=SERVICE_IDENTITIES_SAMPLE)
+        result = self.consul.acl.read_token(value["AccessorID"])
+        self.assertEqual(result['AccessorID'], accessor_id)
+
+    def test_create_and_delete_token(self):
+        secret_id = self.uuidv4()
+        accessor_id = self.uuidv4()
+        value = self.consul.acl.create_token(
+            accessor_id=accessor_id,
+            secret_id=secret_id,
+            roles=ROLELINKS_SAMPLE,
+            policies=POLICYLINKS_SAMPLE,
+            service_identities=SERVICE_IDENTITIES_SAMPLE)
+        result = self.consul.acl.delete_token(value["AccessorID"])
+        self.assertTrue(result)

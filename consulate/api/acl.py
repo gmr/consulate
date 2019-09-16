@@ -24,13 +24,6 @@ class ACL(base.Endpoint):
     tokens.
 
     """
-    def read_self_token(self):
-        """Retrieve the currently used token.
-        :param rtype: dict
-
-        """
-        return self._get(["token", "self"])
-
     def list_policies(self):
         """List all ACL policies available in cluster.
         :param rtype: list
@@ -172,6 +165,28 @@ class ACL(base.Endpoint):
         """
         return self._delete(["policy", id])
 
+    def list_tokens(self):
+        """List all ACL tokens available in cluster.
+        :param rtype: list
+
+        """
+        return self._get(["tokens"])
+
+    def read_token(self, accessor_id):
+        """Read an existing token with the given ID.
+        :param str id: The ID of the role.
+        :param rtype: dict
+
+        """
+        return self._get(["token", accessor_id])
+
+    def read_self_token(self):
+        """Retrieve the currently used token.
+        :param rtype: dict
+
+        """
+        return self._get(["token", "self"])
+
     def create_token(self,
                      accessor_id=None,
                      description=None,
@@ -198,7 +213,17 @@ class ACL(base.Endpoint):
         :param rtype: dict
 
         """
-        pass
+        return self._put_response_body(
+            ["token"], {},
+            dict(
+                model.ACLToken(accessor_id=accessor_id,
+                               description=description,
+                               expiration_time=expiration_time,
+                               expiration_ttl=expiration_ttl,
+                               local=local,
+                               policies=policies,
+                               roles=roles,
+                               service_identities=service_identities)))
 
     # NOTE: Everything below here is deprecated post consul-1.4.0.
 
