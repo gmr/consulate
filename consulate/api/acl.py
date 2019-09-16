@@ -16,6 +16,8 @@ LOGGER = logging.getLogger(__name__)
 # ServiceIdentities = List[ServiceIdentity]
 # PolicyLink = Dict[str, str]
 # PolicyLinks = List[PolicyLink]
+# RoleLink = Dict[str, str]
+# RoleLinks = List[RoleLink]
 
 
 def __check_policylinks(policies):
@@ -219,6 +221,34 @@ class ACL(base.Endpoint):
 
         """
         return self._delete(["policy", id])
+
+    def create_token(self,
+                     accessor_id=None,
+                     description=None,
+                     expiration_time=None,
+                     expiration_ttl=None,
+                     local=False,
+                     policies=None,
+                     roles=None,
+                     secret_id=None,
+                     service_identities=None):
+        """Create a token from the roles, policies, and service identities
+        provided.
+        :param str accessor_id: A UUID for accessing the token.
+        :param str description: A human-readable description of the token.
+        :param str expiration_time: The amount of time till the token expires.
+        :param str expiration_ttl: Sets expiration_time to creation time +
+        expiration_ttl value.
+        :param bool local: Whether the token is only locally available in the
+        current datacenter or to all datacenters defined.
+        :param PolicyLinks policies: A PolicyLink array.
+        :param RoleLinks roles: A RoleLink array.
+        :param str secret_id: A UUID for making requests to consul.
+        :param ServiceIdentities service_identities: A ServiceIdentity array.
+        :param rtype: dict
+
+        """
+        pass
 
     # NOTE: Everything below here is deprecated post consul-1.4.0.
 

@@ -34,6 +34,8 @@ POLICYLINKS_SAMPLE = [
 
 SERVICE_IDENTITIES_SAMPLE = [dict(ServiceName="db", Datacenters=["dc1"])]
 
+ROLELINKS_SAMPLE = [dict(Name="some_role_name")]
+
 
 class TestCase(base.TestCase):
     @staticmethod
@@ -200,3 +202,15 @@ class TestCase(base.TestCase):
         with httmock.HTTMock(base.raise_oserror):
             with self.assertRaises(exceptions.RequestError):
                 self.consul.acl.list_roles()
+
+    def test_create_token(self):
+        secret_id = self.uuidv4()
+        accessor_id = self.uuidv4()
+        result = self.consul.acl.create_create_token(
+            accessor_id=accessor_id,
+            secret_id=secret_id,
+            roles=ROLELINKS_SAMPLE,
+            policies=POLICYLINKS_SAMPLE,
+            service_identities=SERVICE_IDENTITIES_SAMPLE)
+        self.assertEqual(result['AccessorID'], accessor_id)
+        self.assertEqual(result['SecretID'], secret_id)

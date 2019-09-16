@@ -6,7 +6,7 @@ from consulate.models import base
 
 
 class ACLPolicy(base.Model):
-    """Defines the model used fur an ACL policy."""
+    """Defines the model used for an ACL policy."""
     __slots__ = ['datacenters', 'description', 'id', 'name', 'rules']
 
     __attributes__ = {
@@ -36,7 +36,7 @@ class ACLPolicy(base.Model):
 
 
 class ACLRole(base.Model):
-    """Defines the model used fur an ACL role."""
+    """Defines the model used for an ACL role."""
     __slots__ = ['description', 'name', 'policies', 'service_identities']
 
     __attributes__ = {
@@ -58,6 +58,18 @@ class ACLRole(base.Model):
             'type': list,
         }
     }
+
+
+class ACLToken(base.Model):
+    """Defines the model used for an ACL token."""
+    __slots__ = [
+        'accessor_id', 'description', 'expiration_time', 'expiration_ttl',
+        'local', 'policies', 'roles', 'secret_id', 'service_identities'
+    ]
+    pass
+
+
+# NOTE: Everything below here is deprecated post consul-1.4.0.
 
 
 class ACL(base.Model):
