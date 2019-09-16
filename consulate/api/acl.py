@@ -26,6 +26,7 @@ class ACL(base.Endpoint):
     """
     def list_policies(self):
         """List all ACL policies available in cluster.
+
         :param rtype: list
 
         """
@@ -33,6 +34,7 @@ class ACL(base.Endpoint):
 
     def read_policy(self, id):
         """Read an existing policy with the given ID.
+
         :param str id: The ID of the policy.
         :param rtype: dict
 
@@ -68,6 +70,7 @@ class ACL(base.Endpoint):
                       description=None,
                       rules=None):
         """Update policy with id given.
+
         :param str id: A UUID for the policy to update.
         :param str name: name of the policy
         :param list() datacenters: A list of datacenters to filter on policy.
@@ -86,6 +89,7 @@ class ACL(base.Endpoint):
 
     def delete_policy(self, id):
         """Delete an existing policy with the given ID.
+
         :param str id: The ID of the policy.
         :param rtype: bool
 
@@ -101,6 +105,7 @@ class ACL(base.Endpoint):
 
     def read_role(self, id=None, name=None):
         """Read an existing role with the given ID or Name.
+
         :param str id: The ID of the role.
         :param str name: The name of the role.
         :param rtype: dict
@@ -119,6 +124,7 @@ class ACL(base.Endpoint):
                     policies=None,
                     service_identities=None):
         """Create an ACL role from a list of policies or service identities.
+
         :param str name: The name of the ACL role. Must be unique.
         :param str description: The description of the ACL role.
         :param PolicyLinks policies: An array of PolicyLink.
@@ -141,6 +147,7 @@ class ACL(base.Endpoint):
                     policies=None,
                     service_identities=None):
         """Update role with id given.
+
         :param str id: A UUID for the policy to update.
         :param str name: name of the policy
         :param list() datacenters: A list of datacenters to filter on policy.
@@ -159,6 +166,7 @@ class ACL(base.Endpoint):
 
     def delete_role(self, id):
         """Delete an existing role with the given ID.
+
         :param str id: The ID of the role.
         :param rtype: bool
 
@@ -167,6 +175,7 @@ class ACL(base.Endpoint):
 
     def list_tokens(self):
         """List all ACL tokens available in cluster.
+
         :param rtype: list
 
         """
@@ -174,6 +183,7 @@ class ACL(base.Endpoint):
 
     def read_token(self, accessor_id):
         """Read an existing token with the given ID.
+
         :param str id: The ID of the role.
         :param rtype: dict
 
@@ -182,6 +192,7 @@ class ACL(base.Endpoint):
 
     def read_self_token(self):
         """Retrieve the currently used token.
+
         :param rtype: dict
 
         """
@@ -199,6 +210,7 @@ class ACL(base.Endpoint):
                      service_identities=None):
         """Create a token from the roles, policies, and service identities
         provided.
+
         :param str accessor_id: A UUID for accessing the token.
         :param str description: A human-readable description of the token.
         :param str expiration_time: The amount of time till the token expires.
@@ -224,6 +236,15 @@ class ACL(base.Endpoint):
                                policies=policies,
                                roles=roles,
                                service_identities=service_identities)))
+
+    def delete_token(self, accessor_id):
+        """Delete an existing token with the given AcccessorID.
+
+        :param str id: The AccessorID of the token.
+        :param rtype: bool
+
+        """
+        return self._delete(["token", accessor_id])
 
     # NOTE: Everything below here is deprecated post consul-1.4.0.
 

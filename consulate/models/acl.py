@@ -7,6 +7,7 @@ from consulate.models import base
 
 def _validate_link_array(value, model):
     """ Validate the policies or roles links are formatted correctly.
+
     :param list(dict()) value: An array of PolicyLink or RoleLink.
     :param rtype: bool
     :param consulate.models.agent.Check model: The model instance.
@@ -19,6 +20,7 @@ def _validate_link_array(value, model):
 
 def _validate_service_identities(value, model):
     """ Validate service_identities is formatted correctly.
+
     :param list(dict()) value: A ServiceIdentity list
     :param rtype: bool
 
