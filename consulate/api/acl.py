@@ -276,6 +276,18 @@ class ACL(base.Endpoint):
                                roles=roles,
                                service_identities=service_identities)))
 
+    def clone_token(self, accessor_id, description=None):
+        """Clone a token by the accessor_id.
+
+        :param str accessor_id: A UUID for accessing the token.
+        :param str description: A human-readable description of the token.
+        :param rtype: dict
+
+        """
+        return self._put_response_body(
+            ["token", accessor_id, "clone"], {},
+            dict(model.ACLToken(description=description)))
+
     def delete_token(self, accessor_id):
         """Delete an existing token with the given AcccessorID.
 

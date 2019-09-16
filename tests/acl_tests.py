@@ -270,6 +270,20 @@ class TestCase(base.TestCase):
             value["AccessorID"], policies=POLICYLINKS_UPDATE_SAMPLE)
         self.assertGreater(result["ModifyIndex"], result["CreateIndex"])
 
+    def test_create_and_clone_token(self):
+        secret_id = self.uuidv4()
+        accessor_id = self.uuidv4()
+        clone_description = "clone token of " + accessor_id
+        value = self.consul.acl.create_token(
+            accessor_id=accessor_id,
+            secret_id=secret_id,
+            roles=ROLELINKS_SAMPLE,
+            policies=POLICYLINKS_SAMPLE,
+            service_identities=SERVICE_IDENTITIES_SAMPLE)
+        result = self.consul.acl.clone_token(value["AccessorID"],
+                                             description="clone")
+        self.assertEqual(result["Description"], clone_description)
+
     def test_create_and_delete_token(self):
         secret_id = self.uuidv4()
         accessor_id = self.uuidv4()
