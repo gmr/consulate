@@ -28,6 +28,12 @@ key "foo/" {
 }
 """
 
+POLICYLINKS_SAMPLE = [
+    dict(ID="783beef3-783f-f41f-7422-7087dc272765"),
+]
+
+SERVICE_IDENTITIES_SAMPLE = [dict(ServiceName="db", Datacenters=["dc1"])]
+
 
 class TestCase(base.TestCase):
     @staticmethod
@@ -164,3 +170,33 @@ class TestCase(base.TestCase):
         with httmock.HTTMock(base.raise_oserror):
             with self.assertRaises(exceptions.RequestError):
                 self.consul.acl.list_policies()
+
+    def test_create_role(self):
+        result = self.consul.acl.create_create_role(
+            "unittest_create_role",
+            policies=POLICYLINKS_SAMPLE,
+            service_identities=SERVICE_IDENTITIES_SAMPLE)
+        self.assertEqual(result['Policies'][0]['ID'],
+                         POLICYLINKS_SAMPLE['Policies'][0]['ID'])
+
+    def test_create_and_read_role(self):
+        value = self.consul.acl.create_role(
+            "unittest_read_role",
+            policies=POLICYLINKS_SAMPLE,
+            service_identities=SERVICE_IDENTITIES_SAMPLE)
+        result = self.consul.acl.read_role(value["ID"])
+        self.assertEqual(result['Policies'][0]['ID'],
+                         POLICYLINKS_SAMPLE[0]["ID"])
+
+    def test_create_and_delete_role(self):
+        value = self.consul.acl.create_role(
+            "unittest_delete_role",
+            policies=POLICYLINKS_SAMPLE,
+            service_identities=SERVICE_IDENTITIES_SAMPLE)
+        result = self.consul.acl.delete_role(value["ID"])
+        self.assertTrue(result)
+
+    def test_list_roles_exception(self):
+        with httmock.HTTMock(base.raise_oserror):
+            with self.assertRaises(exceptions.RequestError):
+                self.consul.acl.list_roles()
