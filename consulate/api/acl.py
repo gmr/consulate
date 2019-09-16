@@ -8,8 +8,14 @@ import json
 from consulate.models import acl as model
 from consulate.api import base
 from consulate import exceptions
+# from typing import List, Dict, Union
 
 LOGGER = logging.getLogger(__name__)
+
+# ServiceIdentity = Dict[str, Union[str, List[str]]]
+# ServiceIdentities = List[ServiceIdentity]
+# PolicyLink = Dict[str, str]
+# PolicyLinks = List[PolicyLink]
 
 
 def __check_policylinks(policies):
