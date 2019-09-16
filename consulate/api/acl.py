@@ -3,12 +3,55 @@ Consul ACL Endpoint Access
 
 """
 import logging
+import json
 
 from consulate.models import acl as model
 from consulate.api import base
 from consulate import exceptions
 
 LOGGER = logging.getLogger(__name__)
+
+
+def __check_policylinks(policies):
+    """ Checks if policies is formatted correctly.
+    :param list policies: A list of PolicyLink.
+    :param rtype: bool
+    :raises: consulate.exceptions.ACLFormatError
+
+    """
+    for policy in policies:
+        if not ('ID' in policy or 'Name' in policy):
+            raise exceptions.ACLPolicyFormatError(str(policy))
+
+    return True
+
+
+def __check_service_identities(service_identities):
+    """ Checks if service_identities is formatted correctly.
+    :param list service_identities: A ServiceIdentity list
+    :param rtype: bool
+    :raises: consulate.exceptions.ACLFormatError
+
+    """
+    for service_identity in service_identities:
+        if 'ServiceName' not in service_identity:
+            raise exceptions.ACLPolicyFormatError(str(service_identity))
+
+    return True
+
+
+def __create_json_format(structures, check):
+    """Creates a json string from a structures provided check passes.
+    :param list structure: a PolicyLinks or ServiceIdentities.
+    :param function check: a function to check structure
+    :param rtype: str
+
+    """
+    formatted = None
+    if structures is not None and check(structures):
+        formatted = json.dumps(structures)
+
+    return formatted
 
 
 class ACL(base.Endpoint):
