@@ -16,7 +16,6 @@ class ACL(base.Endpoint):
     tokens.
 
     """
-
     def read_self_token(self):
         """Retrieve the currently used token.
         :param rtype: dict
@@ -39,35 +38,50 @@ class ACL(base.Endpoint):
         """
         return self._get(["policy", id])
 
-    def create_policy(self, name, datacenters=None, description=None, rules=None):
+    def create_policy(self,
+                      name,
+                      datacenters=None,
+                      description=None,
+                      rules=None):
         """Create policy with name given and rules.
 
         :param str name: name of the policy
-        :param list() datacenters: A list of datacenters to filter the policy for. Default is an empty list for all datacenters.
+        :param list() datacenters: A list of datacenters to filter on policy.
         :param str description: Human readable description of the policy.
-        :param str rules: A json serializable string for the ACL rules to define for the policy.
+        :param str rules: A json serializable string for ACL rules.
         :param rtype: dict
 
         """
-        return self._put_response_body(["policy"], {}, dict(
-            model.ACLPolicy(name=name, datacenters=datacenters,
-                            description=description, rules=rules)
-        ))
+        return self._put_response_body(["policy"], {},
+                                       dict(
+                                           model.ACLPolicy(
+                                               name=name,
+                                               datacenters=datacenters,
+                                               description=description,
+                                               rules=rules)))
 
-    def update_policy(self, id, name, datacenters=None, description=None, rules=None):
+    def update_policy(self,
+                      id,
+                      name,
+                      datacenters=None,
+                      description=None,
+                      rules=None):
         """Update policy with id given.
         :param str id: A UUID for the policy to update.
         :param str name: name of the policy
-        :param list() datacenters: A list of datacenters to filter the policy for. Default is an empty list for all datacenters.
+        :param list() datacenters: A list of datacenters to filter on policy.
         :param str description: Human readable description of the policy.
-        :param str rules: A json serializable string for the ACL rules to define for the policy.
+        :param str rules: A json serializable string for ACL rules.
         :param rtype: dict
 
         """
-        return self._put_response_body(["policy", id], {}, dict(
-            model.ACLPolicy(name=name, datacenters=datacenters,
-                            description=description, rules=rules)
-        ))
+        return self._put_response_body(["policy", id], {},
+                                       dict(
+                                           model.ACLPolicy(
+                                               name=name,
+                                               datacenters=datacenters,
+                                               description=description,
+                                               rules=rules)))
 
     def delete_policy(self, id):
         """Delete an existing policy with the given ID.
@@ -85,19 +99,26 @@ class ACL(base.Endpoint):
         """
         return self._get(["roles"])
 
-    def create_role(self, name, description=None, policies=None, service_identities=None):
-        """Create an ACL role from a list of policies and or service service_identities.
-        :param str name: The name of the ACL role. Must be unique alphanumeral and dashes and underscores.
+    def create_role(self,
+                    name,
+                    description=None,
+                    policies=None,
+                    service_identities=None):
+        """Create an ACL role from a list of policies or service identities.
+        :param str name: The name of the ACL role. Must be unique.
         :param str description: The description of the ACL role.
         :param PolicyLinks policies: An array of PolicyLink.
-        :param ServiceIdentities service_identities: An array of ServiceIdentity.
+        :param ServiceIdentities service_identities: A ServiceIdentity array.
         :param rtype: dict
 
         """
-        return self._put_response_body(["role"], {}, dict(
-            model.ACLPolicy(name=name, description=description,
-                            policies=policies, service_identities=service_identities)
-        ))
+        return self._put_response_body(
+            ["role"], {},
+            dict(
+                model.ACLPolicy(name=name,
+                                description=description,
+                                policies=policies,
+                                service_identities=service_identities)))
 
     # NOTE: Everything below here is deprecated post consul-1.4.0.
 
@@ -154,9 +175,11 @@ class ACL(base.Endpoint):
         :raises: consulate.exceptions.Forbidden
 
         """
-        return self._put_response_body(
-            ['create'], {}, dict(model.ACL(
-                name=name, type=acl_type, rules=rules)))['ID']
+        return self._put_response_body(['create'], {},
+                                       dict(
+                                           model.ACL(name=name,
+                                                     type=acl_type,
+                                                     rules=rules)))['ID']
 
     def clone(self, acl_id):
         """Clone an existing ACL returning the new ACL ID
@@ -232,6 +255,9 @@ class ACL(base.Endpoint):
         :raises: consulate.exceptions.Forbidden
 
         """
-        return self._put_response_body(
-            ['update'], {}, dict(model.ACL(
-                id=acl_id, name=name, type=acl_type, rules=rules)))['ID']
+        return self._put_response_body(['update'], {},
+                                       dict(
+                                           model.ACL(id=acl_id,
+                                                     name=name,
+                                                     type=acl_type,
+                                                     rules=rules)))['ID']
