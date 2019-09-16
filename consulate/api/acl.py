@@ -138,7 +138,6 @@ class ACL(base.Endpoint):
         :param rtype: dict
 
         """
-
         return self._delete(["policy", id])
 
     def list_roles(self):
@@ -147,6 +146,20 @@ class ACL(base.Endpoint):
 
         """
         return self._get(["roles"])
+
+    def read_role(self, id=None, name=None):
+        """Read an existing role with the given ID or Name.
+        :param str id: The ID of the role.
+        :param str name: The name of the role.
+        :param rtype: dict
+
+        """
+        if id is not None:
+            return self._get(["role", id])
+        elif name is not None:
+            return self._get(["role", "name", name])
+        else:
+            raise exceptions.NotFound("Either id or name must be specified")
 
     def create_role(self,
                     name,
@@ -161,8 +174,38 @@ class ACL(base.Endpoint):
         :param rtype: dict
 
         """
+        policies = __create_json_format(policies, __check_policylinks)
+        service_identities = __create_json_format(service_identities,
+                                                  __check_service_identities)
+
         return self._put_response_body(
             ["role"], {},
+            dict(
+                model.ACLPolicy(name=name,
+                                description=description,
+                                policies=policies,
+                                service_identities=service_identities)))
+
+    def update_role(self,
+                    id,
+                    name,
+                    description=None,
+                    policies=None,
+                    service_identities=None):
+        """Update role with id given.
+        :param str id: A UUID for the policy to update.
+        :param str name: name of the policy
+        :param list() datacenters: A list of datacenters to filter on policy.
+        :param str description: Human readable description of the policy.
+        :param str rules: A json serializable string for ACL rules.
+        :param rtype: dict
+
+        """
+        policies = __create_json_format(policies, __check_policylinks)
+        service_identities = __create_json_format(service_identities,
+                                                  __check_service_identities)
+        return self._put_response_body(
+            ["role", id], {},
             dict(
                 model.ACLPolicy(name=name,
                                 description=description,
