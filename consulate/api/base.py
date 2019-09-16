@@ -75,13 +75,13 @@ class Endpoint(object):
         """Perform a DELETE request
 
         :param list params: List of path parts
-        :rtype: dict or list or None
+        :rtype: bool
 
         """
         response = self._adapter.delete(self._build_uri(params))
         if utils.response_ok(response, raise_on_404):
             return response.body
-        return []
+        return False
 
     def _get_list(self, params, query_params=None):
         """Return a list queried from Consul
