@@ -135,7 +135,7 @@ class ACL(base.Endpoint):
     def delete_policy(self, id):
         """Delete an existing policy with the given ID.
         :param str id: The ID of the policy.
-        :param rtype: dict
+        :param rtype: bool
 
         """
         return self._delete(["policy", id])
@@ -211,6 +211,14 @@ class ACL(base.Endpoint):
                                 description=description,
                                 policies=policies,
                                 service_identities=service_identities)))
+
+    def delete_role(self, id):
+        """Delete an existing role with the given ID.
+        :param str id: The ID of the role.
+        :param rtype: bool
+
+        """
+        return self._delete(["policy", id])
 
     # NOTE: Everything below here is deprecated post consul-1.4.0.
 
