@@ -135,10 +135,10 @@ class ACL(base.Endpoint):
         return self._put_response_body(
             ["role"], {},
             dict(
-                model.ACLPolicy(name=name,
-                                description=description,
-                                policies=policies,
-                                service_identities=service_identities)))
+                model.ACLRole(name=name,
+                              description=description,
+                              policies=policies,
+                              service_identities=service_identities)))
 
     def update_role(self,
                     id,
@@ -159,10 +159,10 @@ class ACL(base.Endpoint):
         return self._put_response_body(
             ["role", id], {},
             dict(
-                model.ACLPolicy(name=name,
-                                description=description,
-                                policies=policies,
-                                service_identities=service_identities)))
+                model.ACLRole(name=name,
+                              description=description,
+                              policies=policies,
+                              service_identities=service_identities)))
 
     def delete_role(self, id):
         """Delete an existing role with the given ID.

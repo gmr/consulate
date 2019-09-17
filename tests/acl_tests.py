@@ -37,17 +37,17 @@ key "foo/" {
 """
 
 POLICYLINKS_SAMPLE = [
-    dict(ID="783beef3-783f-f41f-7422-7087dc272765"),
+    dict(Name="policylink_sample"),
 ]
 
 POLICYLINKS_UPDATE_SAMPLE = [
-    dict(ID="783beef3-783f-f41f-7422-7087dc272765"),
-    dict(Name="some_policy_name")
+    dict(Name="policylink_sample"),
+    dict(Name="policylink_update_sample")
 ]
 
 SERVICE_IDENTITIES_SAMPLE = [dict(ServiceName="db", Datacenters=["dc1"])]
 
-ROLELINKS_SAMPLE = [dict(Name="some_role_name")]
+ROLELINKS_SAMPLE = [dict(Name="role_sample")]
 
 
 class TestCase(base.TestCase):

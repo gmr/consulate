@@ -8,26 +8,22 @@ from consulate.models import base
 def _validate_link_array(value, model):
     """ Validate the policies or roles links are formatted correctly.
 
-    :param list(dict()) value: An array of PolicyLink or RoleLink.
-    :param rtype: bool
-    :param consulate.models.agent.Check model: The model instance.
+    :param list value: An array of PolicyLink or RoleLink.
     :param rtype: bool
 
     """
-    return all(['ID' in link or 'Name' in link
-                for link in value]) and not model.args
+    return all(['ID' in link or 'Name' in link for link in value])
 
 
 def _validate_service_identities(value, model):
     """ Validate service_identities is formatted correctly.
 
-    :param list(dict()) value: A ServiceIdentity list
+    :param ServiceIdentities value: A ServiceIdentity list
     :param rtype: bool
 
     """
     return all(
-        ['ServiceName' in service_identity
-         for service_identity in value]) and not model.args
+        ['ServiceName' in service_identity for service_identity in value])
 
 
 class ACLPolicy(base.Model):
