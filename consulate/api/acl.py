@@ -235,6 +235,7 @@ class ACL(base.Endpoint):
                                local=local,
                                policies=policies,
                                roles=roles,
+                               secret_id=secret_id,
                                service_identities=service_identities)))
 
     def update_token(self,
@@ -274,6 +275,7 @@ class ACL(base.Endpoint):
                                local=local,
                                policies=policies,
                                roles=roles,
+                               secret_id=secret_id,
                                service_identities=service_identities)))
 
     def clone_token(self, accessor_id, description=None):
