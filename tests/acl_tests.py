@@ -180,7 +180,7 @@ class TestCase(base.TestCase):
                                               rules=ACL_NEW_RULES)
         result = self.consul.acl.update_policy(value["ID"],
                                                value["Name"],
-                                               policy=ACL_NEW_UPDATE_RULES)
+                                               rules=ACL_NEW_UPDATE_RULES)
         self.assertGreater(result["ModifyIndex"], result["CreateIndex"])
 
     def test_create_and_delete_policy(self):
@@ -195,12 +195,11 @@ class TestCase(base.TestCase):
                 self.consul.acl.list_policies()
 
     def test_create_role(self):
-        result = self.consul.acl.create_create_role(
+        result = self.consul.acl.create_role(
             "unittest_create_role",
             policies=POLICYLINKS_SAMPLE,
             service_identities=SERVICE_IDENTITIES_SAMPLE)
-        self.assertEqual(result['Policies'][0]['ID'],
-                         POLICYLINKS_SAMPLE['Policies'][0]['ID'])
+        self.assertEqual(result[0]['ID'], POLICYLINKS_SAMPLE[0]['ID'])
 
     def test_create_and_read_role(self):
         value = self.consul.acl.create_role(
@@ -217,7 +216,9 @@ class TestCase(base.TestCase):
             policies=POLICYLINKS_SAMPLE,
             service_identities=SERVICE_IDENTITIES_SAMPLE)
         result = self.consul.acl.update_role(
-            value["ID"], policies=POLICYLINKS_UPDATE_SAMPLE)
+            value["ID"],
+            "unittest_read_role",
+            policies=POLICYLINKS_UPDATE_SAMPLE)
         self.assertGreater(result["ModifyIndex"], result["CreateIndex"])
 
     def test_create_and_delete_role(self):
