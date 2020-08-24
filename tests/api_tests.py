@@ -35,7 +35,7 @@ class ConsulTests(unittest.TestCase):
         self.host = '127.0.0.1'
         self.port = 8500
         self.dc = CONSUL_CONFIG['datacenter']
-        self.token = CONSUL_CONFIG['acl_master_token']
+        self.token = CONSUL_CONFIG['acl']['tokens']['master']
 
         self.acl = acl
         self.adapter = adapter
@@ -98,7 +98,7 @@ class ConsulTests(unittest.TestCase):
     def test_coordinate_initialization(self):
         self.assertTrue(
             self.coordinate.called_once_with(self.base_uri, self.adapter, self.dc,
-                                         self.token))
+                                             self.token))
 
     def test_session_initialization(self):
         self.assertTrue(

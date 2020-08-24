@@ -61,11 +61,27 @@ class Endpoint(object):
         :rtype: dict or list or None
 
         """
-        response = self._adapter.get(
-            self._build_uri(params, query_params), timeout=timeout)
+        response = self._adapter.get(self._build_uri(params, query_params),
+                                     timeout=timeout)
         if utils.response_ok(response, raise_on_404):
             return response.body
         return []
+
+    def _delete(
+            self,
+            params,
+            raise_on_404=False,
+    ):
+        """Perform a DELETE request
+
+        :param list params: List of path parts
+        :rtype: bool
+
+        """
+        response = self._adapter.delete(self._build_uri(params))
+        if utils.response_ok(response, raise_on_404):
+            return response.body
+        return False
 
     def _get_list(self, params, query_params=None):
         """Return a list queried from Consul
@@ -105,8 +121,8 @@ class Endpoint(object):
             self._adapter.put(self._build_uri(url_parts, query), payload))
 
     def _put_response_body(self, url_parts, query=None, payload=None):
-        response = self._adapter.put(
-            self._build_uri(url_parts, query), data=payload)
+        response = self._adapter.put(self._build_uri(url_parts, query),
+                                     data=payload)
         if utils.response_ok(response):
             return response.body
 

@@ -4,6 +4,7 @@ Tests for Consulate.acl
 """
 import json
 import uuid
+import random
 
 import httmock
 
@@ -12,7 +13,7 @@ from consulate import exceptions
 
 from . import base
 
-ACL_RULES = """key "" {
+ACL_OLD_RULES = """key "" {
   policy = "read"
 }
 key "foo/" {
@@ -20,15 +21,53 @@ key "foo/" {
 }
 """
 
+ACL_NEW_RULES = """key_prefix "" {
+    policy = "read"
+}
+key "foo/" {
+    policy = "write"
+}
+"""
+
+ACL_NEW_UPDATE_RULES = """key_prefix "" {
+    policy = "deny"
+}
+key "foo/" {
+    policy = "read"
+}
+"""
+
+POLICYLINKS_SAMPLE = [
+    dict(Name="policylink_sample"),
+]
+
+POLICYLINKS_UPDATE_SAMPLE = [
+    dict(Name="policylink_sample"),
+    dict(Name="policylink_update_sample")
+]
+
+SERVICE_IDENTITIES_SAMPLE = [dict(ServiceName="db", Datacenters=list("dc1"))]
+
 
 class TestCase(base.TestCase):
-
     @staticmethod
     def uuidv4():
         return str(uuid.uuid4())
 
-    def test_bootstrap_request_exception(self):
+    @staticmethod
+    def random():
+        return str(random.randint(0, 999999))
 
+    def _generate_policies(self):
+        sample = self.consul.acl.create_policy(self.random())
+        sample_update = self.consul.acl.create_policy(self.random())
+        return [dict(ID=sample["ID"]), dict(ID=sample_update["ID"])]
+
+    def _generate_roles(self):
+        role = self.consul.acl.create_role(self.random())
+        return [dict(ID=role["ID"])]
+
+    def test_bootstrap_request_exception(self):
         @httmock.all_requests
         def response_content(_url_unused, _request):
             raise OSError
@@ -42,8 +81,8 @@ class TestCase(base.TestCase):
 
         @httmock.all_requests
         def response_content(_url_unused, request):
-            return httmock.response(
-                200, json.dumps({'ID': expectation}), {}, None, 0, request)
+            return httmock.response(200, json.dumps({'ID': expectation}), {},
+                                    None, 0, request)
 
         with httmock.HTTMock(response_content):
             result = self.consul.acl.bootstrap()
@@ -67,9 +106,9 @@ class TestCase(base.TestCase):
         self.assertTrue(self.consul.acl.destroy(acl_id))
 
     def test_create_with_rules(self):
-        acl_id = self.consul.acl.create(self.uuidv4(), rules=ACL_RULES)
+        acl_id = self.consul.acl.create(self.uuidv4(), rules=ACL_OLD_RULES)
         value = self.consul.acl.info(acl_id)
-        self.assertEqual(value['Rules'], ACL_RULES)
+        self.assertEqual(value['Rules'], ACL_OLD_RULES)
 
     def test_create_and_info(self):
         acl_id = self.consul.acl.create(self.uuidv4())
@@ -125,10 +164,150 @@ class TestCase(base.TestCase):
         self.assertIn(acl_id, [r.get('ID') for r in data])
 
     def test_update_with_rules(self):
-        acl_id = self.consul.acl.update(self.uuidv4(), name='test', rules=ACL_RULES)
+        acl_id = self.consul.acl.update(self.uuidv4(),
+                                        name='test',
+                                        rules=ACL_OLD_RULES)
         value = self.consul.acl.info(acl_id)
-        self.assertEqual(value['Rules'], ACL_RULES)
+        self.assertEqual(value['Rules'], ACL_OLD_RULES)
 
     def test_update_forbidden(self):
         with self.assertRaises(consulate.Forbidden):
             self.forbidden_consul.acl.update(self.uuidv4(), name='test')
+
+    # NOTE: Everything above here is deprecated post consul-1.4.0
+
+    def test_create_policy(self):
+        name = self.random()
+        result = self.consul.acl.create_policy(name=name, rules=ACL_NEW_RULES)
+        self.assertEqual(result['Rules'], ACL_NEW_RULES)
+
+    def test_create_and_read_policy(self):
+        name = self.random()
+        value = self.consul.acl.create_policy(name=name, rules=ACL_NEW_RULES)
+        result = self.consul.acl.read_policy(value["ID"])
+        self.assertEqual(result['Rules'], ACL_NEW_RULES)
+
+    def test_create_and_update_policy(self):
+        name = self.random()
+        value = self.consul.acl.create_policy(name=name, rules=ACL_NEW_RULES)
+        result = self.consul.acl.update_policy(value["ID"],
+                                               str(value["Name"]),
+                                               rules=ACL_NEW_UPDATE_RULES)
+        self.assertGreater(result["ModifyIndex"], result["CreateIndex"])
+
+    def test_create_and_delete_policy(self):
+        name = self.random()
+        value = self.consul.acl.create_policy(name=name, rules=ACL_NEW_RULES)
+        result = self.consul.acl.delete_policy(value["ID"])
+        self.assertTrue(result)
+
+    def test_list_policy_exception(self):
+        with httmock.HTTMock(base.raise_oserror):
+            with self.assertRaises(exceptions.RequestError):
+                self.consul.acl.list_policies()
+
+    def test_create_role(self):
+        name = self.random()
+        result = self.consul.acl.create_role(
+            name=name,
+            policies=self._generate_policies(),
+            service_identities=SERVICE_IDENTITIES_SAMPLE)
+        self.assertEqual(result['Name'], name)
+
+    def test_create_and_read_role(self):
+        name = self.random()
+        value = self.consul.acl.create_role(
+            name=name,
+            policies=self._generate_policies(),
+            service_identities=SERVICE_IDENTITIES_SAMPLE)
+        result = self.consul.acl.read_role(value["ID"])
+        self.assertEqual(result['ID'], value['ID'])
+
+    def test_create_and_update_role(self):
+        name = self.random()
+        value = self.consul.acl.create_role(
+            name=name,
+            policies=self._generate_policies(),
+            service_identities=SERVICE_IDENTITIES_SAMPLE)
+        result = self.consul.acl.update_role(
+            value["ID"],
+            str(value["Name"]),
+            policies=self._generate_policies())
+        self.assertGreater(result["ModifyIndex"], result["CreateIndex"])
+
+    def test_create_and_delete_role(self):
+        name = self.random()
+        value = self.consul.acl.create_role(
+            name=name,
+            policies=self._generate_policies(),
+            service_identities=SERVICE_IDENTITIES_SAMPLE)
+        result = self.consul.acl.delete_role(value["ID"])
+        self.assertTrue(result)
+
+    def test_list_roles_exception(self):
+        with httmock.HTTMock(base.raise_oserror):
+            with self.assertRaises(exceptions.RequestError):
+                self.consul.acl.list_roles()
+
+    def test_create_token(self):
+        secret_id = self.uuidv4()
+        accessor_id = self.uuidv4()
+        result = self.consul.acl.create_token(
+            accessor_id=accessor_id,
+            secret_id=secret_id,
+            roles=self._generate_roles(),
+            policies=self._generate_policies(),
+            service_identities=SERVICE_IDENTITIES_SAMPLE)
+        self.assertEqual(result['AccessorID'], accessor_id)
+        self.assertEqual(result['SecretID'], secret_id)
+
+    def test_create_and_read_token(self):
+        secret_id = self.uuidv4()
+        accessor_id = self.uuidv4()
+        value = self.consul.acl.create_token(
+            accessor_id=accessor_id,
+            secret_id=secret_id,
+            roles=self._generate_roles(),
+            policies=self._generate_policies(),
+            service_identities=SERVICE_IDENTITIES_SAMPLE)
+        result = self.consul.acl.read_token(value["AccessorID"])
+        self.assertEqual(result['AccessorID'], accessor_id)
+
+    def test_create_and_update_token(self):
+        secret_id = self.uuidv4()
+        accessor_id = self.uuidv4()
+        value = self.consul.acl.create_token(
+            accessor_id=accessor_id,
+            secret_id=secret_id,
+            roles=self._generate_roles(),
+            policies=self._generate_policies(),
+            service_identities=SERVICE_IDENTITIES_SAMPLE)
+        result = self.consul.acl.update_token(
+            str(value["AccessorID"]), policies=self._generate_policies())
+        self.assertGreater(result["ModifyIndex"], result["CreateIndex"])
+
+    def test_create_and_clone_token(self):
+        secret_id = self.uuidv4()
+        accessor_id = self.uuidv4()
+        clone_description = "clone token of " + accessor_id
+        value = self.consul.acl.create_token(
+            accessor_id=accessor_id,
+            secret_id=secret_id,
+            roles=self._generate_roles(),
+            policies=self._generate_policies(),
+            service_identities=SERVICE_IDENTITIES_SAMPLE)
+        result = self.consul.acl.clone_token(value["AccessorID"],
+                                             description=clone_description)
+        self.assertEqual(result["Description"], clone_description)
+
+    def test_create_and_delete_token(self):
+        secret_id = self.uuidv4()
+        accessor_id = self.uuidv4()
+        value = self.consul.acl.create_token(
+            accessor_id=accessor_id,
+            secret_id=secret_id,
+            roles=self._generate_roles(),
+            policies=self._generate_policies(),
+            service_identities=SERVICE_IDENTITIES_SAMPLE)
+        result = self.consul.acl.delete_token(value["AccessorID"])
+        self.assertTrue(result)

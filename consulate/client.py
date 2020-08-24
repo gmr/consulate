@@ -2,11 +2,14 @@
 Consul client object
 
 """
+import os
 from consulate import adapters, api, utils
 
-DEFAULT_HOST = 'localhost'
-DEFAULT_PORT = 8500
+DEFAULT_HOST = os.environ.get('CONSUL_HOST') or 'localhost'
+DEFAULT_PORT = os.environ.get('CONSUL_PORT') or 8500
+DEFAULT_ADDR = os.environ.get('CONSUL_HTTP_ADDR')
 DEFAULT_SCHEME = 'http'
+DEFAULT_TOKEN = os.environ.get('CONSUL_HTTP_TOKEN')
 API_VERSION = 'v1'
 
 
@@ -23,6 +26,7 @@ class Consul(object):
                                   adapter=consulate.adapters.UnixSocketRequest)
         services = consul.agent.services()
 
+    :param str addr: The CONSUL_HTTP_ADDR if available (Default: None)
     :param str host: The host name to connect to (Default: localhost)
     :param int port: The port to connect on (Default: 8500)
     :param str datacenter: Specify a specific data center
@@ -36,17 +40,21 @@ class Consul(object):
 
     """
     def __init__(self,
+                 addr=DEFAULT_ADDR,
                  host=DEFAULT_HOST,
                  port=DEFAULT_PORT,
                  datacenter=None,
-                 token=None,
+                 token=DEFAULT_TOKEN,
                  scheme=DEFAULT_SCHEME,
                  adapter=None,
                  verify=True,
                  cert=None,
                  timeout=None):
         """Create a new instance of the Consul class"""
-        base_uri = self._base_uri(scheme, host, port)
+        base_uri = self._base_uri(addr=addr,
+                                  scheme=scheme,
+                                  host=host,
+                                  port=port)
         self._adapter = adapter() if adapter else adapters.Request(
             timeout=timeout, verify=verify, cert=cert)
         self._acl = api.ACL(base_uri, self._adapter, datacenter, token)
@@ -54,12 +62,13 @@ class Consul(object):
         self._catalog = api.Catalog(base_uri, self._adapter, datacenter, token)
         self._event = api.Event(base_uri, self._adapter, datacenter, token)
         self._health = api.Health(base_uri, self._adapter, datacenter, token)
-        self._coordinate = api.Coordinate(base_uri, self._adapter, datacenter, token)
+        self._coordinate = api.Coordinate(base_uri, self._adapter, datacenter,
+                                          token)
         self._kv = api.KV(base_uri, self._adapter, datacenter, token)
         self._session = api.Session(base_uri, self._adapter, datacenter, token)
         self._status = api.Status(base_uri, self._adapter, datacenter, token)
-        self._lock = api.Lock(
-            base_uri, self._adapter, self._session, datacenter, token)
+        self._lock = api.Lock(base_uri, self._adapter, self._session,
+                              datacenter, token)
 
     @property
     def acl(self):
@@ -172,7 +181,7 @@ class Consul(object):
         return self._status
 
     @staticmethod
-    def _base_uri(scheme, host, port):
+    def _base_uri(scheme, host, port, addr=None):
         """Return the base URI to use for API requests. Set ``port`` to None
         when creating a UNIX Socket URL.
 
@@ -182,7 +191,10 @@ class Consul(object):
         :rtype: str
 
         """
-        if port:
-            return '{0}://{1}:{2}/{3}'.format(scheme, host, port, API_VERSION)
-        return '{0}://{1}/{2}'.format(
-            scheme, utils.quote(host, ''), API_VERSION)
+        if addr is None:
+            if port:
+                return '{0}://{1}:{2}/{3}'.format(scheme, host, port,
+                                                  API_VERSION)
+            return '{0}://{1}/{2}'.format(scheme, utils.quote(host, ''),
+                                          API_VERSION)
+        return '{0}/{1}'.format(addr, API_VERSION)

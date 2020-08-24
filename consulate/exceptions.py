@@ -24,6 +24,13 @@ class ACLDisabled(ConsulateException):
     """Raised when ACL related calls are made while ACLs are disabled"""
 
 
+class ACLFormatError(ConsulateException):
+    """Raised when PolicyLinks is missing 'ID' and 'Name' in a PolicyLink or
+    when ServiceIdentities is missing 'ServiceName' field in a ServiceIdentity.
+
+    """
+
+
 class Forbidden(ConsulateException):
     """Raised when ACLs are enabled and the token does not validate"""
 
