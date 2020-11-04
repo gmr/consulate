@@ -165,7 +165,7 @@ class Response(object):
                         body = body.decode('utf-8')
                     except UnicodeDecodeError:
                         pass
-                value = json.loads(body, encoding='utf-8')
+                value = json.loads(body)
             except (TypeError, ValueError):
                 return body
             if value is None:
