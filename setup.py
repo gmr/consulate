@@ -1,8 +1,8 @@
 import setuptools
 
 setuptools.setup(
-    name='abaez.consulate',
-    version='1.1.0',
+    name='consulate',
+    version='1.1.1',
     description='A Client library and command line application for the Consul',
     maintainer='Gavin M. Roy',
     maintainer_email='gavinr@aweber.com',
