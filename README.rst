@@ -199,7 +199,7 @@ the scope of the full Consulate API.
     health = consul.health.node('my-node')
 
     # Get all checks that are critical
-    checks = consul.heath.state('critical')
+    checks = consul.health.state('critical')
 
 For more examples, check out the Consulate documentation.
 
