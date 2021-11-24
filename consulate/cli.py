@@ -620,8 +620,14 @@ def main():
         if args.api_host:
             api_host = args.api_host
 
-    consul = consulate.Consul(api_host, port, args.dc,
-                              args.token, args.api_scheme, adapter)
+    consul = consulate.Consul(
+        host=api_host,
+        port=port,
+        datacenter=args.dc,
+        token=args.token,
+        scheme=args.api_scheme,
+        adapter=adapter,
+    )
 
     if args.command == 'acl':
         ACL_ACTIONS[args.action](consul, args)
